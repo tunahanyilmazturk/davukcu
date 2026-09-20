@@ -4,6 +4,7 @@ import { L } from '../config.js';
 import { layInterval, BREEDS, roosterBoost } from '../economy.js';
 import { CHICKEN_VARIANTS } from '../sprites/index.js';
 import { layEgg } from './eggs.js';
+import { tickManure } from './manure.js';
 
 // rastgele spawn havuzu — yumurtlamayanlar (horoz) hariç
 const VARIANT_KEYS = Object.keys(CHICKEN_VARIANTS)
@@ -61,6 +62,7 @@ export function updateChickens(dt, fed) {
   for (const ch of S.chickens) {
     if (ch.drag) continue;
     ch.t -= dt; ch.frameT += dt;
+    tickManure(ch, dt); // gübre yığını bırakma sayacı
     if (ch.hop > 0) ch.hop -= dt;
     if (ch.squat > 0) ch.squat -= dt;
     if (ch.petCd > 0) ch.petCd -= dt; // Sevgi Eli aralığı

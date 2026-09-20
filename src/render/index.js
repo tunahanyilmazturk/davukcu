@@ -3,7 +3,7 @@ import { L, fmt } from '../config.js';
 import { S } from '../state.js';
 import { SPR, drawSprite } from '../sprites/index.js';
 import { bg } from '../world.js';
-import { sellPrice, feedCap, waterCap } from '../economy.js';
+import { sellPrice, feedCap, waterCap, fedOk } from '../economy.js';
 import { drag } from '../input.js';
 import { drawMagnet } from './magnet.js';
 import { drawBelts } from '../belts.js';
@@ -120,7 +120,22 @@ export function draw(ctx, dt) {
   drawTank(ctx, L.FEED,  S.feed  / feedCap(),  'feed',  S.lvl.autoF);
   drawTank(ctx, L.WATER, S.water / waterCap(), 'water', S.lvl.autoW);
 
+  // gübre yığınları — kümes zemini, tavukların altında/arkasında
+  for (const m of S.manures) {
+    const sw = Math.sin(m.seed || 0) * 2;
+    ctx.fillStyle = 'rgba(0,0,0,.12)';
+    ctx.beginPath(); ctx.ellipse(m.x, m.y + 2, 9, 3, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#5a4028';
+    ctx.fillRect(m.x - 7 + sw, m.y - 4, 14, 6);
+    ctx.fillRect(m.x - 5 + sw, m.y - 8, 10, 4);
+    ctx.fillRect(m.x - 2 + sw, m.y - 11, 5, 3);
+    ctx.fillStyle = '#7a5a38';
+    ctx.fillRect(m.x - 6 + sw, m.y - 4, 4, 2);
+    ctx.fillRect(m.x - 3 + sw, m.y - 8, 3, 1);
+  }
+
   // tavuklar (y'ye göre sırala — derinlik)
+  const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
   const sorted = [...S.chickens].sort((a, b) => a.y - b.y);
   for (const ch of sorted) {
     const sprs = SPR.chickens[ch.variant] || SPR.chickens.white;
@@ -141,6 +156,15 @@ export function draw(ctx, dt) {
       ctx.restore();
     } else {
       drawSprite(ctx, spr, ch.x - w / 2, ch.y - h + hopY + bobY, 3, ch.dir < 0);
+    }
+    // açlık işareti: tavuğun ~üçte biri gösterir (kalabalıkta okunaklı kalır)
+    if (hungry && !ch.drag && (S.chickens.indexOf(ch) % 3 === 0)) {
+      const bt = Math.floor(performance.now() / 400) % 2 === 0;
+      if (bt) {
+        ctx.font = 'bold 11px "Courier New",monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#241c2c'; ctx.fillText('!', ch.x + 1, ch.y - h - 3);
+        ctx.fillStyle = '#ffb040'; ctx.fillText('!', ch.x, ch.y - h - 4);
+      }
     }
   }
 

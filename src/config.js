@@ -39,7 +39,7 @@ export const BASE = { egg: 1, lay: 5.0, belt: 75, beltD: 85, golden: 0.02, rare:
 export const MAXL = { value: 99, lay: 12, beltF: 10, beltD: 10, golden: 14, rare: 8, wash: 5, washS: 8,
                       polish: 5, polishS: 8, feedCap: 8, waterCap: 8, autoF: 4, autoW: 4, magnet: 8,
                       twin: 6, lucky: 8, saver: 5, offline: 5, rooster: 3, pack: 4,
-                      hatch: 8, grow: 8, grade: 6, truck: 6, autopet: 5 };
+                      hatch: 8, grow: 8, grade: 6, truck: 6, autopet: 5, scoop: 6 };
 
 export const SAVE_KEY = 'tavukciftligi_v1';
 export const MAX_CHICKENS = 80;

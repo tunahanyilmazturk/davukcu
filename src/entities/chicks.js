@@ -12,7 +12,7 @@ export function spawnChick(x, y, growT) {
   S.chicks.push({
     x: x !== undefined ? x : P.x + 40 + Math.random() * (P.w - 80),
     y: y !== undefined ? y : P.y + 60 + Math.random() * (P.h - 80),
-    tx: 0, state: 'idle', t: Math.random() * 1.5,
+    tx: 0, ty: 0, state: 'idle', t: Math.random() * 1.5,
     dir: Math.random() < 0.5 ? 1 : -1, frame: 'a', frameT: Math.random(),
     growT: growT !== undefined ? growT : chickGrowT(),
   });
@@ -40,27 +40,33 @@ export function updateChicks(dt) {
     if (c.state === 'idle') {
       c.frame = 'a';
       if (c.t <= 0) {
-        // hedef silo şeridine düşmesin + çok yakın olmasın
+        // hedef silo şeridine düşmesin + çok yakın olmasın (tavuklarla aynı kural)
+        let ok = false;
         for (let i = 0; i < 6; i++) {
-          c.tx = P.x + 16 + Math.random() * (P.w - 32);
-          if (inSilo(c.tx, c.y, L.FEED) || inSilo(c.tx, c.y, L.WATER)) continue;
-          if (Math.abs(c.tx - c.x) > 24) break;
+          const tx = P.x + 16 + Math.random() * (P.w - 32);
+          const ty = P.y + 30 + Math.random() * (P.h - 34);
+          if (inSilo(tx, ty, L.FEED) || inSilo(tx, ty, L.WATER)) continue;
+          if (Math.hypot(tx - c.x, ty - c.y) < 24) continue;
+          c.tx = tx; c.ty = ty; ok = true; break;
         }
+        if (!ok) { c.t = 0.4 + Math.random(); continue; }
         if (Math.abs(c.tx - c.x) > 8) c.dir = c.tx > c.x ? 1 : -1; // mini kaymada yönü koru
         c.state = 'walk';
       }
     } else {
-      const dx = c.tx - c.x;
-      const step = 55 * dt * c.dir; // civcivler hızlı seyirtir
-      if (Math.abs(dx) <= Math.abs(step) + 1) {
-        c.x = c.tx; c.state = 'idle'; c.t = 0.5 + Math.random() * 1.8;
+      // çapraz yürüyüş — civcivler hem yatay hem dikey seyirtir
+      const dx = c.tx - c.x, dy = c.ty - c.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const step = 55 * dt;
+      if (dist <= step + 1) {
+        c.x = c.tx; c.y = c.ty; c.state = 'idle'; c.t = 0.5 + Math.random() * 1.8;
       } else {
-        const nx = c.x + step;
+        const nx = c.x + dx / dist * step, ny = c.y + dy / dist * step;
         // silo şeridine çarparsa durur — tavuklar gibi üstüne çıkamaz
-        const hit = [L.FEED, L.WATER].some(t => !inSilo(c.x, c.y, t) && inSilo(nx, c.y, t));
+        const hit = [L.FEED, L.WATER].some(t => !inSilo(c.x, c.y, t) && inSilo(nx, ny, t));
         if (hit) { c.state = 'idle'; c.t = 0.5 + Math.random(); }
         else {
-          c.x = nx;
+          c.x = nx; c.y = ny;
           c.frame = (Math.floor(c.frameT * 10) % 2) ? 'a' : 'b';
         }
       }

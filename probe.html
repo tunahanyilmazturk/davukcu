@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head><meta charset="UTF-8"><link rel="stylesheet" href="style.css"></head>
+<body>
+<div id="app">
+  <div id="stage"><canvas id="game" width="660" height="600"></canvas></div>
+  <div id="panel">
+    <button id="btnPanel">&#9654;</button><div class="rail-label">PAZAR</div>
+    <div class="stat-row">
+      <div class="stat"><canvas class="icon" id="icoChicken" width="16" height="16"></canvas><b id="stChickens">1</b></div>
+      <div class="stat money"><canvas class="icon" id="icoCoin" width="16" height="16"></canvas><b id="stMoney">0</b><small id="stRate"></small></div>
+      <button id="btnSettings">&#9881;</button>
+    </div>
+    <div class="res-row">
+      <div class="res feed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed"></b></div>
+      <div class="res water"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater"></b></div>
+    </div>
+    <div class="pazar">Pazar</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="shop">ÇİFTLİK</button>
+      <button class="tab" data-tab="stats">İSTATİSTİK</button>
+      <button class="tab" data-tab="achv">BAŞARIM</button>
+    </div>
+    <div id="tabShop"><div class="qtyrow"><span>Satın al</span><button id="btnAvail">Alınabilir</button><button id="btnQty">1x</button></div><div id="cards"></div></div>
+    <div id="tabStats" class="hidden"><div id="statList"></div></div>
+    <div id="tabAchv" class="hidden"><div id="achvList"></div></div>
+    <div id="sellHint"></div><div id="toast"></div>
+    <div class="foot"><span id="stEggsSold"></span></div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+<script>
+setTimeout(() => {
+  const out = document.createElement('pre'); out.id = 'testout';
+  try {
+    const { S, update, magnet, L } = window.GAME;
+    S.muted = true;
+    const log = {};
+    log.state0 = { feed: S.feed, water: S.water, chickens: S.chickens.length };
+    // 1) pet spam: canvas üstünde tavuğa 20 hızlı tık — layT bir kez düşmeli (cd 1sn)
+    const cv = document.getElementById('game');
+    const r = cv.getBoundingClientRect();
+    const ch = S.chickens[0];
+    const toClient = (x, y) => ({ clientX: r.left + x * r.width / L.W,
+                                  clientY: r.top + y * r.height / 800 });
+    ch.layT = 5;
+    const lay0 = ch.layT;
+    for (let i = 0; i < 20; i++) {
+      const p = toClient(ch.x, ch.y - 20);
+      cv.dispatchEvent(new MouseEvent('mousedown', { ...p, button: 0, bubbles: true }));
+      window.dispatchEvent(new MouseEvent('mouseup', { ...p, button: 0, bubbles: true }));
+    }
+    log.petSpam = { before: lay0, after: +ch.layT.toFixed(2),
+                    blocked: ch.layT > lay0 * 0.5 }; // spam'siz tek düşüş ~0.7x
+    // 2) civciv dikey hareket: horoz + civcivler, 90sn — y yayılımı >0 olmalı
+    window.GAME.spawnChicken(undefined, undefined, 'rooster');
+    window.GAME.spawnChick(); window.GAME.spawnChick(); window.GAME.spawnChick();
+    S.lvl.rooster = 1;
+    for (let i = 0; i < 1800; i++) update(0.05);
+    const ys = S.chicks.map(c => Math.round(c.y));
+    log.chicks = { n: S.chicks.length, ys: ys.slice(0, 8),
+      spread: ys.length ? Math.max(...ys) - Math.min(...ys) : -1 };
+    // 3) bant taşması: bantlar kapalı, 40 tavuk 60sn — pile<=8 ve floor'a dökülenler
+    while (S.chickens.length < 40) window.GAME.spawnChicken();
+    S.lvl.beltF = 0; S.lvl.beltD = 0; S.feed = 900; S.water = 900;
+    S.lvl.feedCap = 8; S.lvl.waterCap = 8;
+    for (let i = 0; i < 1200; i++) update(0.05);
+    log.pile = {
+      live: S.eggs.length,
+      maxPile: Math.max(0, ...S.eggs.map(e => e.pile || 0)),
+      floor: S.eggs.filter(e => e.phase === 'floor').length,
+      belt1: S.eggs.filter(e => e.phase === 'belt1').length,
+    };
+    // 4) oto dolum: feed=0, autoF=4 → tek seferde eşiğin üstüne çıkmalı
+    S.feed = 0; S.money = 10000; S.lvl.autoF = 4;
+    update(0.05);
+    log.autoFill = { feedAfter: Math.round(S.feed), pct: Math.round(S.feed / 900 * 100) };
+    // 5) mıknatıs kilitlenmesi: blur simülasyonu
+    magnet.active = true; magnet.x = 100; magnet.y = 460;
+    for (let i = 0; i < 10; i++) update(0.05);
+    window.dispatchEvent(new Event('blur'));
+    log.magnetAfterBlur = { active: magnet.active, held: magnet.held.length };
+    out.textContent = 'PROBE|' + JSON.stringify(log);
+  } catch (e) { out.textContent = 'PROBEERR|' + e.message + '|' + e.stack; }
+  document.body.appendChild(out);
+}, 800);
+</script>
+</body>
+</html>

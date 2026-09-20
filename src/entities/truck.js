@@ -12,6 +12,7 @@ export function updateTruck(dt) {
   const lvl = S.lvl.truck;
 
   // zemin yığılımı sınırı — üstü eski usul sessizce satılır
+  // (kamyon istatistiğine yazılmaz: trucked = sadece kamyonun taşıdığı)
   const floorEggs = S.eggs.filter(e => e.phase === 'floor');
   if (floorEggs.length > FLOOR_CAP) {
     const e = floorEggs[0];
@@ -19,7 +20,6 @@ export function updateTruck(dt) {
     S.money += eggWorth(e);
     S.eggsSold++;
     S.stats.earned += eggWorth(e);
-    S.stats.trucked++;
   }
 
   if (!S.truck) {

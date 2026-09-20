@@ -4,7 +4,10 @@ import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
-         chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, autoPetCd } from './economy.js';
+         chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, autoPetCd,
+         scoopInterval } from './economy.js';
+import { checkQuests, refreshQuestBar } from './quests.js';
+import { refreshPrestige } from './prestige.js';
 import { spawnChicken } from './entities/index.js';
 import { sndBuy, sndErr } from './audio.js';
 import { SPR } from './sprites/index.js';
@@ -115,6 +118,10 @@ export const SHOP = [
     costAt: l => Math.ceil(300 * Math.pow(2.4, l)),
     effAt: l => l === 0 ? 'kapalı'
       : 'düşükken %' + Math.round(autoTrigger(l) * 100) + "'de · %" + Math.round(autoFillPct(l) * 100) + ' dolar' },
+  { id: 'scoop', sec: 'BAKIM', name: 'Gübre Kepçesi', icon: 'scoop', lv: 'scoop',
+    costAt: l => Math.ceil(150 * Math.pow(2.2, l)),
+    effAt: l => l === 0 ? 'kapalı — tıkla da toplanır'
+      : 'her ' + Math.round(scoopInterval(l)) + ' sn tüm gübreyi toplar' },
   { id: 'magnet', sec: 'ARAÇLAR', name: 'Mıknatıs', icon: 'magnet', lv: 'magnet',
     costAt: l => Math.ceil(60 * Math.pow(2.0, l)),
     effAt: l => magnetRadius(l) + 'px · ' + magnetCap(l) + ' yumurta' },
@@ -297,16 +304,19 @@ export function refreshShop() {
 }
 
 /* ---------------- Sekmeler + toplu alım ---------------- */
+const TAB_IDS = { shop: 'tabShop', stats: 'tabStats', achv: 'tabAchv', prest: 'tabPrest' };
 function initTabs() {
   document.querySelectorAll('.tab').forEach(b => {
     b.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
       const t = b.dataset.tab;
-      document.getElementById('tabShop').classList.toggle('hidden', t !== 'shop');
-      document.getElementById('tabStats').classList.toggle('hidden', t !== 'stats');
-      document.getElementById('tabAchv').classList.toggle('hidden', t !== 'achv');
+      for (const k in TAB_IDS) {
+        const el = document.getElementById(TAB_IDS[k]);
+        if (el) el.classList.toggle('hidden', k !== t);
+      }
       if (t === 'stats') refreshStats();
       if (t === 'achv') refreshAchv();
+      if (t === 'prest') refreshPrestige();
     });
   });
   const q = document.getElementById('btnQty');
@@ -337,6 +347,8 @@ let lastMoney = -1;
 
 export function refreshUI() {
   checkAchv(); // koşulu dolan başarım varsa ödül + bildirim
+  checkQuests();
+  refreshQuestBar();
   elMoney.textContent = fmt(S.money);
   // para artınca kısa yeşil flaş
   if (lastMoney >= 0 && S.money > lastMoney) {
@@ -357,8 +369,10 @@ export function refreshUI() {
   elFeedBar.classList.toggle('low', fr < 0.12);
   elWaterBar.classList.toggle('low', wr < 0.12);
   refreshShop();
-  if (!document.getElementById('tabStats').classList.contains('hidden')) refreshStats();
-  if (!document.getElementById('tabAchv').classList.contains('hidden')) refreshAchv();
+  const tabEl = id => document.getElementById(id);
+  if (!tabEl('tabStats').classList.contains('hidden')) refreshStats();
+  if (!tabEl('tabAchv').classList.contains('hidden')) refreshAchv();
+  if (tabEl('tabPrest') && !tabEl('tabPrest').classList.contains('hidden')) refreshPrestige();
 }
 
 export function initPanel() {

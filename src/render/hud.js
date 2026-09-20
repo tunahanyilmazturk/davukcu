@@ -53,7 +53,8 @@ export function drawHud(ctx, fps) {
   ctx.fillStyle = '#f0e6f0';
   ctx.font = 'bold 10px "Courier New",monospace';
   ctx.textAlign = 'left';
-  ctx.fillText('⏱ ' + fmtTime(S.playTime) + '  KLASİK', 8, 13);
+  ctx.fillText('⏱ ' + fmtTime(S.playTime) + '  KLASİK' +
+               (S.prestige ? '  ⭐' + S.prestige : ''), 8, 13);
   ctx.textAlign = 'right';
   ctx.fillText('v1.0' + (S.showFps ? ' | ' + fps + ' FPS' : ''), L.W - 8, 13);
 }

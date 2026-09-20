@@ -9,6 +9,22 @@ import { magnet } from '../input.js';
 
 export const box = { t: 0 }; // paketleme kutusu — yumurta düşünce kısa ezilme animasyonu
 
+let lastWashSnd = 0; // yıkama sesi throttle — geçiş yıkamasında ard arda çalmasın
+// yıkama tamamlama: temizle + sıçrama efekti + (throttle'lı) su sesi
+function finishWash(e) {
+  e.clean = true;
+  S.parts.push({ kind: 'splash', x: e.x, y: L.BELT2_Y - 22, t: 0, life: .4 });
+  const now = performance.now();
+  if (now - lastWashSnd > 150) { lastWashSnd = now; sndWash(); }
+}
+// yığın taşması: katman sınırını aşan yumurta bandtan dökülüp yere düşer
+// (kamyonun topladığı 'floor' fazına geçer — sonsuz kule olmaz)
+const PILE_MAX = 8;
+function spill(e) {
+  e.phase = 'floorfall'; e.vy = 0; e.pile = 0;
+  S.parts.push({ kind: 'puff', x: e.x, y: e.y + 14, t: 0, life: .3 });
+}
+
 // her yumurtaya ufak görsel kişilik: boyut, eğim, dikey kayma, sallanma fazı
 export function eggLooks() {
   return { sc: 1.85 + Math.random() * 0.3, rot: (Math.random() - .5) * 0.34,
@@ -138,9 +154,12 @@ export function updateEggs(dt) {
     if (e.x > limit) e.x = Math.max(limit, e.x - bs1 * dt);
     else if (i > 0 && e.x < limit) e.x = Math.min(limit, e.x + push1 * dt);
     if (e.x > L.BELT1_LIMIT) e.x = L.BELT1_LIMIT; // sağ uçta sıkışıp kalırlar
-    // uç taşması: aralık sağlanamayan yumurtalar üst üste katmanlanır
-    if (i > 0 && e.x >= L.BELT1_LIMIT - 1 && e.x - lead1 < gap - 3) e.pile = ++pile1;
-    else { e.pile = 0; pile1 = 0; }
+    // uç taşması: aralık sağlanamayan yumurtalar üst üste katmanlanır;
+    // katman sınırını aşanlar bandtan dökülür
+    if (i > 0 && e.x >= L.BELT1_LIMIT - 1 && e.x - lead1 < gap - 3) {
+      e.pile = ++pile1;
+      if (e.pile > PILE_MAX) spill(e);
+    } else { e.pile = 0; pile1 = 0; }
     if (i === 0 && e.x <= L.DROP_X) { e.phase = 'fall2'; e.vy = 0; }
     lead1 = e.x;
     // kirli yumurta bantta tortu bırakır
@@ -170,11 +189,7 @@ export function updateEggs(dt) {
         S.parts.push({ kind: 'drop', x: e.x - 8 + Math.random() * 16,
           y: L.BELT2_Y - 40, vy: 140, t: 0, life: .3 });
       }
-      if (e.washM <= 0) {
-        e.washM = 0; e.clean = true;
-        S.parts.push({ kind: 'splash', x: e.x, y: L.BELT2_Y - 22, t: 0, life: .4 });
-        sndWash();
-      }
+      if (e.washM <= 0) { e.washM = 0; finishWash(e); }
     }
 
     if (e.wash > 0) {
@@ -184,11 +199,7 @@ export function updateEggs(dt) {
         S.parts.push({ kind: 'drop', x: e.x - 8 + Math.random() * 16,
           y: L.BELT2_Y - 40, vy: 140, t: 0, life: .3 });
       }
-      if (e.wash <= 0) {
-        e.wash = 0; e.clean = true;
-        S.parts.push({ kind: 'splash', x: e.x, y: L.BELT2_Y - 22, t: 0, life: .4 });
-        sndWash();
-      }
+      if (e.wash <= 0) { e.wash = 0; finishWash(e); }
       washerBusy = true;
       lead2 = e.x;
       continue;
@@ -240,9 +251,12 @@ export function updateEggs(dt) {
     if (e.x < limit) e.x = Math.min(limit, e.x + bs2 * dt);
     else if (i > 0 && e.x > limit) e.x = Math.max(limit, e.x - push2 * dt); // aralık ihlali → geriye kay
     if (e.x < L.BELT_X0 + 4) e.x = L.BELT_X0 + 4;
-    // sol uç taşması: kuyruk duvara dayanınca yumurtalar katmanlanır
-    if (i > 0 && e.x <= L.BELT_X0 + 6 && lead2 - e.x < gap - 3) e.pile = ++pile2;
-    else { e.pile = 0; pile2 = 0; }
+    // sol uç taşması: kuyruk duvara dayanınca yumurtalar katmanlanır;
+    // katman sınırını aşanlar yere dökülür (kamyon toplar)
+    if (i > 0 && e.x <= L.BELT_X0 + 6 && lead2 - e.x < gap - 3) {
+      e.pile = ++pile2;
+      if (e.pile > PILE_MAX) spill(e);
+    } else { e.pile = 0; pile2 = 0; }
     if (!e.clean && Math.random() < dt * 0.4) {
       S.parts.push({ kind: 'speck', x: e.x + (Math.random() - .5) * 8,
         y: L.BELT2_Y + 2, vy: 20, t: 0, life: .6 });

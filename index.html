@@ -35,8 +35,10 @@
       <button class="tab active" data-tab="shop">ÇİFTLİK</button>
       <button class="tab" data-tab="stats">İSTATİSTİK</button>
       <button class="tab" data-tab="achv">BAŞARIM</button>
+      <button class="tab tab-prest" data-tab="prest">EFSANE</button>
     </div>
     <div id="tabShop">
+      <div id="questBar" class="hidden"></div>
       <div class="qtyrow">
         <span>Satın al</span>
         <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
@@ -49,6 +51,10 @@
     </div>
     <div id="tabAchv" class="hidden">
       <div id="achvList"></div>
+    </div>
+    <div id="tabPrest" class="hidden">
+      <div id="prestBody"></div>
+      <button id="btnPrest" class="btn-prest" disabled>PRESTİJ</button>
     </div>
     <div id="sellHint">Tavuğu satmak için buraya sürükle!</div>
     <div id="toast"></div>

@@ -13,7 +13,13 @@ export const BREEDS = {
   rooster: { name: 'Horoz',      costMult: 4,   layRate: 1,    rare: 0,    gold: 0,    val: 1, lays: false },
 };
 
-export function eggValue(l = S.lvl.value)      { return BASE.egg + l; }
+// prestij: her Altın Yem kalıcı +%12 yumurta değeri
+export function prestMult()                    { return 1 + 0.12 * S.prestige; }
+// sıfırlamada kazanılacak Altın Yem: son prestijden bu yana kazanç, √ ölçekli
+export function prestGain() {
+  return Math.floor(Math.sqrt(Math.max(0, S.stats.earned - S.prestigeBase) / 40000));
+}
+export function eggValue(l = S.lvl.value)      { return Math.round((BASE.egg + l) * prestMult()); }
 export function layInterval(l = S.lvl.lay)     { return Math.max(0.7, BASE.lay * Math.pow(0.88, l)); }
 export function farmBeltSpeed(l = S.lvl.beltF) { return BASE.belt * Math.pow(1.25, l); }   // üst bant
 export function depoBeltSpeed(l = S.lvl.beltD) { return BASE.beltD * Math.pow(1.22, l); }  // alt bant
@@ -96,6 +102,10 @@ export function truckInterval(l = S.lvl.truck) { return Math.max(5, 26 * Math.po
 export function truckCap(l = S.lvl.truck)      { return 3 + l; }
 // Sevgi Eli: imlecin üstündeki tavuğun otomatik sevilme aralığı (tavuk başına)
 export function autoPetCd(l = S.lvl.autopet)   { return 5.5 - l; }
+// Gübre Kepçesi: tüm yığınları toplama aralığı (sn)
+export function scoopInterval(l = S.lvl.scoop) { return 14 * Math.pow(0.8, l); }
+// bir gübre yığınının satış değeri — yumurta değeriyle ölçeklenir
+export function manureValue()                  { return Math.max(1, Math.ceil(eggValue() * 0.5)); }
 
 export function chickenCost(n = S.chickens.length) { return Math.ceil(12 * Math.pow(1.23, n)); }
 export function sellPrice(breed = 'white') {

@@ -5,7 +5,8 @@ import { eggValue, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance,
          washMult, washTime, polishMult, polishTime, feedCap, waterCap, refillCost,
          magnetRadius, magnetCap, magnetPull, twinChance, luckyChance, consumeMult,
          offlineEff, offlineCapH, roosterBoost, eggGap,
-         chickInterval, chickGrowT, gradeChance, autoPetCd } from './economy.js';
+         chickInterval, chickGrowT, gradeChance, autoPetCd,
+         prestMult, manureValue, scoopInterval } from './economy.js';
 
 const statDefs = [
   ['Satılan yumurta',  () => fmt(S.eggsSold)],
@@ -35,6 +36,9 @@ const statDefs = [
   ['Cila süresi',      () => S.lvl.polish ? polishTime().toFixed(2) + ' sn' : '—'],
   ['Sınıflandırılan',  () => fmt(S.stats.upg) + (S.lvl.grade ? ' · %' + Math.round(gradeChance() * 100) : '')],
   ['Kamyonla satılan', () => fmt(S.stats.trucked)],
+  ['Altın Yem',        () => '⭐ ' + fmt(S.prestige) + ' · x' + prestMult().toFixed(2) + ' değer'],
+  ['Toplanan gübre',   () => fmt(S.stats.manure) + ' · $' + fmt(manureValue()) + '/yığın'],
+  ['Gübre Kepçesi',    () => S.lvl.scoop ? 'her ' + Math.round(scoopInterval()) + ' sn' : '—'],
   ['Çiftlik bandı',    () => farmBeltSpeed().toFixed(0) + ' px/sn'],
   ['Depolama bandı',   () => depoBeltSpeed().toFixed(0) + ' px/sn'],
   ['Mıknatıs',         () => magnetRadius() + ' px · ' + magnetCap() + ' yumurta · ' + magnetPull() + ' çekim'],

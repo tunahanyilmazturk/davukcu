@@ -12,7 +12,9 @@ export function tryRefill(kind, auto = false) {
   let amount = cap - S[kind];
   if (auto) {
     const l = S.lvl[kind === 'feed' ? 'autoF' : 'autoW'];
-    amount = Math.min(amount, cap * autoFillPct(l));
+    // en az tetik eşiğinin üstüne çıkar — yoksa sonraki karede tekrar tetiklenir
+    const need = cap * autoTrigger(l) - S[kind];
+    amount = Math.min(amount, Math.max(cap * autoFillPct(l), need + 1));
   }
   if (amount < 1) {
     if (!auto) toast((kind === 'feed' ? 'Yemlik' : 'Suluk') + ' zaten dolu');

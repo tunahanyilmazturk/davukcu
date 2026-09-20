@@ -6,6 +6,7 @@ import { updateChickens } from './chickens.js';
 import { updateChicks } from './chicks.js';
 import { updateEggs, box } from './eggs.js';
 import { updateTruck } from './truck.js';
+import { updateManure } from './manure.js';
 import { pointer, pet, chickenAt, drag, magnet } from '../input.js';
 
 export { spawnChicken } from './chickens.js';
@@ -43,6 +44,7 @@ export function update(dt) {
   updateChicks(dt);
   updateEggs(dt);
   updateTruck(dt);
+  updateManure(dt);
 
   // kutu animasyonu
   if (box.t > 0) box.t -= dt;

@@ -8,6 +8,9 @@ import { draw } from './render/index.js';
 import { initInput, magnet } from './input.js';
 import { buildShop, refreshShop, refreshUI, initPanel, SHOP, buyItem } from './shop.js';
 import { initSettings } from './settings.js';
+import { initPrestige } from './prestige.js';
+import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
+import { collectManure } from './entities/manure.js';
 import { toast } from './toast.js';
 import { buildBG } from './world.js';
 
@@ -56,6 +59,7 @@ if (gain > 0) {
 initInput(cv);
 initPanel();
 initSettings();
+initPrestige();
 buildShop();
 refreshUI();
 
@@ -82,7 +86,8 @@ requestAnimationFrame(loop);
 
 // geliştirme: test.html bu kancayı kullanır
 if (import.meta.env && import.meta.env.DEV) {
-  window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, magnet };
+  window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
+                  QUESTS, checkQuests, refreshQuestBar, collectManure };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
   const ff = parseFloat(q.get('ff') || '0');
@@ -90,7 +95,9 @@ if (import.meta.env && import.meta.env.DEV) {
   const lvls = (q.get('lvl') || '').split(',').filter(Boolean);
   for (const kv of lvls) {
     const [k, v] = kv.split(':');
-    if (k in S.lvl) S.lvl[k] = parseInt(v) || 0;
+    const n = parseInt(v) || 0;
+    if (k === 'belt') { S.lvl.beltF = n; S.lvl.beltD = n; } // iki banda birden
+    else if (k in S.lvl) S.lvl[k] = n;
   }
   const mny = parseFloat(q.get('money') || '0');
   if (mny > 0) S.money = mny;

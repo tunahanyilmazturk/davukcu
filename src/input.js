@@ -4,6 +4,7 @@ import { L, fmt } from './config.js';
 import { sellPrice, autoPetCd } from './economy.js';
 import { sndPet, sndCoin, sndZap } from './audio.js';
 import { tryRefill } from './entities/index.js';
+import { manureAt, collectManure } from './entities/manure.js';
 import { toast } from './toast.js';
 
 export const drag = { current: null }; // {ch, ox, oy, origX, origY, moved}
@@ -24,11 +25,14 @@ export function chickenAt(x, y) {
 }
 
 // sevme: tavuk zıplar, kalpler çıkar, bir sonraki yumurtlama hızlanır
+// hızlandırma aralıklıdır — spam tıkla sonsuz hız exploit'i yok
 export function pet(ch) {
   ch.hop = 0.35;
   S.stats.pets++;
-  ch.layT = Math.max(0.25, ch.layT * 0.7);
-  if (S.lvl.autopet > 0) ch.petCd = autoPetCd(); // otomatik sevme aralığı
+  if ((ch.petCd || 0) <= 0) {
+    ch.layT = Math.max(0.25, ch.layT * 0.7);
+    ch.petCd = S.lvl.autopet > 0 ? Math.min(autoPetCd(), 1.0) : 1.0;
+  }
   for (let i = 0; i < 3; i++) {
     S.parts.push({ kind: 'heart', x: ch.x - 12 + i * 12, y: ch.y - 50,
       vy: -30 - i * 8, t: 0, life: .9 });
@@ -57,10 +61,35 @@ function dropEgg(eg) {
   }
 }
 
+// mıknatıs bırakma: tutulan/çekilen yumurtalar düşer veya satılır
+function releaseMagnet() {
+  magnet.active = false;
+  for (const eg of S.eggs) {
+    if (eg.phase === 'pulled') { eg.vx = 0; dropEgg(eg); }
+  }
+  for (const eg of magnet.held) {
+    if (eg.phase === 'held') dropEgg(eg);
+  }
+  magnet.held = [];
+  cv.style.cursor = 'default';
+}
+
+// sürükleme iptali (pencere odağı kaybolunca) — tavuk eski yerine döner
+function cancelDrag() {
+  const d = drag.current;
+  if (d) { d.ch.drag = false; d.ch.x = d.origX; d.ch.y = d.origY; drag.current = null; }
+  document.getElementById('panel').classList.remove('sell-hover');
+}
+
 export function initInput(canvas) {
   cv = canvas;
   // sağ tık mıknatıs yumurtası ayıklamada kullanılıyor — menüyü kapat
   cv.addEventListener('contextmenu', e => e.preventDefault());
+
+  // imleç pencere dışında bırakılırsa mouseup hiç gelmez — kilitlenmeyi önle
+  window.addEventListener('blur', () => { if (magnet.active) releaseMagnet(); cancelDrag(); });
+  document.documentElement.addEventListener('mouseleave',
+    () => { if (magnet.active) releaseMagnet(); cancelDrag(); });
 
   cv.addEventListener('mousedown', e => {
     if (e.button !== 0) return; // sadece sol tık etkileşim başlatır
@@ -74,6 +103,9 @@ export function initInput(canvas) {
       ch.drag = true;
       return;
     }
+    // gübre yığını — tıkla topla (küçük gelir)
+    const mn = manureAt(p.x, p.y);
+    if (mn) { collectManure(mn); return; }
     // boş alanda basılı tut → mıknatıs devrede (yumurtaları kapar)
     magnet.active = true;
     magnet.x = p.x; magnet.y = p.y;
@@ -96,7 +128,8 @@ export function initInput(canvas) {
       magnet.x = p.x; magnet.y = p.y;
       cv.style.cursor = 'none'; // imlecin yerini nal görseli alıyor
     } else {
-      cv.style.cursor = troughAt(p.x, p.y) ? 'pointer' : (chickenAt(p.x, p.y) ? 'grab' : 'default');
+      cv.style.cursor = troughAt(p.x, p.y) || manureAt(p.x, p.y) ? 'pointer'
+        : (chickenAt(p.x, p.y) ? 'grab' : 'default');
     }
   });
 
@@ -114,15 +147,7 @@ export function initInput(canvas) {
     if (e.button !== 0) return;
     // mıknatıs bırakılınca: tutulan yumurtalar düşer veya satılır
     if (magnet.active) {
-      magnet.active = false;
-      for (const eg of S.eggs) {
-        if (eg.phase === 'pulled') { eg.vx = 0; dropEgg(eg); }
-      }
-      for (const eg of magnet.held) {
-        if (eg.phase === 'held') dropEgg(eg);
-      }
-      magnet.held = [];
-      cv.style.cursor = 'default';
+      releaseMagnet();
       document.getElementById('panel').classList.remove('sell-hover');
       if (!d) return;
     }

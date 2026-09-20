@@ -34,8 +34,10 @@
       <button class="tab active" data-tab="shop">ÇİFTLİK</button>
       <button class="tab" data-tab="stats">İSTATİSTİK</button>
       <button class="tab" data-tab="achv">BAŞARIM</button>
+      <button class="tab tab-prest" data-tab="prest">EFSANE</button>
     </div>
     <div id="tabShop">
+      <div id="questBar" class="hidden"></div>
       <div class="qtyrow">
         <span>Satın al</span>
         <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
@@ -48,6 +50,10 @@
     </div>
     <div id="tabAchv" class="hidden">
       <div id="achvList"></div>
+    </div>
+    <div id="tabPrest" class="hidden">
+      <div id="prestBody"></div>
+      <button id="btnPrest" class="btn-prest" disabled>PRESTİJ</button>
     </div>
     <div id="sellHint">Tavuğu satmak için buraya sürükle!</div>
     <div id="toast"></div>
@@ -132,6 +138,38 @@ setTimeout(() => {
     for (let i = 0; i < 2400; i++) update(0.05); // kamyon gelir, yükler, gider
     log.push({ trucked: S.stats.trucked, truckPaid: S.money > moneyBefore,
                floorLeft: S.eggs.filter(e => e.phase === 'floor').length });
+    // ---- gübre: yığınlar oluşmuş olmalı, tıkla topla + kepçe ----
+    const pilesBefore = S.manures.length;
+    const manBefore = S.stats.manure;
+    if (S.manures.length) window.GAME.collectManure(S.manures[0]); // elle toplama
+    S.lvl.scoop = Math.max(S.lvl.scoop, 1);                        // kepçe açık
+    for (let i = 0; i < 600; i++) update(0.05);                    // kepçe turlar
+    log.push({ manurePiles: pilesBefore, manureMaxOk: pilesBefore <= 14,
+               manureClicked: manBefore + 1 <= S.stats.manure,
+               scoopCollected: S.stats.manure });
+    // ---- görev zinciri: koşullar sağlandı → sıralı ilerleme ----
+    window.GAME.checkQuests();
+    const qAfter = S.questIdx;
+    S.eggsSold = 600; // 'Yarım Bin' için
+    window.GAME.checkQuests();
+    log.push({ questIdx: qAfter, questAdvanced: S.questIdx > qAfter,
+               questBarShown: !!document.querySelector('#questBar b') });
+    // ---- prestij: kazanç → ⭐ → tam sıfırlama ----
+    S.stats.earned = 200000; S.prestigeBase = 0; // √ ölçek: sqrt(200000/40000) ≈ 2 ⭐
+    document.querySelector('.tab[data-tab="prest"]').click();
+    const btn = document.getElementById('btnPrest');
+    btn.click(); btn.click(); // iki aşamalı onay
+    log.push({ prestige: S.prestige, prestResetOk: S.money === 0 && S.lvl.value === 0
+               && S.chickens.length === 1 && S.eggs.length === 0,
+               prestTabRows: document.querySelectorAll('#prestBody .srow').length });
+    // prestij 'Efsane Ol' görevini tamamlamalı → zincir biter
+    window.GAME.checkQuests();
+    log.push({ questsDone: S.questIdx >= window.GAME.QUESTS.length });
+    // ---- kayıt: prestij/görev alanları kalıcı ----
+    window.GAME.writeSave();
+    const saved = JSON.parse(localStorage.getItem('tavukciftligi_v1'));
+    log.push({ saveOk: saved && saved.prestige === S.prestige
+               && saved.questIdx === S.questIdx });
     out.textContent = 'TEST|' + JSON.stringify(log);
   } catch (e) {
     out.textContent = 'TESTERR|' + e.message + '|' + e.stack;
