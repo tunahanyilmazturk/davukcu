@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+body { background:#333; } canvas { image-rendering: pixelated; }
+</style></head><body>
+<canvas id="c" width="800" height="640"></canvas>
+<script type="module">
+import { SPR, drawSprite } from '/src/sprites/index.js';
+const g = document.getElementById('c').getContext('2d');
+g.imageSmoothingEnabled = false;
+let x = 20;
+for (const v of ['white','brown','black','gold','rooster']) {
+  drawSprite(g, SPR.chickens[v].a, x, 40, 8);
+  drawSprite(g, SPR.chickens[v].b, x, 200, 8, true);
+  drawSprite(g, SPR.chickens[v].c, x, 360, 8);
+  x += 140;
+}
+drawSprite(g, SPR.chick.a, 20, 520, 8);
+drawSprite(g, SPR.chick.b, 80, 520, 8, true);
+drawSprite(g, SPR.egg, 480, 520, 8);
+drawSprite(g, SPR.goldenEgg, 560, 520, 8);
+drawSprite(g, SPR.coin, 640, 520, 8);
+drawSprite(g, SPR.heart, 720, 520, 8);
+</script>
+</body></html>

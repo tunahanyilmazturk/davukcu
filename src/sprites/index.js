@@ -1,0 +1,58 @@
+// Sprite paketi: alt modülleri toplar, tek SPR nesnesi sunar.
+import { CHICKEN_SPRITES, CHICK_SPRITE } from './chickens.js';
+import { EGG, GOLDEN_EGG, EGG_DIRTY, GOLDEN_EGG_DIRTY,
+         BRONZE_EGG, BRONZE_EGG_DIRTY, SILVER_EGG, SILVER_EGG_DIRTY,
+         DIAMOND_EGG, DIAMOND_EGG_DIRTY } from './eggs.js';
+import { COIN, HEART, FEATHER } from './misc.js';
+import { ICON_EGG, ICON_GOLDEGG, ICON_FASTLAY, ICON_BELT, ICON_MACHINE,
+         ICON_WASH, ICON_WASHSPD, ICON_POLISH, ICON_RARE, ICON_FEED, ICON_WATER,
+         ICON_AUTOF, ICON_AUTOW, ICON_MAGNET,
+         ICON_TWIN, ICON_LUCKY, ICON_SAVER, ICON_OFFLINE, ICON_PACK,
+         ICON_HATCH, ICON_GROW, ICON_GRADE, ICON_TRUCK, ICON_PET } from './icons.js';
+
+export { makeSprite, drawSprite } from './core.js';
+export { CHICKEN_VARIANTS } from './chickens.js';
+
+export const SPR = {
+  chickens: CHICKEN_SPRITES,
+  chick: CHICK_SPRITE,
+  egg: EGG,
+  goldenEgg: GOLDEN_EGG,
+  eggDirty: EGG_DIRTY,
+  goldenEggDirty: GOLDEN_EGG_DIRTY,
+  eggBronze: BRONZE_EGG,
+  eggBronzeDirty: BRONZE_EGG_DIRTY,
+  eggSilver: SILVER_EGG,
+  eggSilverDirty: SILVER_EGG_DIRTY,
+  eggDiamond: DIAMOND_EGG,
+  eggDiamondDirty: DIAMOND_EGG_DIRTY,
+  coin: COIN,
+  heart: HEART,
+  feather: FEATHER,
+  icons: {
+    egg: ICON_EGG,
+    goldegg: ICON_GOLDEGG,
+    fastlay: ICON_FASTLAY,
+    belt: ICON_BELT,
+    machine: ICON_MACHINE,
+    wash: ICON_WASH,
+    washspd: ICON_WASHSPD,
+    polish: ICON_POLISH,
+    rare: ICON_RARE,
+    feed: ICON_FEED,
+    water: ICON_WATER,
+    autof: ICON_AUTOF,
+    autow: ICON_AUTOW,
+    magnet: ICON_MAGNET,
+    twin: ICON_TWIN,
+    lucky: ICON_LUCKY,
+    saver: ICON_SAVER,
+    offline: ICON_OFFLINE,
+    pack: ICON_PACK,
+    hatch: ICON_HATCH,
+    grow: ICON_GROW,
+    grade: ICON_GRADE,
+    truck: ICON_TRUCK,
+    pet: ICON_PET,
+  },
+};

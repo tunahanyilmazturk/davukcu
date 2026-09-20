@@ -1,0 +1,506 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: #1a1020;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  color: #f0e6f0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+#stage {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #120a18;
+}
+
+#game {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #4a8c3f;
+}
+
+/* ---------- SAĞ PANEL ---------- */
+#panel {
+  width: clamp(300px, 26vw, 380px);
+  height: 100vh;
+  flex: 0 0 auto;
+  background: #4a2c55;
+  box-shadow: 0 0 0 4px #120a18, inset 4px 0 0 #5c3a68;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px 8px;
+  gap: 8px;
+  position: relative;
+  transition: width .16s ease, padding .16s ease;
+}
+
+/* panel kenarındaki kulakçık — her durumda görünür */
+#btnPanel {
+  position: absolute;
+  left: -20px;
+  top: 46%;
+  width: 20px;
+  height: 64px;
+  background: #6e4a80;
+  border: 3px solid #2c1834;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  color: #ffd23e;
+  font-size: 11px;
+  cursor: pointer;
+  z-index: 6;
+  padding: 0;
+  transition: left .16s ease;
+}
+#btnPanel:hover { background: #7e5a92; }
+
+/* kapalı durum: ince ray + dikey PAZAR yazısı; kulakçık rayın içine kayar */
+#panel.closed {
+  width: 30px;
+  padding: 14px 3px 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+#panel.closed #btnPanel {
+  left: 1px;
+  width: 26px;
+  border: 3px solid #2c1834;
+  border-radius: 6px;
+}
+#panel.closed > *:not(#btnPanel):not(.rail-label) { display: none; }
+.rail-label {
+  display: none;
+  writing-mode: vertical-rl;
+  letter-spacing: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #b896c8;
+  margin: 60px auto 0;
+}
+#panel.closed .rail-label { display: block; }
+
+#panel.sell-hover {
+  background: #5c3568;
+  outline: 4px dashed #ffd23e;
+  outline-offset: -8px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #6e4a80;
+  border: 3px solid #2c1834;
+  padding: 8px 10px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.25);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 18px;
+}
+
+.stat.money {
+  flex: 1;
+  background: #c98fd8;
+  color: #2c1834;
+  padding: 4px 10px;
+  border: 3px solid #2c1834;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.2);
+}
+
+.stat.money b { font-size: 20px; }
+.stat.money small { font-size: 11px; opacity: .7; margin-left: auto; }
+
+.icon { image-rendering: pixelated; width: 20px; height: 20px; }
+
+#btnSettings {
+  width: 34px; height: 34px;
+  background: #e8a54c;
+  border: 3px solid #2c1834;
+  color: #2c1834;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.25);
+}
+#btnSettings:active { transform: translateY(2px); box-shadow: inset 0 -2px 0 rgba(0,0,0,.25); }
+
+/* para artış flaşı */
+@keyframes moneyUp { 0% { color: #2e7a34; transform: scale(1.25); } 100% { transform: scale(1); } }
+.stat.money b.up { animation: moneyUp .35s; display: inline-block; }
+
+/* yem/su kaynak barları */
+.res-row {
+  display: flex;
+  gap: 8px;
+}
+.res {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #3a2444;
+  border: 3px solid #2c1834;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+.res span { color: #b090c0; letter-spacing: 1px; }
+.res b { font-size: 10px; color: #f0e6f0; min-width: 34px; text-align: right; }
+.res .bar {
+  flex: 1;
+  height: 10px;
+  background: #120a18;
+  border: 2px solid #2c1834;
+  position: relative;
+  overflow: hidden;
+}
+.res .bar i {
+  display: block;
+  height: 100%;
+  transition: width .3s;
+}
+.res.feed .bar i { background: #e8a54c; }
+.res.water .bar i { background: #5cb8e8; }
+.res .bar i.low { background: #e0637c; animation: lowBlink .5s steps(2) infinite; }
+@keyframes lowBlink { 50% { opacity: .35; } }
+
+.pazar {
+  background: #e0637c;
+  color: #fff;
+  text-align: center;
+  font-size: 22px;
+  padding: 8px;
+  border: 3px solid #2c1834;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.35);
+  letter-spacing: 4px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.2);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+}
+.tab {
+  flex: 1;
+  background: #2c1834;
+  color: #b090c0;
+  border: 3px solid #120a18;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 3px;
+  padding: 7px 0;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.3);
+}
+.tab.active {
+  background: #6e4a80;
+  color: #f0e6f0;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.2), inset 0 3px 0 rgba(255,255,255,.08);
+}
+.tab:not(.active):hover { background: #3a2444; color: #d8b8e8; }
+
+.qtyrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #b090c0;
+  padding: 0 2px;
+}
+#btnQty {
+  background: #2c1834;
+  color: #ffd23e;
+  border: 2px solid #120a18;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 3px 12px;
+  cursor: pointer;
+  min-width: 52px;
+}
+#btnQty:hover { background: #3a2444; }
+#btnAvail {
+  background: #2c1834;
+  color: #b090c0;
+  border: 2px solid #120a18;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+#btnAvail:hover { background: #3a2444; }
+#btnAvail.on { color: #9fe870; border-color: #9fe870; }
+
+#tabShop { flex: 1; display: flex; flex-direction: column; min-height: 0; gap: 6px; }
+#tabStats, #tabAchv { flex: 1; min-height: 0; overflow-y: auto; }
+.hidden { display: none !important; }
+
+#cards {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-content: start;
+  padding-right: 2px;
+}
+#cards::-webkit-scrollbar, #tabStats::-webkit-scrollbar, #tabAchv::-webkit-scrollbar { width: 8px; }
+#cards::-webkit-scrollbar-thumb, #tabStats::-webkit-scrollbar-thumb, #tabAchv::-webkit-scrollbar-thumb { background: #2c1834; }
+
+.sec {
+  grid-column: 1 / -1;
+  background: #2c1834;
+  color: #b090c0;
+  font-size: 11px;
+  letter-spacing: 3px;
+  padding: 4px 10px;
+  margin-top: 2px;
+  border-left: 4px solid #7a5590; /* renk JS'ten bölüme göre atanır */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.sec:hover { filter: brightness(1.3); }
+.sec > span:first-child::before { content: '▾ '; letter-spacing: 0; }
+.sec.collapsed > span:first-child::before { content: '▸ '; }
+.sec .sec-prog { letter-spacing: 0; font-size: 10px; opacity: .75; }
+.sec.collapsed .sec-prog { opacity: .5; }
+
+.card {
+  background: #6e4a80;
+  border: 3px solid #2c1834;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.25);
+  transition: transform .05s;
+}
+.card:hover { transform: scale(1.03); }
+.card:active { transform: scale(.97); }
+.card.cant { opacity: .55; cursor: default; }
+.card.cant:hover { transform: none; }
+
+/* alınabilir kart: parlak çerçeve + doygun fiyat butonu, hover'da altın kenar */
+.card:not(.cant):not(.maxed) { border-color: #9a6cb0; }
+.card:not(.cant):not(.maxed) .cost { background: #3e7a44; color: #d0ffc0; }
+.card:not(.cant):not(.maxed):hover { border-color: #ffd23e; }
+.card.maxed { opacity: .8; cursor: default; }
+.card.maxed .cost { background: #4a8c3f; }
+
+.card .top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card canvas { image-rendering: pixelated; width: 28px; height: 28px; background: #8a6a9c; border: 2px solid #2c1834; }
+.card .name { font-size: 11px; line-height: 1.15; }
+.card .lvl { font-size: 10px; color: #d8b8e8; }
+.card .eff {
+  font-size: 10px;
+  color: #b8e8a0;
+  min-height: 12px;
+}
+.card.maxed .eff { color: #9fe870; }
+.card .pips {
+  display: flex;
+  gap: 3px;
+  padding: 1px 0;
+}
+.card .pips i {
+  width: 8px; height: 6px;
+  background: #3a2444;
+  border: 1px solid #120a18;
+}
+.card .pips i.on { background: #ffd23e; }
+.card .cost {
+  margin-top: auto;
+  text-align: center;
+  background: #2e5a34;
+  color: #b8f0a8;
+  font-size: 13px;
+  padding: 4px 0;
+  border: 2px solid #120a18;
+}
+.card.cant .cost { background: #2c1834; color: #8a7594; }
+.card.maxed .cost { background: #3a5a3a; color: #9fe870; }
+.card.locked { opacity: .55; filter: saturate(.6); }
+.card.locked .eff { color: #e8a0a0; }
+
+.srow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  padding: 7px 10px;
+  border-bottom: 2px solid #3a2444;
+  color: #c9a0d8;
+}
+.srow b { color: #f0e6f0; }
+.srow:nth-child(even) { background: rgba(0,0,0,.12); }
+
+/* başarım satırları */
+.srow.achv { align-items: flex-start; }
+.srow.achv .aname { color: #f0e6f0; font-weight: bold; }
+.srow.achv .adesc { font-size: 10px; color: #8a7594; margin-top: 2px; }
+.srow.achv b { color: #ffd23e; white-space: nowrap; margin-top: 2px; }
+.srow.achv.done { opacity: .75; }
+.srow.achv.done b { color: #7de87d; }
+.srow.achv.done .aname { color: #9fe870; }
+
+#sellHint {
+  text-align: center;
+  font-size: 11px;
+  color: #c9a0d8;
+  border: 3px dashed #7a5590;
+  padding: 6px;
+}
+#panel.sell-hover #sellHint { color: #ffd23e; border-color: #ffd23e; }
+
+#toast {
+  min-height: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: #9fe870;
+}
+#toast:not(:empty) {
+  background: #2c1834;
+  border: 2px solid #120a18;
+  padding: 3px 8px;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #8a7594;
+}
+
+/* ---- ayarlar modalı ---- */
+#settingsModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 5, 15, .72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+#settingsModal .mbox {
+  width: 300px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #241428;
+  border: 3px solid #120a18;
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,.3), 0 10px 0 rgba(0,0,0,.4);
+  padding: 10px;
+  color: #d8b8e8;
+  font-size: 11px;
+}
+#settingsModal .mhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #ffd23e;
+  letter-spacing: 3px;
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+#settingsModal .mhead button {
+  background: #2c1834;
+  color: #e0637c;
+  border: 2px solid #120a18;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+#settingsModal .mhead button:hover { background: #3a2444; }
+#settingsModal .set-sec {
+  background: #2c1834;
+  color: #b090c0;
+  letter-spacing: 3px;
+  padding: 3px 8px;
+  margin: 8px 0 4px;
+  border-left: 4px solid #7a5590;
+}
+#settingsModal .set-sec.danger { color: #ff8090; border-left-color: #e0637c; }
+#settingsModal .set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 2px;
+}
+#settingsModal .set-row b { color: #9fe870; font-weight: normal; }
+#settingsModal .set-note { opacity: .6; padding: 2px; font-size: 10px; }
+#settingsModal .set-btn {
+  background: #2c1834;
+  color: #9fe870;
+  border: 2px solid #120a18;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 4px 12px;
+  cursor: pointer;
+  min-width: 60px;
+}
+#settingsModal .set-btn:hover { background: #3a2444; }
+#settingsModal .set-btn.off { color: #e0637c; }
+#settingsModal .set-btn.wide { width: 100%; margin-top: 4px; }
+#settingsModal .set-btn.danger { color: #ff8090; border-color: #5c1a28; }
+#settingsModal .set-btn.danger:hover { background: #4a1626; }
+#settingsModal .set-btn.danger.arm {
+  background: #5c1a28;
+  color: #ffd23e;
+  border-color: #e04840;
+  animation: armBlink .4s steps(2) infinite;
+}
+@keyframes armBlink { 50% { background: #7a2030; } }
+#settingsModal #setSaveBox {
+  width: 100%;
+  height: 54px;
+  box-sizing: border-box;
+  background: #120a18;
+  color: #9fe870;
+  border: 2px solid #2c1834;
+  font-family: inherit;
+  font-size: 9px;
+  resize: none;
+  padding: 4px;
+}
+#settingsModal .set-btns { display: flex; gap: 6px; margin-top: 4px; }
+#settingsModal .set-btns .set-btn { flex: 1; }
+#settingsModal .volbox { display: flex; align-items: center; gap: 8px; }
+#settingsModal .volbox b { min-width: 36px; text-align: right; color: #9fe870; font-weight: normal; }
+#settingsModal input[type=range] {
+  width: 110px;
+  accent-color: #9fe870;
+  cursor: pointer;
+}
+#settingsModal .set-btn.wide + .set-btn.wide { margin-top: 6px; }
+
+/* tooltip balonu (canvas üstünde css ile değil, canvas içinde çiziliyor) */

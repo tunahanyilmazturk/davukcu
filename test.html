@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>test</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="game" width="660" height="600"></canvas>
+  </div>
+  <div id="panel">
+    <button id="btnPanel" title="Paneli kapat">&#9654;</button>
+    <div class="rail-label">PAZAR</div>
+    <div class="stat-row">
+      <div class="stat">
+        <canvas class="icon" id="icoChicken" width="16" height="16"></canvas>
+        <b id="stChickens">1</b>
+      </div>
+      <div class="stat money">
+        <canvas class="icon" id="icoCoin" width="16" height="16"></canvas>
+        <b id="stMoney">0</b>
+        <small id="stRate">+$0/sn</small>
+      </div>
+      <button id="btnSettings" title="Ayarlar">&#9881;</button>
+    </div>
+    <div class="res-row">
+      <div class="res feed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
+      <div class="res water"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
+    </div>
+    <div class="pazar">Pazar</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="shop">ÇİFTLİK</button>
+      <button class="tab" data-tab="stats">İSTATİSTİK</button>
+      <button class="tab" data-tab="achv">BAŞARIM</button>
+    </div>
+    <div id="tabShop">
+      <div class="qtyrow">
+        <span>Satın al</span>
+        <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
+        <button id="btnQty">1x</button>
+      </div>
+      <div id="cards"></div>
+    </div>
+    <div id="tabStats" class="hidden">
+      <div id="statList"></div>
+    </div>
+    <div id="tabAchv" class="hidden">
+      <div id="achvList"></div>
+    </div>
+    <div id="sellHint">Tavuğu satmak için buraya sürükle!</div>
+    <div id="toast"></div>
+    <div class="foot">
+      <span id="stEggsSold">⏱ 00:00</span>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+<script>
+setTimeout(() => {
+  const out = document.createElement('pre');
+  out.id = 'testout';
+  try {
+    const { S, update, SHOP, buyItem, magnet, L } = window.GAME;
+    S.muted = true;
+    localStorage.clear();
+    const log = [];
+    for (let i = 0; i < 2400; i++) update(0.05);           // 120 sn (bantlar yok)
+    log.push({ t: 120, money: Math.round(S.money), sold: S.eggsSold,
+               chickens: S.chickens.length, eggsLive: S.eggs.length,
+               onBelt: S.eggs.filter(e => e.phase === 'belt1').length });
+    // mıknatıs testi: duran banttaki yumurtayı kap
+    let magnetGrabbed = 0;
+    const beltEgg = S.eggs.find(e => e.phase === 'belt1');
+    if (beltEgg) {
+      magnet.active = true;
+      magnet.x = beltEgg.x; magnet.y = beltEgg.y + 10;
+      for (let i = 0; i < 30; i++) update(0.05);
+      magnetGrabbed = magnet.held.length;
+      magnet.active = false;
+      for (const e of magnet.held) e.phase = 'belt1';
+      magnet.held = [];
+    }
+    log.push({ magnetGrabbed });
+    // kilit şartlarını sağla: satış sayısı + sürü (cins/horoz kapıları)
+    S.eggsSold = 400;
+    while (S.chickens.length < 15) window.GAME.spawnChicken();
+    S.money = 20000;
+    for (const item of SHOP) buyItem(item);
+    for (let i = 0; i < 1200; i++) update(0.05);           // +60 sn
+    log.push({ t: 180, money: Math.round(S.money), sold: S.eggsSold,
+               chickens: S.chickens.length, eggsLive: S.eggs.length,
+               lvl: S.lvl, stats: S.stats });
+    // panel kontrolleri: eski kart kalmamalı, toplu alım çalışmalı
+    const names = [...document.querySelectorAll('#cards .name')].map(e => e.textContent);
+    const qtyBtn = document.getElementById('btnQty');
+    qtyBtn.click(); // 10x
+    S.money = 100000;
+    const before = S.lvl.value;
+    const valCard = [...document.querySelectorAll('#cards .card')]
+      .find(c => c.querySelector('.name').textContent === 'Yumurta Değeri');
+    valCard.click();
+    qtyBtn.click(); // MAX
+    document.querySelector('.tab[data-tab="stats"]').click();
+    const statRows = document.querySelectorAll('#statList .srow').length;
+    log.push({ names, bulkBought: S.lvl.value - before,
+               statsTabRows: statRows,
+               machineCardGone: !names.some(n => n.includes('Makine')) });
+    // civciv: horoz spawn → 40 sn bekle → civciv çıkmalı
+    window.GAME.spawnChicken(undefined, undefined, 'rooster');
+    for (let i = 0; i < 800; i++) update(0.05);
+    log.push({ chicks: S.chicks.length });
+    // geçiş yıkaması: washS maksdayken hiçbir yumurta durup beklememeli (e.wash>0 olmamalı)
+    S.lvl.washS = 8;
+    for (let i = 0; i < 40; i++) update(0.05); // seviye atanmadan önce yıkananlar bitsin
+    let sawStop = false;
+    for (let i = 0; i < 600; i++) { update(0.05); if (S.eggs.some(e => e.wash > 0)) sawStop = true; }
+    log.push({ washThruOk: !sawStop, washedTotal: S.stats.washed });
+    // sınıflandırıcı: %40 şansla (Sv.5) 30 sn'de katman yükseltme olmalı
+    const upgBefore = S.stats.upg;
+    S.lvl.grade = 5;
+    for (let i = 0; i < 600; i++) update(0.05);
+    log.push({ graded: S.stats.upg - upgBefore });
+    // lojistik: yere yumurta at + kamyon seviyesi → gelip toplayıp satmalı
+    S.lvl.truck = 2;
+    const moneyBefore = S.money;
+    for (let i = 0; i < 6; i++)
+      S.eggs.push({ x: 200 + i * 30, y: L.FLOOR_Y - 10, vy: 0, phase: 'floor',
+                    tier: 'normal', valMult: 1, clean: false, wash: 0, polish: 0,
+                    shine: false, graded: true });
+    for (let i = 0; i < 2400; i++) update(0.05); // kamyon gelir, yükler, gider
+    log.push({ trucked: S.stats.trucked, truckPaid: S.money > moneyBefore,
+               floorLeft: S.eggs.filter(e => e.phase === 'floor').length });
+    out.textContent = 'TEST|' + JSON.stringify(log);
+  } catch (e) {
+    out.textContent = 'TESTERR|' + e.message + '|' + e.stack;
+  }
+  document.body.appendChild(out);
+}, 800);
+</script>
+</body>
+</html>

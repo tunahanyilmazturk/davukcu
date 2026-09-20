@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tavuk Çiftliği</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <canvas id="game" width="660" height="600"></canvas>
+  </div>
+  <div id="panel">
+    <button id="btnPanel" title="Paneli kapat">&#9654;</button>
+    <div class="rail-label">PAZAR</div>
+    <div class="stat-row">
+      <div class="stat">
+        <canvas class="icon" id="icoChicken" width="16" height="16"></canvas>
+        <b id="stChickens">1</b>
+      </div>
+      <div class="stat money">
+        <canvas class="icon" id="icoCoin" width="16" height="16"></canvas>
+        <b id="stMoney">0</b>
+        <small id="stRate">+$0/sn</small>
+      </div>
+      <button id="btnSettings" title="Ayarlar">&#9881;</button>
+    </div>
+    <div class="res-row">
+      <div class="res feed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
+      <div class="res water"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
+    </div>
+    <div class="pazar">Pazar</div>
+    <div class="tabs">
+      <button class="tab active" data-tab="shop">ÇİFTLİK</button>
+      <button class="tab" data-tab="stats">İSTATİSTİK</button>
+      <button class="tab" data-tab="achv">BAŞARIM</button>
+    </div>
+    <div id="tabShop">
+      <div class="qtyrow">
+        <span>Satın al</span>
+        <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
+        <button id="btnQty">1x</button>
+      </div>
+      <div id="cards"></div>
+    </div>
+    <div id="tabStats" class="hidden">
+      <div id="statList"></div>
+    </div>
+    <div id="tabAchv" class="hidden">
+      <div id="achvList"></div>
+    </div>
+    <div id="sellHint">Tavuğu satmak için buraya sürükle!</div>
+    <div id="toast"></div>
+    <div class="foot">
+      <span id="stEggsSold">⏱ 00:00</span>
+    </div>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
