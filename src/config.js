@@ -56,6 +56,7 @@ export function computeLayout(stageW, stageH) {
   L.MOUTH_X = w - 52;           // kutu ağzının ortası (para yazısı konumu)
   // kutu algılama bölgesi: boxfall'da bu aralığa giren yumurta içeri düşer
   L.CRATE_ZONE = { x0: L.CRATE_X - 4, x1: w - 14, rimY: L.BELT2_Y + 6, inY: L.BELT2_Y + 22 };
+  L.BRUSH_X = Math.round(w * 0.6);      // süpürge merkezi (üst bant — boru çıkışı ile düşüş arası)
   L.WASH_X = Math.round(w * 0.45) + 26; // yıkama yuvası merkezi (alt bant)
   L.GRADE_X = Math.round(w * 0.58);     // sınıflandırıcı merkezi (yıkama ile cila arası)
   L.POLISH_X = Math.round(w * 0.72);    // cila makinesi merkezi (yıkamadan sonra)
@@ -81,6 +82,7 @@ export function computeLayout(stageW, stageH) {
     belt2x1:  L.FX + L.BELT2_X1,
     crateX:   L.FX + L.CRATE_X,
     mouthX:   L.FX + L.MOUTH_X,
+    brushX:   L.FX + L.BRUSH_X,
     washX:    L.FX + L.WASH_X,
     gradeX:   L.FX + L.GRADE_X,
     polishX:  L.FX + L.POLISH_X,
@@ -100,7 +102,8 @@ export const MAXL = { value: 99, lay: 12, beltF: 10, beltD: 10, golden: 14, rare
                       polish: 5, polishS: 8, feedCap: 8, waterCap: 8, autoF: 4, autoW: 4, magnet: 8,
                       twin: 6, lucky: 8, saver: 5, offline: 5, rooster: 3, pack: 4,
                       hatch: 8, grow: 8, grade: 6, truck: 6, autopet: 5, scoop: 6,
-                      gene: 5, dealer: 5, organic: 8, fertile: 5, supply: 5, bargain: 5 };
+                      gene: 5, dealer: 5, organic: 8, fertile: 5, supply: 5, bargain: 5,
+                      brush: 5 };
 
 export const SAVE_KEY = 'tavukciftligi_v1';
 export const MAX_CHICKENS = 80;

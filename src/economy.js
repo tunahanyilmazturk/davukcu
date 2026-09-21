@@ -139,6 +139,9 @@ export function truckBonus(l = S.lvl.dealer)   { return 1 + 0.15 * l; }
 export function fertileRate(l = S.lvl.fertile) { return 1 + 0.30 * l; }
 // Sevgi Eli: imlecin üstündeki tavuğun otomatik sevilme aralığı (tavuk başına)
 export function autoPetCd(l = S.lvl.autopet)   { return 5.5 - l; }
+// süpürge (üst bant): rulo fırça — kaba kir kazıma hızı (kir/sn) ve kapsama yarıçapı
+export function brushRate(l = S.lvl.brush) { return 1.0 + 0.55 * l; }
+export function brushHalf(l = S.lvl.brush) { return 15 + 4 * l; }
 // Gübre Kepçesi: tüm yığınları toplama aralığı (sn)
 export function scoopInterval(l = S.lvl.scoop) { return 14 * Math.pow(0.8, l); }
 // bir gübre yığınının satış değeri — yumurta değeriyle ölçeklenir

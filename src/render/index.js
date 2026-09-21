@@ -13,6 +13,7 @@ import { drawBelts } from '../belts.js';
 import { drawWashBack, drawWashFront, drawWashSlot } from './wash.js';
 import { drawPolishBack, drawPolishFront, drawPolishSlot } from './polish.js';
 import { drawGradeBack, drawGradeFront, drawGradeSlot } from './grade.js';
+import { drawBrushBack, drawBrushFront, drawBrushSlot } from './brush.js';
 import { drawAmbient } from './ambient.js';
 import { drawDecor } from './decor.js';
 import { drawTank } from './tanks.js';
@@ -97,6 +98,9 @@ export function draw(ctx, dt) {
   // iki konveyör: çiftlik bandı (sola) + depolama bandı (sağa) — belts.js
   drawBelts(ctx);
 
+  // süpürge (üst bant) — arka gövde yumurtaların arkasında
+  if (S.lvl.brush > 0) drawBrushBack(ctx); else drawBrushSlot(ctx);
+
   // istasyon arka gövdeleri (alt bant üstü)
   if (S.lvl.wash > 0) drawWashBack(ctx); else drawWashSlot(ctx);
   if (S.lvl.grade > 0) drawGradeBack(ctx); else if (S.lvl.beltD > 0) drawGradeSlot(ctx);
@@ -166,6 +170,16 @@ export function draw(ctx, dt) {
     }
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(spr.c, -w / 2, -h, w, h); // taban noktasından sallanır
+    // kaba kir benekleri — süpürge kazımadan satılırsa değer düşer
+    if (e.dirt > 0) {
+      const sd = e.seed || 0;
+      ctx.globalAlpha = 0.3 + 0.4 * e.dirt;
+      ctx.fillStyle = '#6a4a28';
+      ctx.fillRect(-w / 4 + (sd % 5), -h * 0.62, 3, 3);
+      ctx.fillRect(w / 6 - (sd % 3), -h * 0.4, 3, 2);
+      if (e.dirt > 0.55) ctx.fillRect(-w / 8, -h * 0.8, 2, 2);
+      ctx.globalAlpha = 1;
+    }
     ctx.restore();
     // istasyon ilerleme çubuğu — yıkanan/cilalanan yumurtanın üstünde
     const pr = e.wash > 0 ? 1 - e.wash / (e.washT || 1)
@@ -197,6 +211,7 @@ export function draw(ctx, dt) {
   ctx.save();
   ctx.translate(L.FX, 0);
   // istasyon ön yüzleri: cam tünel + jetler/fırçalar (yumurta camın arkasında)
+  if (S.lvl.brush > 0) drawBrushFront(ctx);
   if (S.lvl.wash > 0) drawWashFront(ctx);
   if (S.lvl.grade > 0) drawGradeFront(ctx);
   if (S.lvl.polish > 0) drawPolishFront(ctx);

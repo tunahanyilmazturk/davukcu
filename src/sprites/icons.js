@@ -698,3 +698,23 @@ export const ICON_STAR = makeSprite([
 "................",
 "................",
 ], { A:'#ffd23e' });
+
+// süpürge: dönen rulo fırça — borudan gelen yumurtaların kaba kirini kazır
+export const ICON_BRUSH = makeSprite([
+"................",
+"....HHHH........",
+"...HHHHHH.......",
+"...Hhhhhh.......",
+"....DDDDDD......",
+"....DDDDDDDD....",
+"....DDDDDDDD....",
+"....dddddddd....",
+"....d.d.d.d.....",
+"....dddddddd....",
+"....d.d.d.d.....",
+".....d.d.d......",
+"....EE..EE......",
+"...EEEEEEEE.....",
+"...EEEEEeee.....",
+"....EEEEE.......",
+], { H:'#54687e', h:'#3a4a5c', D:'#b8863c', d:'#8a6428', E:'#f8f2e6', e:'#d0c4b2' });

@@ -7,7 +7,8 @@ export const S = {
          polish: 0, polishS: 0, feedCap: 0, waterCap: 0, autoF: 0, autoW: 0, magnet: 0,
          twin: 0, lucky: 0, saver: 0, offline: 0, rooster: 0, pack: 0, hatch: 0, grow: 0,
          grade: 0, truck: 0, autopet: 0, scoop: 0,
-         gene: 0, dealer: 0, organic: 0, fertile: 0, supply: 0, bargain: 0 },
+         gene: 0, dealer: 0, organic: 0, fertile: 0, supply: 0, bargain: 0,
+         brush: 0 },
   feed: 100,
   water: 100,
   eggsSold: 0,
@@ -76,7 +77,8 @@ export function applySave(d) {
                           polish: 0, polishS: 0, feedCap: 0, waterCap: 0, autoF: 0, autoW: 0, magnet: 0,
                           twin: 0, lucky: 0, saver: 0, offline: 0, rooster: 0, pack: 0,
                           hatch: 0, grow: 0, grade: 0, truck: 0, autopet: 0, scoop: 0,
-                          gene: 0, dealer: 0, organic: 0, fertile: 0, supply: 0, bargain: 0 }, d.lvl || {});
+                          gene: 0, dealer: 0, organic: 0, fertile: 0, supply: 0, bargain: 0,
+                          brush: 0 }, d.lvl || {});
   // eski kayıtlardaki tek 'belt' seviyesini iki banda da taşı
   if (d.lvl && 'belt' in d.lvl) {
     if (!d.lvl.beltF) S.lvl.beltF = d.lvl.belt;

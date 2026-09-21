@@ -4,7 +4,7 @@ import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
-         diffDef, diffPrice,
+         diffDef, diffPrice, brushRate,
          chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, truckTier, autoPetCd,
          scoopInterval, organicMult, truckBonus, fertileRate, supplyMult, sellFrac,
          chickOdds } from './economy.js';
@@ -84,6 +84,11 @@ export const SHOP = [
     costAt: l => l === 0 ? 150 : Math.ceil(60 * Math.pow(1.9, l)),
     effAt: l => 'x' + (depoBeltSpeed(l) / BASE.beltD).toFixed(2) + ' hız',
     req: () => S.eggsSold >= 10, reqText: 'Önce 10 yumurta sat' },
+  { id: 'brush', sec: 'HAT', name: 'Yumurta Süpürgesi', icon: 'brush', lv: 'brush',
+    costAt: l => Math.ceil(180 * Math.pow(1.95, l)),
+    effAt: l => l === 0 ? 'kirli yumurta -%35 değer'
+      : 'kazıma x' + brushRate(l).toFixed(1) + ' · kir → gübre',
+    req: () => S.eggsSold >= 15, reqText: 'Önce 15 yumurta sat' },
   { id: 'wash', sec: 'HAT', name: 'Yumurta Yıkama', icon: 'wash', lv: 'wash',
     costAt: l => Math.ceil(300 * Math.pow(2.5, l)),
     effAt: l => l === 0 ? 'yıkama yok' : 'x' + washMult(l).toFixed(1) + ' değer',

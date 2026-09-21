@@ -5,7 +5,8 @@ import { S } from '../state.js';
 import { L, fmt, MAXL } from '../config.js';
 import { eggValue, washMult, washTime, polishMult, polishTime, farmBeltSpeed, depoBeltSpeed,
          rollTier, TIERS, BREEDS, magnetRadius, magnetCap, magnetPull,
-         twinChance, luckyChance, eggGap, gradeChance, NEXT_TIER, TIER_TR } from '../economy.js';
+         twinChance, luckyChance, eggGap, gradeChance, NEXT_TIER, TIER_TR,
+         brushRate, brushHalf } from '../economy.js';
 import { sndPop, sndCoin, sndCluck, sndPolish, sndZap, sndGrade, sndWash } from '../audio.js';
 import { magnet } from '../input.js';
 
@@ -40,6 +41,7 @@ export function layEgg(ch) {
     x: ch.x, y: ch.y - 18, vy: 0,
     phase: 'fall', tier: rollTier(b.rare, b.gold), valMult: b.val,
     clean: false, wash: 0, polish: 0, shine: false, graded: false,
+    dirt: Math.random() < 0.65 ? 0.5 + Math.random() * 0.5 : 0, // kaba pislik — süpürge kazır
     ...eggLooks(),
   });
   // pasif: Çift Yumurta — şansla ikinci yumurta
@@ -48,6 +50,7 @@ export function layEgg(ch) {
       x: ch.x + 10, y: ch.y - 18, vy: 0,
       phase: 'fall', tier: rollTier(b.rare, b.gold), valMult: b.val,
       clean: false, wash: 0, polish: 0, shine: false, graded: false,
+      dirt: Math.random() < 0.65 ? 0.5 + Math.random() * 0.5 : 0,
       ...eggLooks(),
     });
   }
@@ -63,7 +66,8 @@ export function layEgg(ch) {
 export function eggWorth(e) {
   const t = TIERS[e.tier] || TIERS.normal;
   return Math.round(eggValue() * t.mult * (e.valMult || 1)
-                    * (e.clean ? washMult() : 1) * (e.shine ? polishMult() : 1));
+                    * (e.clean ? washMult() : 1) * (e.shine ? polishMult() : 1)
+                    * (1 - 0.35 * (e.dirt || 0))); // kaba kir kalırsa değer düşer
 }
 
 export function payout(e) {
@@ -185,6 +189,7 @@ export function updateEggs(dt) {
     if (e.phase === 'belt1') _b1.push(e);
     else if (e.phase === 'belt2') _b2.push(e);
   }
+  const brushOn = S.lvl.brush > 0;
   const b1 = _b1.sort((a, b) => a.x - b.x);
   const push1 = Math.max(bs1, 70), gap = eggGap();
   let lead1 = -Infinity, pile1 = 0;
@@ -202,6 +207,20 @@ export function updateEggs(dt) {
     } else { e.pile = 0; pile1 = 0; }
     if (i === 0 && e.x <= WD.dropX) { e.phase = 'fall2'; e.vy = 0; }
     lead1 = e.x;
+    // süpürge: fırça altından geçen yumurtanın kaba kiri kazınır, kir gübreye döner
+    if (brushOn && e.dirt > 0 && Math.abs(e.x - WD.brushX) < brushHalf()) {
+      const d0 = e.dirt;
+      e.dirt = Math.max(0, e.dirt - brushRate() * dt);
+      if (Math.random() < dt * 7) {
+        S.parts.push({ kind: 'speck', x: e.x + (Math.random() - .5) * 10,
+          y: L.BELT1_Y - 10, vy: 30 + Math.random() * 30, t: 0, life: .5 });
+      }
+      if (e.dirt <= 0) {
+        S.manureBin += 0.12;                 // kazınan kir gübre kovasına
+        S.parts.push({ kind: 'text', text: '+KİR', x: e.x - 10, y: L.BELT1_Y - 30,
+          vy: -28, t: 0, life: .8, color: '#b08850' });
+      }
+    }
     // kirli yumurta bantta tortu bırakır
     if (!e.clean && Math.random() < dt * 0.4) {
       S.parts.push({ kind: 'speck', x: e.x + (Math.random() - .5) * 8,
