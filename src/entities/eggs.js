@@ -92,7 +92,8 @@ export function payout(e) {
 // ('duct': boru içindeki yumurtaya ulaşılamaz)
 export function eggGrabbable(e) {
   return e.phase !== 'held' && e.phase !== 'pulled' && e.phase !== 'boxfall'
-      && e.phase !== 'gone' && e.phase !== 'in' && e.phase !== 'duct';
+      && e.phase !== 'gone' && e.phase !== 'in' && e.phase !== 'duct'
+      && e.phase !== 'load2';
 }
 
 // mıknatıs kutu ağzı bölgesinde mi — otomatik besleme tetik çizgisi
@@ -299,9 +300,17 @@ export function updateEggs(dt) {
     lead2 = e.x;
   }
 
-  // hareket fazları: düşüş, yuvarlanma, kanal, kutu
+  // hareket fazları: düşüş, yuvarlanma, kanal, kutu, kamyon
   for (const e of S.eggs) {
     if (e.sq > 0) e.sq -= dt; // iniş ezilmesi sayacı
+    if (e.phase === 'load2') {
+      // kamyon kasasına uçuş — varınca yutulur (sayım truck.js'te alındı)
+      const dx = e.tx - e.x, dy = e.ty - e.y, d = Math.hypot(dx, dy) || 1;
+      const sp = 340 * dt;
+      if (d <= sp) e.phase = 'gone';
+      else { e.x += dx / d * sp; e.y += dy / d * sp; }
+      continue;
+    }
     if (e.phase === 'boxfall') {
       // bant ucundan kutuya uçuş — ağız bölgesine girince içeri düşer
       e.vy += 1400 * dt;

@@ -153,7 +153,7 @@ setTimeout(() => {
                floorLeft: S.eggs.filter(e => e.phase === 'floor').length });
     // ---- gübre zinciri: yığın → kürek tık → kova → 20'de çuval → kamyon satışı ----
     // (kamyon bu bölümde durur — stok çuvalı alıp sayacı bozmasın diye)
-    const truckLvlSav = S.lvl.truck; S.truck = null; S.lvl.truck = 0;
+    const truckLvlSav = S.lvl.truck; S.truck = null; S.truckOff = true;
     const pilesBefore = S.manures.length;
     const manBefore = S.stats.manure;
     const binBefore = S.manureBin;
@@ -188,7 +188,7 @@ setTimeout(() => {
     const cursorReset = cvEl.style.cursor !== 'none';
     // kamyon çuval satışı: stok koy → kamyon gelip yükleyip ödesin
     const paidBefore = S.money, soldBagsBefore = S.stats.bags;
-    S.lvl.truck = truckLvlSav; S.manureBags = 2;
+    S.truckOff = false; S.lvl.truck = truckLvlSav; S.manureBags = 2;
     for (let i = 0; i < 3000 && S.stats.bags === soldBagsBefore; i++) update(0.05);
     log.push({ manurePiles: pilesBefore, manureMaxOk: pilesBefore <= 14,
                clickedToBin, binCount: S.manureBin, bagMade,
@@ -215,7 +215,7 @@ setTimeout(() => {
     S.lvl.dealer = 2;
     S.eggs.length = 0; // kutu satışı deltayı bozmasın
     const eBefore = S.stats.earned; // ödüller earned'e dokunmaz — sadece satışlar
-    S.truck = { x: L.W + 60, state: 'leave', cargo: 1, bags: 0, worth: 1000, t: 0, bob: 0 };
+    S.truck = { x: L.W + 60, state: 'leave', cargo: 1, bags: 0, worth: 1000, t: 0, bob: 0, tier: 1, dip: 0 };
     for (let i = 0; i < 30; i++) update(0.05);
     const dealerOk = S.stats.earned - eBefore === 1300;
     S.lvl.dealer = 0;

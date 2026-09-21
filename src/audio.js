@@ -35,6 +35,8 @@ export const sndPolish = () => { beep(1200, 1800, .09, 'sine', .08); setTimeout(
 export const sndGrade = () => { beep(880, 1180, .06, 'sine', .08); setTimeout(() => beep(1180, 1560, .08, 'sine', .06), 55); };
 // yıkama bitince yumuşak su sesi
 export const sndWash = () => { beep(360, 140, .12, 'sine', .07); setTimeout(() => beep(500, 240, .08, 'sine', .05), 50); };
+// kamyon kornası: kalın çift ton (iskele yanaşınca)
+export const sndTruck = () => { beep(185, 165, .2, 'sawtooth', .09); setTimeout(() => beep(185, 165, .16, 'sawtooth', .08), 240); };
 // başarım jingle'ı: kısa yükselen dörtlü
 export const sndAchv = () => {
   [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, f, .14, 'triangle', .12), i * 90));

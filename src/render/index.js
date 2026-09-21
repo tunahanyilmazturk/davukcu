@@ -16,7 +16,7 @@ import { drawGradeBack, drawGradeFront, drawGradeSlot } from './grade.js';
 import { drawAmbient } from './ambient.js';
 import { drawTank } from './tanks.js';
 import { drawCrate, drawCrateFront } from './crate.js';
-import { drawRoad, drawTruck } from './truck.js';
+import { drawRoad, drawDock, drawTruck } from './truck.js';
 import { drawFactoryFX } from './facfx.js';
 import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
@@ -86,6 +86,7 @@ export function draw(ctx, dt) {
   ctx.translate(L.FX, 0);
   ctx.drawImage(bgFac, 0, 0);
   drawRoad(ctx); // lojistik yolu — en altta, her şeyin arkasında
+  drawDock(ctx); // yükleme iskelesi + sevkiyat tabelası
 
   // iki konveyör: çiftlik bandı (sola) + depolama bandı (sağa) — belts.js
   drawBelts(ctx);

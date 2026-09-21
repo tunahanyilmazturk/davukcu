@@ -4,7 +4,7 @@ import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
-         chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, autoPetCd,
+         chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, truckTier, autoPetCd,
          scoopInterval, organicMult, truckBonus, fertileRate, supplyMult, sellFrac,
          chickOdds } from './economy.js';
 import { checkQuests, refreshQuestBar } from './quests.js';
@@ -99,13 +99,13 @@ export const SHOP = [
     req: () => S.lvl.polish > 0, reqText: 'Önce cila kur' },
   { id: 'truck', sec: 'HAT', name: 'Lojistik Kamyonu', icon: 'truck', lv: 'truck',
     costAt: l => Math.ceil(600 * Math.pow(2.2, l)),
-    effAt: l => l === 0 ? 'kapalı — yerdekileri toplar'
-      : Math.round(truckInterval(l)) + ' sn · ' + truckCap(l) + ' kasa' },
+    effAt: l => Math.round(truckInterval(l)) + ' sn · ' + truckCap(l) + ' kasa · '
+      + (truckTier(l) === 2 ? 'TIR' : truckTier(l) === 1 ? 'kamyon' : 'kamyonet') },
   { id: 'dealer', sec: 'HAT', name: 'Toptancı Anlaşması', icon: 'dealer', lv: 'dealer',
     costAt: l => Math.ceil(800 * Math.pow(2.5, l)),
     effAt: l => l === 0 ? 'kamyon primi yok'
       : 'kamyon ödemesi +%' + Math.round((truckBonus(l) - 1) * 100),
-    req: () => S.lvl.truck > 0, reqText: 'Önce kamyon al' },
+    req: () => S.stats.trucked > 0, reqText: 'İlk sevkiyatı bekle' },
   { id: 'value', sec: 'DEĞER', name: 'Yumurta Değeri', icon: 'egg', lv: 'value',
     costAt: l => Math.ceil(25 * Math.pow(1.75, l)),
     effAt: l => '$' + fmt(eggValue(l)) + '/yumurta' },

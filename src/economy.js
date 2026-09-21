@@ -117,8 +117,10 @@ export function chickBreed() {
 }
 
 // lojistik kamyonu: geliş sıklığı ve kasa kapasitesi seviyeyle iyileşir
-export function truckInterval(l = S.lvl.truck) { return Math.max(5, 26 * Math.pow(0.85, l)); }
-export function truckCap(l = S.lvl.truck)      { return 3 + l; }
+export function truckInterval(l = S.lvl.truck) { return Math.max(6, 48 * Math.pow(0.8, l)); }
+export function truckCap(l = S.lvl.truck)      { return 3 + l * 2; }
+// araç tipi: 0 kamyonet (Sv.0-1) · 1 panelvan (Sv.2-4) · 2 tır (Sv.5-6)
+export function truckTier(l = S.lvl.truck)     { return l >= 5 ? 2 : l >= 2 ? 1 : 0; }
 // Toptancı Anlaşması: kamyonun toptan ödemesine seviye başına +%15 prim
 export function truckBonus(l = S.lvl.dealer)   { return 1 + 0.15 * l; }
 // Bereketli Yem: gübre yığını düşme sıklığı çarpanı

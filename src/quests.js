@@ -24,7 +24,7 @@ export const QUESTS = [
   { name: 'Kendi Kendine',     desc: 'Bir otomatik dolum sistemi kur',          prog: () => [S.lvl.autoF + S.lvl.autoW, 1], reward: 300 },
   { name: 'Sarı Kız',          desc: 'Altın tavuk al',                          prog: () => [S.chickens.filter(c => c.breed === 'gold').length, 1], reward: 450 },
   { name: 'Yarım Bin',         desc: '500 yumurta sat',                         prog: () => [S.eggsSold, 500],      reward: 500 },
-  { name: 'Yolcu',             desc: 'Lojistik Kamyonu kur',                    prog: () => [S.lvl.truck, 1],       reward: 400 },
+  { name: 'Yolcu',             desc: 'Lojistik Kamyonu geliştir',               prog: () => [S.lvl.truck, 1],       reward: 400 },
   { name: 'Servet',            desc: 'Toplam $10.000 kazan',                    prog: () => [S.stats.earned, 10000],reward: 600 },
   { name: 'Efsane Ol',         desc: 'Prestij yap — EFSANE sekmesinden sıfırla', prog: () => [S.prestige, 1],        reward: 0 },
 ];

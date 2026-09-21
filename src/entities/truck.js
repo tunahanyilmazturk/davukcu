@@ -1,13 +1,21 @@
 // Lojistik kamyonu: yoldan gelir, yerdeki yumurtaları + gübre çuvallarını
-// toplar, giderken satar
+// toplar, giderken satar. Sv.0'da küçük kamyonet çalışır (seyrek gelir, az
+// taşır); seviye arttıkça araç büyür: kamyonet → panelvan → tır.
 import { S } from '../state.js';
 import { L, fmt } from '../config.js';
-import { truckInterval, truckCap, manureBagValue, truckBonus } from '../economy.js';
+import { truckInterval, truckCap, truckTier, manureBagValue, truckBonus } from '../economy.js';
 import { eggWorth } from './eggs.js';
-import { sndCoin, sndPop } from '../audio.js';
+import { sndCoin, sndPop, sndTruck } from '../audio.js';
 
-let timer = 6;
+let timer = 8;
 const FLOOR_CAP = 40; // zeminde taşabilecek yumurta üst sınırı
+
+// sonraki araca kalan süre — iskele tabelası okur. -1 = yük bekleniyor
+export function truckEta() {
+  if (S.truck) return 0;
+  if (S.truckOff) return -1;
+  return (S.eggs.some(e => e.phase === 'floor') || S.manureBags > 0) ? timer : -1;
+}
 
 export function updateTruck(dt) {
   const lvl = S.lvl.truck;
@@ -24,21 +32,32 @@ export function updateTruck(dt) {
   }
 
   if (!S.truck) {
-    // seviye yoksa ya da taşınacak şey (yerde yumurta / stokta çuval) yoksa gelmez
-    if (lvl <= 0 || (!floorEggs.length && !S.manureBags)) { timer = Math.max(1.5, timer); return; }
+    // taşınacak şey (yerde yumurta / stokta çuval) yoksa gelmez
+    // (S.truckOff: test/dev kancası — sim kamyonu durdurur)
+    if (S.truckOff || (!floorEggs.length && !S.manureBags)) { timer = Math.max(1.5, timer); return; }
     timer -= dt;
     if (timer <= 0) {
-      S.truck = { x: -80, state: 'arrive', cargo: 0, bags: 0, worth: 0, t: 0, bob: 0 };
+      S.truck = { x: -150, state: 'arrive', cargo: 0, bags: 0, worth: 0,
+                  t: 0, bob: 0, dip: 0, tier: truckTier(lvl) };
     }
     return;
   }
 
   const tr = S.truck;
   tr.bob += dt * 10;
+  if (tr.dip > 0) tr.dip = Math.max(0, tr.dip - dt * 5);
+
+  // hareket halinde egzoz pufu
+  if (tr.state !== 'load' && Math.random() < dt * 6) {
+    S.parts.push({ kind: 'smoke', x: L.FX + tr.x + 4, y: L.ROAD_Y + 18,
+      vx: -30, vy: -18, t: 0, life: .6 });
+  }
 
   if (tr.state === 'arrive') {
     tr.x += 150 * dt;
-    if (tr.x >= L.DOCK_X) { tr.x = L.DOCK_X; tr.state = 'load'; tr.t = 0.2; }
+    const len = tr.tier === 2 ? 112 : tr.tier === 1 ? 86 : 64;
+    const stopX = L.DOCK_X + 22 - len; // kasa/kasa ucu iskele ortasına denk gelsin
+    if (tr.x >= stopX) { tr.x = stopX; tr.state = 'load'; tr.t = 0.3; sndTruck(); }
     return;
   }
 
@@ -49,9 +68,11 @@ export function updateTruck(dt) {
     if (e && tr.cargo < truckCap(lvl)) {
       tr.cargo++;
       tr.worth += eggWorth(e);
-      S.eggs.splice(S.eggs.indexOf(e), 1);
-      tr.t = 0.16;                       // yumurta başı yükleme süresi
-      S.parts.push({ kind: 'spark', x: L.FX + tr.x + 6, y: L.ROAD_Y - 18, vy: -50, t: 0, life: .3 });
+      e.phase = 'load2';                       // kasaya uçar — updateEggs yutar
+      e.tx = L.FX + tr.x + 16 + (tr.cargo % 9) * 4;
+      e.ty = L.ROAD_Y + 24;
+      tr.dip = 1;                              // süspansiyon oturması
+      tr.t = 0.16;                             // yumurta başı yükleme süresi
       sndPop();
       return;
     }
@@ -60,18 +81,20 @@ export function updateTruck(dt) {
       S.manureBags--;
       tr.bags++;
       tr.worth += manureBagValue();
-      tr.t = 0.22;                       // çuval başı yükleme süresi
-      S.parts.push({ kind: 'spark', x: L.FX + tr.x + 6, y: L.ROAD_Y - 24, vy: -50, t: 0, life: .3 });
+      tr.dip = 1;
+      tr.t = 0.22;                             // çuval başı yükleme süresi
+      S.parts.push({ kind: 'manureFly', x: L.FX + tr.x + 52, y: L.ROAD_Y + 4,
+        vx: -90, vy: -50, t: 0, life: .45 });
       sndPop();
       return;
     }
-    tr.state = 'leave';                  // doldu ya da taşınacak kalmadı
+    tr.state = 'leave';                        // doldu ya da taşınacak kalmadı
     return;
   }
 
   // leave: sağa sürer, ekrandan çıkınca toptan ödeme
   tr.x += 190 * dt;
-  if (tr.x > L.W + 80) {
+  if (tr.x > L.W + 140) {
     if (tr.worth > 0) {
       const pay = Math.round(tr.worth * truckBonus()); // toptancı primi
       S.money += pay;
@@ -81,7 +104,7 @@ export function updateTruck(dt) {
       S.stats.bags += tr.bags;
       S.parts.push({ kind: 'text', text: '+$' + fmt(pay) + ' kamyon' +
           (tr.bags ? ' (' + tr.bags + ' çuval)' : ''),
-        x: L.WD.dockX - 20, y: L.ROAD_Y - 60, vy: -30, t: 0, life: 1.2, color: '#8fd8ff' });
+        x: L.WD.dockX - 20, y: L.ROAD_Y - 40, vy: -30, t: 0, life: 1.2, color: '#8fd8ff' });
       sndCoin();
     }
     S.truck = null;
