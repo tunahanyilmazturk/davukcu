@@ -56,6 +56,7 @@ export function computeLayout(stageW, stageH) {
   L.DOCK_X = L.CRATE_X - 30;         // kamyonun durduğu yükleme noktası
   // yumurta kanalı (fabrika tarafı, lokal): zeminden girer, sol duvar boyunca
   // yükselir, üstten sağa koşar, üst bandın sağ ucu üstünde yumurtayı bırakır
+  L.FAN = { x: w - 200, y: 150, r: 34 }; // duvar egzoz fanı (üst bant, lokal)
   L.DUCT = { rx: 12,            // yükselen kolonun lokal x'i (sol duvar içi)
              top: 230,          // üst yatay hattın y'si
              outX: w - 70,      // bırakma ağzı lokal x'i (BELT1 sağ ucu üstü)

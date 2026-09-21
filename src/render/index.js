@@ -17,6 +17,7 @@ import { drawAmbient } from './ambient.js';
 import { drawTank } from './tanks.js';
 import { drawCrate, drawCrateFront } from './crate.js';
 import { drawRoad, drawTruck } from './truck.js';
+import { drawFactoryFX } from './facfx.js';
 import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
 import { drawHint, drawHud } from './hud.js';
@@ -177,6 +178,8 @@ export function draw(ctx, dt) {
   drawCrateFront(ctx);
   // lojistik kamyonu (yolun üstünde, yumurtaların önünde)
   drawTruck(ctx);
+  // fabrika canlı katmanı: dönen fan, durum LED'leri, buhar, toz
+  drawFactoryFX(ctx);
   ctx.restore();
 
   // ================= tavuklar + civcivler (çiftlik tarafı) =================

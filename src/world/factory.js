@@ -90,8 +90,14 @@ export function drawFactory(g) {
   const rnd = mulberry32(777);
   const wTop = L.LINE.y; // duvarın başladığı hat (tavan kirişinin altı)
 
-  // ---- tavan kirişi: sayfa üstünde ahşap/metal hat + cıvata sırası ----
+  // ---- tavan: makas çizgileri + kiriş + cıvata sırası ----
   g.fillStyle = '#241c2c'; g.fillRect(0, 0, L.W, L.BEAM_Y);
+  g.fillStyle = '#2c2133';
+  for (let x = 0; x < L.W; x += 120) { // çatı makası diyagonalleri
+    g.beginPath(); g.moveTo(x, L.BEAM_Y - 2); g.lineTo(x + 60, 2);
+    g.lineTo(x + 120, L.BEAM_Y - 2); g.lineTo(x + 60, L.BEAM_Y - 14);
+    g.closePath(); g.fill();
+  }
   g.fillStyle = '#c07830'; g.fillRect(0, L.BEAM_Y, L.W, 14);
   g.fillStyle = '#e09440'; g.fillRect(0, L.BEAM_Y, L.W, 4);
   g.fillStyle = '#8a5424';
@@ -127,6 +133,64 @@ export function drawFactory(g) {
     g.fillStyle = '#54404c'; g.fillRect(x + 1, wTop + 2, 10, 4);
     g.fillStyle = '#2c1a26'; g.fillRect(x - 2, L.FLOOR_Y - 16, 16, 16);
     g.fillStyle = '#3c2836'; g.fillRect(x, L.FLOOR_Y - 14, 12, 14);
+  }
+  // ---- üst duvar bandı: fabrika pencereleri + ışık huzmeleri ----
+  // (kanal üst hattının üstünde; riser, iniş ağzı ve fan bölgesi boş bırakılır)
+  const winTop = 96, winH = 80, winW = 52;
+  const winXs = [];
+  const winEnd = Math.min(L.DUCT.outX - 90, L.FAN.x - L.FAN.r - 16);
+  for (let x = 210; x < winEnd; x += 190) winXs.push(x);
+  for (const wx of winXs) {
+    // huzme: pencereden zemine doğru eğik sıcak şerit (duvara düşen ışık)
+    g.fillStyle = 'rgba(255,220,140,.05)';
+    g.beginPath();
+    g.moveTo(wx + 4, winTop + winH); g.lineTo(wx + winW - 4, winTop + winH);
+    g.lineTo(wx + winW + 60, L.FLOOR_Y); g.lineTo(wx + 90, L.FLOOR_Y);
+    g.closePath(); g.fill();
+    // çerçeve + sıcak cam + doğrama
+    g.fillStyle = '#1c1220'; g.fillRect(wx - 3, winTop - 3, winW + 6, winH + 6);
+    const wg = g.createLinearGradient(0, winTop, 0, winTop + winH);
+    wg.addColorStop(0, '#e8b860'); wg.addColorStop(1, '#7a5a3c');
+    g.fillStyle = wg; g.fillRect(wx, winTop, winW, winH);
+    g.fillStyle = '#241c2c';
+    g.fillRect(wx + winW / 2 - 1, winTop, 3, winH);         // dikey doğrama
+    g.fillRect(wx, winTop + winH / 2 - 1, winW, 3);         // yatay doğrama
+    g.fillStyle = 'rgba(255,240,190,.35)';                  // cam parlaması
+    g.fillRect(wx + 4, winTop + 4, 12, winH - 8);
+    // pervaz
+    g.fillStyle = '#2c1a26'; g.fillRect(wx - 5, winTop + winH, winW + 10, 5);
+  }
+  // egzoz fanı yuvası (kanatlar render/facfx.js'te döner)
+  {
+    const F = L.FAN;
+    g.fillStyle = '#14101a'; g.beginPath(); g.arc(F.x, F.y, F.r + 5, 0, 7); g.fill();
+    g.fillStyle = '#2e2438'; g.beginPath(); g.arc(F.x, F.y, F.r + 2, 0, 7); g.fill();
+    g.fillStyle = '#191423'; g.beginPath(); g.arc(F.x, F.y, F.r - 2, 0, 7); g.fill();
+    g.fillStyle = '#3c3048';
+    for (let a = 0; a < 8; a++) { // koruma ızgarası halkası
+      const ang = a * Math.PI / 4;
+      g.fillRect(F.x + Math.cos(ang) * (F.r + 1) - 2, F.y + Math.sin(ang) * (F.r + 1) - 2, 4, 4);
+    }
+  }
+  // duvar stencil işaretleri — soluk boya; pencere sırası ile kanal arasına
+  // (x:140 — sol taraftaki '◄ YUMURTA' kanal etiketiyle çakışmasın)
+  g.fillStyle = 'rgba(220,200,220,.16)';
+  g.font = 'bold 17px "Courier New",monospace'; g.textAlign = 'left';
+  g.fillText('HAT-1 ◀◀', 140, 200);
+  g.fillStyle = 'rgba(220,200,220,.10)';
+  g.font = 'bold 11px "Courier New",monospace';
+  g.fillText('DAVUKÇU FABRİKA · NO.7', 140, 214);
+  // elektrik kanalları + buat kutuları — pencere aralarına denk gelir
+  for (let i = 0; winXs.length && i <= winXs.length; i++) {
+    const x = i < winXs.length
+      ? winXs[i] + winW + (i + 1 < winXs.length ? (winXs[i + 1] - winXs[i] - winW) / 2 : 66)
+      : winXs[winXs.length - 1] + winW + 66;
+    if (x > L.FAN.x - L.FAN.r - 12 || x > L.CRATE_X - 40) continue;
+    g.fillStyle = '#241c2c'; g.fillRect(x, wTop, 8, L.BELT1_Y - 60 - wTop);
+    g.fillStyle = '#3c3048'; g.fillRect(x + 1, wTop, 6, L.BELT1_Y - 60 - wTop);
+    g.fillStyle = '#1c1220'; g.fillRect(x - 3, 176, 14, 18); // buat kutusu
+    g.fillStyle = '#3c3048'; g.fillRect(x - 1, 178, 10, 14);
+    g.fillStyle = '#54445f'; g.fillRect(x + 2, 182, 4, 4);
   }
   // kiriş altı kablo tavası + sarkan kelepçeler
   g.fillStyle = '#241c2c'; g.fillRect(0, wTop + 2, L.W, 7);
@@ -175,12 +239,20 @@ export function drawFactory(g) {
   g.fillRect(40, L.BELT2_Y + L.BELT_H + 6, L.CRATE_X - 60, 6);
   g.fillStyle = '#2e2438';
   g.fillRect(40, L.BELT2_Y + L.BELT_H + 6, L.CRATE_X - 60, 4);
-  // hat altı yatay kiriş — bacakların arkasında duvarı kuşatır
+  // hat altı yatay kiriş — bacakların arkasında duvarı kuşatır;
+  // üstünde alt bandın akış yönünü gösteren soluk ok dizisi
   const gy = L.BELT2_Y + L.BELT_H + 56;
   g.fillStyle = '#1c1220'; g.fillRect(30, gy, L.CRATE_X - 50, 9);
   g.fillStyle = '#2e2438'; g.fillRect(30, gy, L.CRATE_X - 50, 6);
   g.fillStyle = '#54445f';
   for (let x = 60; x < L.CRATE_X - 40; x += 140) g.fillRect(x, gy + 2, 3, 3);
+  g.fillStyle = 'rgba(255,210,62,.30)';
+  for (let x = 90; x < L.CRATE_X - 60; x += 120) {
+    g.beginPath();
+    g.moveTo(x, gy - 12); g.lineTo(x + 14, gy - 12);
+    g.lineTo(x + 22, gy - 6); g.lineTo(x + 14, gy); g.lineTo(x, gy);
+    g.closePath(); g.fill();
+  }
   // alt bant ayakları: I-kiriş + taban pabucu + cıvata
   for (let x = 60; x < L.CRATE_X - 20; x += 140) {
     g.fillStyle = '#1c1220';
@@ -268,6 +340,26 @@ export function drawFactory(g) {
   g.fillStyle = '#14101a'; g.fillRect(40, L.FLOOR_Y - 11, 46, 9);
   g.fillStyle = '#3c3048';
   for (let x = 44; x < 82; x += 8) g.fillRect(x, L.FLOOR_Y - 10, 4, 7);
+  // personel kapısı — sol duvarda, riser ile ilk payanda arasında
+  {
+    const dx2 = 30, dw = 38, dh = 86, dy = L.FLOOR_Y - dh;
+    g.fillStyle = '#14101a'; g.fillRect(dx2 - 4, dy - 4, dw + 8, dh + 4);
+    g.fillStyle = '#2e4a54'; g.fillRect(dx2, dy, dw, dh);          // kapı gövdesi
+    g.fillStyle = '#3c5c68'; g.fillRect(dx2 + 3, dy + 3, dw - 6, dh - 3);
+    g.fillStyle = '#2e4a54'; g.fillRect(dx2 + 4, dy + 40, dw - 8, 3); // orta kuşak
+    g.fillStyle = '#14101a'; g.fillRect(dx2 + 8, dy + 8, dw - 16, 22); // cam gözü
+    g.fillStyle = '#aee0ff'; g.fillRect(dx2 + 10, dy + 10, dw - 20, 18);
+    g.fillStyle = '#d8f2ff'; g.fillRect(dx2 + 12, dy + 12, 6, 6);
+    g.fillStyle = '#c8c8d0'; g.fillRect(dx2 + dw - 9, dy + 48, 5, 3);  // topuz
+    // ÇIKIŞ tabelası + basamak eşiği
+    g.fillStyle = '#14101a'; g.fillRect(dx2 + 2, dy - 22, dw - 4, 14);
+    g.fillStyle = '#1e5c38'; g.fillRect(dx2 + 4, dy - 20, dw - 8, 10);
+    g.fillStyle = '#b8ffd0';
+    g.font = 'bold 7px "Courier New",monospace'; g.textAlign = 'center';
+    g.fillText('ÇIKIŞ', dx2 + dw / 2, dy - 12);
+    g.textAlign = 'left';
+    g.fillStyle = '#54445f'; g.fillRect(dx2 - 6, L.FLOOR_Y - 3, dw + 12, 3);
+  }
   // yükleme platformu: kutu altında beton çıkıntı + sarı kenar + tamponlar
   const dx = L.CRATE_X - 26;
   g.fillStyle = '#1a141e'; g.fillRect(dx - 2, L.FLOOR_Y - 27, L.W - dx - 6, 27);
@@ -284,6 +376,14 @@ export function drawFactory(g) {
   g.fillStyle = '#3a2430'; g.fillRect(0, L.FLOOR_Y, L.W, 3);
   g.fillStyle = '#241420';
   for (let x = 44; x < L.W; x += 80) g.fillRect(x, L.FLOOR_Y + 5, 2, L.H - L.FLOOR_Y - 25);
+  // düşme hunisi altı tehlike taraması — zeminde sarı/siyah diyagonal
+  g.fillStyle = '#caa028';
+  for (let x = 24; x < 96; x += 14) {
+    g.beginPath();
+    g.moveTo(x, L.FLOOR_Y + 6); g.lineTo(x + 7, L.FLOOR_Y + 6);
+    g.lineTo(x + 1, L.FLOOR_Y + 13); g.lineTo(x - 6, L.FLOOR_Y + 13);
+    g.closePath(); g.fill();
+  }
   // taban dama şeridi (tüm genişlik)
   for (let i = 0, n = Math.ceil(L.W / 10); i < n; i++) {
     for (let j = 0; j < 2; j++) {
