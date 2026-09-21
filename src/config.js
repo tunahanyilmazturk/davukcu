@@ -9,8 +9,11 @@ export function computeLayout(stageW, stageH) {
   const w = Math.round(Math.min(1900, Math.max(640, H * stageW / stageH)));
   L.W = w; L.H = H;
   L.HUD_H = 18;
-  L.PEN = { x: 24, y: 54, w: w - 48, h: 392 }; // kümes genişledi — sanayi bölgesi kompaktlaştı
   L.BEAM_Y = 450;
+  // bölgeler: FARM = otlak/kümes (kiriş üstü), LINE = fabrika hattı (kiriş altı
+  // duvar). İki alan ayrı dosyalarda çizilir — geliştirirken karışmaz.
+  L.FARM = { x: 0, y: L.HUD_H, w, h: L.BEAM_Y - L.HUD_H };
+  L.PEN = { x: 24, y: 54, w: w - 48, h: L.BEAM_Y - 58 }; // kümes — kirişin hemen üstüne kadar
   L.BELT_H = 14;
   L.BELT_X0 = 24; L.BELT_X1 = w - 12;
   L.BELT1_X0 = 64;              // üst bandın sol ucu — kanalın sağında, açıkta durur
@@ -27,6 +30,8 @@ export function computeLayout(stageW, stageH) {
   L.GRADE_X = Math.round(w * 0.58);     // sınıflandırıcı merkezi (yıkama ile cila arası)
   L.POLISH_X = Math.round(w * 0.72);    // cila makinesi merkezi (yıkamadan sonra)
   L.FLOOR_Y = 770;
+  // fabrika bandı bölgesi: kiriş altı duvar → zemin hattı
+  L.LINE = { x: 0, y: L.BEAM_Y + 30, w, h: L.FLOOR_Y - L.BEAM_Y - 30 };
   L.ROAD_Y = 756;                    // lojistik yolu şeridi (en alt)
   L.DOCK_X = L.CRATE_X - 30;         // kamyonun durduğu yükleme noktası
   L.EGG_GAP = 22;
