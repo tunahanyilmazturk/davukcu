@@ -35,10 +35,10 @@
       <button id="btnSettings" title="Ayarlar">&#9881;</button>
     </div>
     <div class="res-row">
-      <div class="res feed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
-      <div class="res water"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
+      <div class="res feed" id="resFeed" title="Doldurmak için tıkla (paran yettiği kadar)"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
+      <div class="res water" id="resWater" title="Doldurmak için tıkla (paran yettiği kadar)"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
     </div>
-    <div class="pazar" id="tabTitle">Pazar</div>
+    <div class="pazar" id="tabTitle"><canvas id="tabIco" width="16" height="16"></canvas><span id="tabName">Pazar</span></div>
     <div id="tabBody">
       <div class="trail">
         <button class="tab ticon active" data-tab="shop" title="Çiftlik — üretim ve yükseltmeler"><canvas class="tico" data-ico="chicken" width="16" height="16"></canvas></button>
@@ -76,7 +76,8 @@
     <div id="sellHint">💰 Tavuk satışı — tavuğu bu panele sürükleyip bırak</div>
     <div id="toast"></div>
     <div class="foot">
-      <span id="stEggsSold">⏱ 00:00</span>
+      <span class="fchip" id="stPlayTime" title="Oynama süresi">⏱ 00:00</span>
+      <span class="fchip" id="stEggsSold" title="Satılan yumurta">🥚 0</span>
     </div>
   </div>
 </div>

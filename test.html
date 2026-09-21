@@ -231,7 +231,7 @@ setTimeout(() => {
     log.push({ diffOk, diffSaved });
     // ---- süpürge: kirli yumurta fırçadan geçer, kir gübre kovasına döner ----
     S.lvl.brush = 3;
-    const mBefore = S.manureBin, bagsBefore = S.manureBags;
+    const mBefore = S.manureBin, bagsB4 = S.manureBags;
     S.eggs.length = 0;
     S.eggs.push({ x: window.GAME.L.WD.brushX + 40, y: window.GAME.L.BELT1_Y - 16,
       phase: 'belt1', tier: 'normal', valMult: 1, dirt: 1, clean: false,
@@ -240,7 +240,7 @@ setTimeout(() => {
     for (let i = 0; i < 60; i++) update(0.05);
     // kova 20'de çuvala çevrilip sıfırlanabilir — ikisini birden izle
     log.push({ brushOk: bEgg.dirt <= 0.05,
-               dirtToManure: S.manureBin > mBefore || S.manureBags > bagsBefore });
+               dirtToManure: S.manureBin > mBefore || S.manureBags > bagsB4 });
     S.lvl.brush = 0;
     // ---- görev zinciri: koşullar sağlandı → sıralı ilerleme ----
     window.GAME.checkQuests();

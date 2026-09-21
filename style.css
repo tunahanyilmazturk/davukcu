@@ -269,10 +269,10 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
 .stat-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: #6e4a80;
   border: 3px solid #2c1834;
-  padding: 8px 10px;
+  padding: 7px 8px;
   box-shadow: inset 0 -4px 0 rgba(0,0,0,.25);
 }
 
@@ -281,6 +281,11 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   align-items: center;
   gap: 6px;
   font-size: 18px;
+  background: #3a2444;
+  border: 3px solid #2c1834;
+  padding: 4px 10px;
+  color: #f0e6f0;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.2);
 }
 
 .stat.money {
@@ -326,7 +331,11 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   border: 3px solid #2c1834;
   padding: 4px 8px;
   font-size: 10px;
+  cursor: pointer;
+  user-select: none;
 }
+.res:hover { filter: brightness(1.2); }
+.res:active { transform: translateY(1px); }
 .res span { color: #b090c0; letter-spacing: 1px; }
 .res b { font-size: 10px; color: #f0e6f0; min-width: 34px; text-align: right; }
 .res .bar {
@@ -350,13 +359,24 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
 .pazar {
   background: #e0637c;
   color: #fff;
-  text-align: center;
-  font-size: 22px;
-  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  padding: 5px 8px;
   border: 3px solid #2c1834;
   text-shadow: 2px 2px 0 rgba(0,0,0,.35);
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   box-shadow: inset 0 -4px 0 rgba(0,0,0,.2);
+}
+.pazar #tabIco {
+  width: 22px; height: 22px;
+  image-rendering: pixelated;
+  background: rgba(255,255,255,.16);
+  border: 2px solid rgba(0,0,0,.28);
+  padding: 1px;
+  box-sizing: border-box;
 }
 
 /* sekme gövdesi: solda dikey ikon rayı + sağda içerik */
@@ -466,11 +486,12 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
 .qtyrow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   font-size: 11px;
   color: #b090c0;
   padding: 0 2px;
 }
+.qtyrow > span { flex: 1; }
 #btnQty {
   background: #2c1834;
   color: #ffd23e;
@@ -478,7 +499,8 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   font-family: inherit;
   font-weight: bold;
   font-size: 11px;
-  padding: 3px 12px;
+  height: 24px;
+  padding: 0 12px;
   cursor: pointer;
   min-width: 52px;
 }
@@ -489,7 +511,8 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   border: 2px solid #120a18;
   font-family: inherit;
   font-size: 10px;
-  padding: 3px 8px;
+  height: 24px;
+  padding: 0 8px;
   cursor: pointer;
 }
 #btnAvail:hover { background: #3a2444; }
@@ -644,10 +667,17 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
 
 .foot {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 8px;
+}
+.fchip {
+  flex: 1;
+  text-align: center;
+  background: #2c1834;
+  border: 2px solid #120a18;
+  padding: 4px 6px;
   font-size: 11px;
-  color: #8a7594;
+  color: #c9a0d8;
+  white-space: nowrap;
 }
 
 /* ---- ayarlar modalı ---- */

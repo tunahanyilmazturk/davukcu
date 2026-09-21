@@ -10,7 +10,7 @@ import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rare
          chickOdds } from './economy.js';
 import { checkQuests, refreshQuestBar } from './quests.js';
 import { refreshPrestige } from './prestige.js';
-import { spawnChicken } from './entities/index.js';
+import { spawnChicken, tryRefill } from './entities/index.js';
 import { sndBuy, sndErr } from './audio.js';
 import { SPR } from './sprites/index.js';
 import { buildStats, refreshStats } from './stats.js';
@@ -357,6 +357,7 @@ export function refreshShop() {
 /* ---------------- Sekmeler + toplu alım ---------------- */
 const TAB_IDS = { shop: 'tabShop', market: 'tabMarket', stats: 'tabStats', achv: 'tabAchv', prest: 'tabPrest' };
 const TAB_TITLES = { shop: 'Pazar', market: 'Mağaza', stats: 'İstatistik', achv: 'Başarım', prest: 'Efsane' };
+const TAB_ICOS   = { shop: 'chicken', market: 'cart', stats: 'chart', achv: 'trophy', prest: 'star' };
 // programatik sekme seçimi — ray ikonları ve üst bar çipleri paylaşır
 function selectTab(t) {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === t));
@@ -364,8 +365,16 @@ function selectTab(t) {
     const el = document.getElementById(TAB_IDS[k]);
     if (el) el.classList.toggle('hidden', k !== t);
   }
-  const tt = document.getElementById('tabTitle');
-  if (tt) tt.textContent = TAB_TITLES[t] || 'Pazar';
+  const tn = document.getElementById('tabName');
+  if (tn) tn.textContent = TAB_TITLES[t] || 'Pazar';
+  const ti = document.getElementById('tabIco');
+  if (ti) {
+    const g = ti.getContext('2d'); g.imageSmoothingEnabled = false;
+    g.clearRect(0, 0, 16, 16);
+    const k = TAB_ICOS[t] || 'chicken';
+    if (k === 'chicken') g.drawImage(SPR.chickens.white.a.c, 1, 2);
+    else g.drawImage(SPR.icons[k].c, 0, 0);
+  }
   if (t === 'market') refreshMarket();
   if (t === 'stats') refreshStats();
   if (t === 'achv') refreshAchv();
@@ -478,7 +487,8 @@ function initTabs() {
 const elMoney = document.getElementById('stMoney');
 const elChickens = document.getElementById('stChickens');
 const elRate = document.getElementById('stRate');
-const elFoot = document.getElementById('stEggsSold');
+const elFootTime = document.getElementById('stPlayTime');
+const elFootEggs = document.getElementById('stEggsSold');
 const elFeedBar = document.getElementById('barFeed');
 const elFeedPct = document.getElementById('pctFeed');
 const elWaterBar = document.getElementById('barWater');
@@ -527,7 +537,8 @@ export function refreshUI() {
   lastMoney = S.money;
   elChickens.textContent = S.chickens.length;
   elRate.textContent = '+$' + fmt(ratePerSec()) + '/sn';
-  elFoot.textContent = '⏱ ' + fmtTime(S.playTime) + '  ·  🥚 ' + fmt(S.eggsSold);
+  if (elFootTime) elFootTime.textContent = '⏱ ' + fmtTime(S.playTime);
+  if (elFootEggs) elFootEggs.textContent = '🥚 ' + fmt(S.eggsSold);
   // üst bar çipleri — panel kapalıyken de görünür, değer değişince DOM yaz
   if (elTbTime) {
     const sec = S.playTime | 0;
@@ -616,4 +627,11 @@ export function initPanel() {
   const g2 = document.getElementById('icoCoin').getContext('2d');
   g2.imageSmoothingEnabled = false;
   g2.drawImage(SPR.coin.c, 4, 4);
+
+  // kaynak barları: tıkla → paran yettiği kadar doldur
+  document.getElementById('resFeed')?.addEventListener('click', () => tryRefill('feed'));
+  document.getElementById('resWater')?.addEventListener('click', () => tryRefill('water'));
+
+  // başlık ikonunu ilk sekmeyle eşle
+  selectTab(document.querySelector('.tab.active')?.dataset.tab || 'shop');
 }
