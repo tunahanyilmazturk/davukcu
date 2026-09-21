@@ -1,16 +1,16 @@
 // Sağ panel: sekmeli mağaza, toplu alım, üst durum çubuğu
 import { S, writeSave } from './state.js';
-import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime, mulberry32 } from './config.js';
+import { MAXL, MAX_CHICKENS, MAX_WORKERS, MAX_KEEPERS, BASE, fmt, fmtTime, mulberry32 } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
          diffDef, diffPrice, brushRate,
          chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, truckTier, autoPetCd,
          scoopInterval, organicMult, truckBonus, fertileRate, supplyMult, sellFrac,
-         chickOdds } from './economy.js';
+         chickOdds, workerSpeed, workerCarry, keeperBoost, keeperCd } from './economy.js';
 import { checkQuests, refreshQuestBar } from './quests.js';
 import { refreshPrestige } from './prestige.js';
-import { spawnChicken, tryRefill } from './entities/index.js';
+import { spawnChicken, spawnWorker, tryRefill } from './entities/index.js';
 import { sndBuy, sndErr } from './audio.js';
 import { SPR } from './sprites/index.js';
 import { buildStats, refreshStats } from './stats.js';
@@ -191,6 +191,34 @@ export const SHOP = [
   { id: 'offline', sec: 'PASİF', name: 'Çevrimdışı Verim', icon: 'offline', lv: 'offline',
     costAt: l => Math.ceil(120 * Math.pow(2.1, l)),
     effAt: l => '%' + Math.round(offlineEff(l) * 100) + ' verim · ' + offlineCapH(l) + ' saat' },
+  { id: 'worker', sec: 'PERSONEL', name: 'Çiftlik İşçisi', icon: 'worker', flat: true,
+    costAt: n => Math.ceil(400 * Math.pow(1.7, n)),
+    effAt: () => 'gübre yığınlarını kovaya taşır',
+    can: () => S.workers.filter(w => w.role === 'worker').length < MAX_WORKERS,
+    idx: () => S.workers.filter(w => w.role === 'worker').length,
+    cap: MAX_WORKERS, unit: 'işçi',
+    req: () => S.stats.manure >= 5, reqText: 'Önce 5 gübre topla',
+    buy() { spawnWorker('worker'); } },
+  { id: 'keeper', sec: 'PERSONEL', name: 'Tavuk Bakıcısı', icon: 'keeper', flat: true,
+    costAt: n => Math.ceil(650 * Math.pow(1.8, n)),
+    effAt: () => 'gezip tavukları sever — yumurtlama hızlanır',
+    can: () => S.workers.filter(w => w.role === 'keeper').length < MAX_KEEPERS,
+    idx: () => S.workers.filter(w => w.role === 'keeper').length,
+    cap: MAX_KEEPERS, unit: 'bakıcı',
+    req: () => S.chickens.length >= 8, reqText: 'En az 8 tavuk gerekli',
+    buy() { spawnWorker('keeper'); } },
+  { id: 'wspd', sec: 'PERSONEL', name: 'Çalışkan Botlar', icon: 'wspd', lv: 'wspd',
+    costAt: l => Math.ceil(250 * Math.pow(2.0, l)),
+    effAt: l => Math.round(workerSpeed(l)) + ' px/sn yürüme',
+    req: () => S.workers.length > 0, reqText: 'Önce bir karakter al' },
+  { id: 'wcap', sec: 'PERSONEL', name: 'Büyük Kepçe', icon: 'wcap', lv: 'wcap',
+    costAt: l => Math.ceil(300 * Math.pow(2.1, l)),
+    effAt: l => 'işçi ' + workerCarry(l) + ' yığın/taşıma',
+    req: () => S.workers.some(w => w.role === 'worker'), reqText: 'Önce işçi al' },
+  { id: 'wcare', sec: 'PERSONEL', name: 'Şefkatli Eller', icon: 'wcare', lv: 'wcare',
+    costAt: l => Math.ceil(280 * Math.pow(2.1, l)),
+    effAt: l => 'sevme x' + keeperBoost(l).toFixed(2) + ' · ' + keeperCd(l).toFixed(1) + ' sn aralık',
+    req: () => S.workers.some(w => w.role === 'keeper'), reqText: 'Önce bakıcı al' },
 ];
 
 // zorluk fiyat çarpanı — tüm mağaza maliyetlerine tek noktadan uygulanır
@@ -202,7 +230,8 @@ for (const it of SHOP) {
 const QTY_STEPS = [1, 10, 'max'];
 const ui = { qty: 0, avail: false }; // qty: QTY_STEPS indeksi, avail: sadece alınabilir filtresi
 const SEC_COLORS = { 'ÜRETİM': '#9fe870', 'HAT': '#ffd23e', 'DEĞER': '#e0637c',
-                     'BAKIM': '#e8a54c', 'ARAÇLAR': '#5cb8e8', 'PASİF': '#b8a0ff' };
+                     'BAKIM': '#e8a54c', 'ARAÇLAR': '#5cb8e8', 'PASİF': '#b8a0ff',
+                     'PERSONEL': '#ff9f68' };
 // daraltılmış bölümler — localStorage'da kalıcı
 let collapsed = new Set();
 try { collapsed = new Set(JSON.parse(localStorage.getItem('shopCollapsed') || '[]')); } catch (e) {}
@@ -219,7 +248,7 @@ function planBuy(item) {
   if (item.req && !item.req()) return { n: 0, total: 0 };
   const want = ui.qty === QTY_STEPS.length - 1 ? 200 : QTY_STEPS[ui.qty];
   let n = 0, total = 0, idx = itemIdx(item);
-  const cap = item.lv ? MAXL[item.lv] : MAX_CHICKENS;
+  const cap = item.lv ? MAXL[item.lv] : (item.cap || MAX_CHICKENS);
   while (n < want && idx + n < cap) {
     const c = item.costAt(idx + n);
     if (S.money < total + c) break;
@@ -322,7 +351,7 @@ export function refreshShop() {
     // seviye / adet satırı
     sub.textContent = item.lv
       ? 'Sv.' + idx + (maxed ? ' · MAX' : '')
-      : idx + ' tavuk' + (S.chickens.length >= MAX_CHICKENS ? ' · MAX' : '');
+      : idx + ' ' + (item.unit || 'tavuk') + (idx >= (item.cap || MAX_CHICKENS) ? ' · MAX' : '');
 
     // pip göstergesi
     if (pips) {
@@ -466,7 +495,7 @@ export function buyDecor(id) {
 
 function initTabs() {
   document.querySelectorAll('.tab').forEach(b => {
-    b.addEventListener('click', () => selectTab(b.dataset.tab));
+    b.addEventListener('click', () => openTab(b.dataset.tab)); // ray dışarıda — kapalı panel tıkta açılır
   });
   const q = document.getElementById('btnQty');
   q.addEventListener('click', () => {

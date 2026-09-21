@@ -718,3 +718,103 @@ export const ICON_BRUSH = makeSprite([
 "...EEEEEeee.....",
 "....EEEEE.......",
 ], { H:'#54687e', h:'#3a4a5c', D:'#b8863c', d:'#8a6428', E:'#f8f2e6', e:'#d0c4b2' });
+
+// işçi: saman şapkalı figür
+export const ICON_WORKER = makeSprite([
+"................",
+"....HHHHHH....",
+"..HHHHHHHHHH..",
+"....ffffff....",
+"....fkffkf....",
+"....ffffff....",
+".....ffff.....",
+"..BBBBBBBBBB..",
+".BBBBBBBBBBBB.",
+"..BBBBBBBBBB..",
+"..PPPPPPPPPP..",
+"..PPP....PPP..",
+"..PPP....PPP..",
+"..KKK....KKK..",
+"................",
+"................",
+], { H:'#d8a840', f:'#e8b088', k:'#241c1c', B:'#4878a8', P:'#5a4a38', K:'#2a2028' });
+
+// bakıcı: figür + kalp
+export const ICON_KEEPER = makeSprite([
+"....HHHHHH....",
+"..HHHHHHHHHH..",
+"....ffffff....",
+"....fkffkf....",
+"....ffffff....",
+".....ffff..RR.",
+"..BBBBBBBB.RR.",
+".BBBBBBBBBRRRR",
+"..BBBBBBBRRRR.",
+"..PPPPPPP.RR..",
+"..PPP..PPP.R..",
+"..PPP..PPP....",
+"..KKK..KKK....",
+"................",
+"................",
+"................",
+], { H:'#b04848', f:'#e8b088', k:'#241c1c', B:'#58a860', P:'#3a4a5a', K:'#2a2028', R:'#e0637c' });
+
+// çalışkan botlar: koşan bot + hız çizgileri
+export const ICON_WSPD = makeSprite([
+"................",
+"................",
+".........PPPP...",
+"........PPPPPP..",
+"........PPP.....",
+".......PPP......",
+"..==..KKKKKKK...",
+".....KKKKKKKKK..",
+"....KKKKKKKKKKK.",
+"..==.KKKKKKKKKKK",
+"....kkkkkkkkkkk.",
+"................",
+"................",
+"................",
+"................",
+"................",
+], { P:'#5a4a38', K:'#2a2028', k:'#4a3a48', '=':'#ffd23e' });
+
+// büyük kepçe: geniş kürek + üç gübre parçası
+export const ICON_WCAP = makeSprite([
+"................",
+"...........WW...",
+"..........WWW..",
+".........WW.....",
+"........WW..bb..",
+".......WW..bbb..",
+"......WW...bb...",
+"..sss.WW........",
+".sSSSsWW........",
+"sSSSSSs.........",
+"sSSSSSSs...bbb..",
+"sSSSSSSs..bbbbb.",
+".sSSSSs...bbbbb.",
+"..ssss....bbb...",
+"................",
+"................",
+], { W:'#a07850', s:'#6a7280', S:'#aab4c2', b:'#5a4028' });
+
+// şefkatli eller: el + kalp
+export const ICON_WCARE = makeSprite([
+"................",
+".....RR..RR....",
+"....RRRRRRRR..",
+"....RRRRRRRR..",
+"....RRRRRRR...",
+".....RRRRR....",
+"......RRR.....",
+"..ffffffff....",
+".ffffffffff...",
+".ff.ff.ff.f...",
+"..ffffffff....",
+"................",
+"................",
+"................",
+"................",
+"................",
+], { R:'#e0637c', f:'#e8b088' });

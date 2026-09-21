@@ -34,15 +34,20 @@ function checkBag() {
   }
 }
 
+// kovaya yığın ekle — işçi karakteri de kullanır (uçan parçacıksız toplu döküm)
+export function binAdd(n) {
+  S.manureBin += n;
+  S.stats.manure += n;
+  checkBag();
+}
+
 // yığın kepçelenir: para yerine kovaya girer, kovaya uçan parçacık çıkar
 function collectPile(m) {
-  S.manureBin++;
-  S.stats.manure++;
   const b = L.MANURE_BIN;
   const tx = b.x + b.w / 2, ty = b.y + 4, life = 0.45;
   S.parts.push({ kind: 'manureFly', x: m.x - 2, y: m.y - 8,
     vx: (tx - m.x) / life, vy: (ty - m.y) / life, t: 0, life });
-  checkBag();
+  binAdd(1);
 }
 
 // tıklanan noktadaki yığını topla (input.js sorar)

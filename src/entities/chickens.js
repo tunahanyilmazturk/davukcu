@@ -163,6 +163,11 @@ export function updateChickens(dt, fed) {
       setAnim(ch, 'flap'); stepAnim(ch, dt);
       continue;
     }
+    // kümes sınırı — tilki bırakması/eski kayıt gibi yollarla dışarı çıkanı geri çek
+    if (ch.x > P.x + P.w - 8) ch.x = P.x + P.w - 8;
+    else if (ch.x < P.x + 8) ch.x = P.x + 8;
+    if (ch.y > P.y + P.h) ch.y = P.y + P.h;
+    else if (ch.y < P.y + 20) ch.y = P.y + 20;
     if (ch.panicT > 0) {
       // tilki paniği — hızla tilkiden uzağa kaç, kanat çırp
       ch.panicT -= dt;
@@ -191,6 +196,7 @@ export function updateChickens(dt, fed) {
     if (ch.landT > 0) ch.landT -= dt;
     if (ch.squat > 0) ch.squat -= dt;
     if (ch.petCd > 0) ch.petCd -= dt; // Sevgi Eli aralığı
+    if (ch.keepCd > 0) ch.keepCd -= dt; // Bakıcı karakterinin sevme aralığı
     if (ch.turnT > 0) ch.turnT -= dt;
 
     if (ch.state === 'idle') {

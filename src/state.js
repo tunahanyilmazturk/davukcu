@@ -8,7 +8,7 @@ export const S = {
          twin: 0, lucky: 0, saver: 0, offline: 0, rooster: 0, pack: 0, hatch: 0, grow: 0,
          grade: 0, truck: 0, autopet: 0, scoop: 0,
          gene: 0, dealer: 0, organic: 0, fertile: 0, supply: 0, bargain: 0,
-         brush: 0 },
+         brush: 0, wspd: 0, wcap: 0, wcare: 0 },
   feed: 100,
   water: 100,
   eggsSold: 0,
@@ -30,6 +30,7 @@ export const S = {
   scenery: {},    // satın alınan çiftlik manzarası {id:1} — eski kayıtta null gelir, main.js toplu verir
   chickens: [],
   chicks: [],
+  workers: [],    // satın alınan karakterler {role:'worker'|'keeper',...}
   eggs: [],
   manures: [],    // kümesdeki gübre yığınları (kaydedilmez)
   manureBin: 0,   // gübre kovasındaki yığın sayısı (BAG_AT'te 1 çuval olur)
@@ -52,6 +53,7 @@ export function writeSave() {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       money: S.money, lvl: S.lvl, chickens: S.chickens.map(c => c.breed || 'white'),
       chicks: S.chicks.map(c => Math.round(c.growT * 10) / 10), // kalan büyüme süreleri
+      workers: S.workers.map(w => w.role),
       feed: S.feed, water: S.water,
       manureBin: S.manureBin, manureBags: S.manureBags,
       eggsSold: S.eggsSold, playTime: S.playTime, muted: S.muted,
@@ -79,7 +81,7 @@ export function applySave(d) {
                           twin: 0, lucky: 0, saver: 0, offline: 0, rooster: 0, pack: 0,
                           hatch: 0, grow: 0, grade: 0, truck: 0, autopet: 0, scoop: 0,
                           gene: 0, dealer: 0, organic: 0, fertile: 0, supply: 0, bargain: 0,
-                          brush: 0 }, d.lvl || {});
+                          brush: 0, wspd: 0, wcap: 0, wcare: 0 }, d.lvl || {});
   // eski kayıtlardaki tek 'belt' seviyesini iki banda da taşı
   if (d.lvl && 'belt' in d.lvl) {
     if (!d.lvl.beltF) S.lvl.beltF = d.lvl.belt;
@@ -116,7 +118,9 @@ export function applySave(d) {
   if (!breeds.length) breeds.push('white');
   // civcivler kalan büyüme süreleriyle saklanır
   const chickTimes = Array.isArray(d.chicks) ? d.chicks.slice(0, 20) : [];
-  return { breeds, chickTimes, lastSeen: d.lastSeen || Date.now() };
+  // karakterler rol listesi olarak saklanır
+  const workerRoles = Array.isArray(d.workers) ? d.workers.slice(0, 10) : [];
+  return { breeds, chickTimes, workerRoles, lastSeen: d.lastSeen || Date.now() };
 }
 
 export function resetSave() {

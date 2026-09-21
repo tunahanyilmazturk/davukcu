@@ -3,7 +3,7 @@ import { S, readSave, applySave, writeSave } from './state.js';
 import { H, L, computeLayout, fmt } from './config.js';
 import { ratePerSec, offlineEff, offlineCapH, eggValue, sellPrice,
          refillCost, refillRate, truckBonus, truckTier, fertileRate, chickOdds, consumeMult } from './economy.js';
-import { spawnChicken, spawnChick, update, clampEntities, tryRefill } from './entities/index.js';
+import { spawnChicken, spawnChick, spawnWorker, update, clampEntities, tryRefill } from './entities/index.js';
 import { eggLooks } from './entities/eggs.js';
 import { draw } from './render/index.js';
 import { initInput, magnet } from './input.js';
@@ -53,11 +53,12 @@ resize(); // L'i doldur — tavuklar PEN'e göre spawn oluyor
 
 // ---- kayıt yükle ----
 const saved = readSave();
-let breeds = ['white'], chickTimes = [], lastSeen = Date.now();
+let breeds = ['white'], chickTimes = [], workerRoles = [], lastSeen = Date.now();
 if (saved) {
   const r = applySave(saved);
   breeds = r.breeds;
   chickTimes = r.chickTimes;
+  workerRoles = r.workerRoles;
   lastSeen = r.lastSeen;
 }
 // eski kayıt: manzara alanı yok → oyuncu zaten hepsini görüyordu, toplu ver
@@ -68,6 +69,7 @@ if (S.scenery === null) {
 buildBG(); // kayıt/arsa durumuna göre çiftlik arka planını kur
 for (const b of breeds) spawnChicken(undefined, undefined, b);
 for (const t of chickTimes) spawnChick(undefined, undefined, t); // kalan süreyle devam
+for (const r of workerRoles) spawnWorker(r === 'keeper' ? 'keeper' : 'worker');
 
 // çevrimdışı kazanç — Çevrimdışı Verim yükseltmesi verim + süreyi artırır
 const dtOff = Math.min(offlineCapH() * 3600, (Date.now() - lastSeen) / 1000);
@@ -111,7 +113,7 @@ requestAnimationFrame(loop);
 
 // geliştirme: test.html bu kancayı kullanır
 if (import.meta.env && import.meta.env.DEV) {
-  window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
+  window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, spawnWorker, magnet,
                   QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage,
                   eggValue, sellPrice, refillCost, refillRate, tryRefill, truckBonus, fertileRate, chickOdds, consumeMult,
                   scareFox, catchButterfly, buyDecor, openTab, SCENERY, buildBG };
@@ -144,6 +146,9 @@ if (import.meta.env && import.meta.env.DEV) {
   // ?rost=1&chick=1 → görsel test: horoz + civciv spawn
   if (q.has('rost')) spawnChicken(undefined, undefined, 'rooster');
   if (q.has('chick')) spawnChick();
+  // ?worker=2&keeper=1 → görsel test: personel spawn
+  for (let i = 0; i < (parseInt(q.get('worker')) || 0); i++) spawnWorker('worker');
+  for (let i = 0; i < (parseInt(q.get('keeper')) || 0); i++) spawnWorker('keeper');
   // ?floor=6 → görsel test: fabrika zeminine yumurta serp (kamyon toplar)
   const fl = parseInt(q.get('floor') || '0');
   for (let i = 0; i < fl; i++)

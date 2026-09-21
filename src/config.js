@@ -103,10 +103,12 @@ export const MAXL = { value: 99, lay: 12, beltF: 10, beltD: 10, golden: 14, rare
                       twin: 6, lucky: 8, saver: 5, offline: 5, rooster: 3, pack: 4,
                       hatch: 8, grow: 8, grade: 6, truck: 6, autopet: 5, scoop: 6,
                       gene: 5, dealer: 5, organic: 8, fertile: 5, supply: 5, bargain: 5,
-                      brush: 5 };
+                      brush: 5, wspd: 8, wcap: 4, wcare: 6 };
 
 export const SAVE_KEY = 'tavukciftligi_v1';
 export const MAX_CHICKENS = 80;
+export const MAX_WORKERS = 6;   // gübre toplayan işçi sınırı
+export const MAX_KEEPERS = 4;   // tavuk seven bakıcı sınırı
 export const BAG_AT = 20; // gübre kovasında 1 çuvala dönüşen yığın sayısı
 
 export function fmt(n) {

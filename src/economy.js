@@ -149,6 +149,16 @@ export function manureValue()                  { return Math.max(1, Math.ceil(eg
 // gübre çuvalı: 20 yığının toplu satışı — %25 toptan primi (kamyon taşır)
 export function manureBagValue()               { return Math.round(manureValue() * BAG_AT * 1.25); }
 
+// ---- karakterler (PERSONEL) ----
+// işçi hızı: Çalışkan Botlar seviye başına +%12
+export function workerSpeed(l = S.lvl.wspd)    { return 55 * Math.pow(1.12, l); }
+// işçi taşıma kapasitesi: Büyük Kepçe seviye başına +1 yığın
+export function workerCarry(l = S.lvl.wcap)    { return 1 + l; }
+// bakıcı sevgi gücü: Şefkatli Eller seviye başına layT çarpanı düşer (0.75 → en az 0.5)
+export function keeperBoost(l = S.lvl.wcare)   { return Math.max(0.5, 0.75 - 0.05 * l); }
+// bakıcının aynı tavuğu tekrar sevme aralığı (sn) — seviye başına %12 kısalır
+export function keeperCd(l = S.lvl.wcare)      { return 6 * Math.pow(0.88, l); }
+
 export function chickenCost(n = S.chickens.length) { return Math.ceil(12 * Math.pow(1.23, n)); }
 // Pazarlık Ustası: tavuk satışı maliyetin %50'sinden başlar, seviye başına +%8 (azami %90)
 export function sellFrac(l = S.lvl.bargain)    { return Math.min(0.9, 0.5 + 0.08 * l); }

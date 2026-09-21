@@ -4,13 +4,15 @@ import { EGG, GOLDEN_EGG, EGG_DIRTY, GOLDEN_EGG_DIRTY,
          BRONZE_EGG, BRONZE_EGG_DIRTY, SILVER_EGG, SILVER_EGG_DIRTY,
          DIAMOND_EGG, DIAMOND_EGG_DIRTY } from './eggs.js';
 import { COIN, HEART, FEATHER, MANURE_BAG, SHOVEL } from './misc.js';
+import { PEOPLE } from './people.js';
 import { ICON_EGG, ICON_GOLDEGG, ICON_FASTLAY, ICON_BELT, ICON_MACHINE,
          ICON_WASH, ICON_WASHSPD, ICON_POLISH, ICON_RARE, ICON_FEED, ICON_WATER,
          ICON_AUTOF, ICON_AUTOW, ICON_MAGNET,
          ICON_TWIN, ICON_LUCKY, ICON_SAVER, ICON_OFFLINE, ICON_PACK,
          ICON_HATCH, ICON_GROW, ICON_GRADE, ICON_TRUCK, ICON_PET, ICON_SCOOP,
          ICON_GENE, ICON_DEALER, ICON_ORGANIC, ICON_FERTILE, ICON_SUPPLY,
-         ICON_BARGAIN, ICON_CART, ICON_CHART, ICON_TROPHY, ICON_STAR, ICON_BRUSH } from './icons.js';
+         ICON_BARGAIN, ICON_CART, ICON_CHART, ICON_TROPHY, ICON_STAR, ICON_BRUSH,
+         ICON_WORKER, ICON_KEEPER, ICON_WSPD, ICON_WCAP, ICON_WCARE } from './icons.js';
 
 export { makeSprite, drawSprite } from './core.js';
 export { CHICKEN_VARIANTS } from './chickens.js';
@@ -33,6 +35,7 @@ export const SPR = {
   feather: FEATHER,
   bag: MANURE_BAG,
   shovel: SHOVEL,
+  people: PEOPLE,
   icons: {
     egg: ICON_EGG,
     goldegg: ICON_GOLDEGG,
@@ -66,6 +69,8 @@ export const SPR = {
     supply: ICON_SUPPLY,
     bargain: ICON_BARGAIN,
     brush: ICON_BRUSH,
+    worker: ICON_WORKER, keeper: ICON_KEEPER,
+    wspd: ICON_WSPD, wcap: ICON_WCAP, wcare: ICON_WCARE,
     cart: ICON_CART, chart: ICON_CHART, trophy: ICON_TROPHY, star: ICON_STAR,
   },
 };

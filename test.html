@@ -26,40 +26,50 @@
       <button id="btnSettings" title="Ayarlar">&#9881;</button>
     </div>
     <div class="res-row">
-      <div class="res feed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
-      <div class="res water"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
+      <div class="res feed" id="resFeed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
+      <div class="res water" id="resWater"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
     </div>
-    <div class="pazar">Pazar</div>
-    <div class="tabs">
-      <button class="tab active" data-tab="shop">ÇİFTLİK</button>
-      <button class="tab" data-tab="stats">İSTATİSTİK</button>
-      <button class="tab" data-tab="achv">BAŞARIM</button>
-      <button class="tab tab-prest" data-tab="prest">EFSANE</button>
-    </div>
-    <div id="tabShop">
-      <div id="questBar" class="hidden"></div>
-      <div class="qtyrow">
-        <span>Satın al</span>
-        <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
-        <button id="btnQty">1x</button>
+    <div class="pazar" id="tabTitle"><canvas id="tabIco" width="16" height="16"></canvas><span id="tabName">Pazar</span></div>
+    <div id="tabBody">
+      <div id="tabMain">
+        <div id="tabShop">
+          <div id="questBar" class="hidden"></div>
+          <div class="qtyrow">
+            <span>Satın al</span>
+            <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
+            <button id="btnQty">1x</button>
+          </div>
+          <div id="cards"></div>
+        </div>
+        <div id="tabMarket" class="hidden">
+          <div class="mknote">test</div>
+          <div id="marketCards"></div>
+        </div>
+        <div id="tabStats" class="hidden">
+          <div id="statList"></div>
+        </div>
+        <div id="tabAchv" class="hidden">
+          <div id="achvList"></div>
+        </div>
+        <div id="tabPrest" class="hidden">
+          <div id="prestBody"></div>
+          <button id="btnPrest" class="btn-prest" disabled>PRESTİJ</button>
+        </div>
       </div>
-      <div id="cards"></div>
-    </div>
-    <div id="tabStats" class="hidden">
-      <div id="statList"></div>
-    </div>
-    <div id="tabAchv" class="hidden">
-      <div id="achvList"></div>
-    </div>
-    <div id="tabPrest" class="hidden">
-      <div id="prestBody"></div>
-      <button id="btnPrest" class="btn-prest" disabled>PRESTİJ</button>
     </div>
     <div id="sellHint">Tavuğu satmak için buraya sürükle!</div>
     <div id="toast"></div>
     <div class="foot">
-      <span id="stEggsSold">⏱ 00:00</span>
+      <span class="fchip" id="stPlayTime">⏱ 00:00</span>
+      <span class="fchip" id="stEggsSold">🥚 0</span>
     </div>
+  </div>
+  <div class="trail">
+    <button class="tab ticon active" data-tab="shop"><canvas class="tico" data-ico="chicken" width="16" height="16"></canvas></button>
+    <button class="tab ticon" data-tab="market"><canvas class="tico" data-ico="cart" width="16" height="16"></canvas></button>
+    <button class="tab ticon" data-tab="stats"><canvas class="tico" data-ico="chart" width="16" height="16"></canvas></button>
+    <button class="tab ticon" data-tab="achv"><canvas class="tico" data-ico="trophy" width="16" height="16"></canvas></button>
+    <button class="tab ticon tab-prest" data-tab="prest"><canvas class="tico" data-ico="star" width="16" height="16"></canvas></button>
   </div>
 </div>
 <script type="module" src="/src/main.js"></script>
@@ -248,13 +258,50 @@ setTimeout(() => {
     S.eggsSold = 600; // 'Yarım Bin' için
     window.GAME.checkQuests();
     log.push({ questIdx: qAfter, questBarShown: !!document.querySelector('#questBar b') });
+    // ---- personel: işçi yığın→kova taşır, bakıcı tavuk sever ----
+    S.money = Math.max(S.money, 10000);
+    S.stats.manure = Math.max(S.stats.manure, 5); // işçi kartı kilidi
+    const wShop = id => SHOP.find(i => i.id === id);
+    buyItem(wShop('worker'));
+    const workerSpawned = S.workers.some(w => w.role === 'worker');
+    const scoopSav = S.lvl.scoop; S.lvl.scoop = 0; // kepçe yığınları kapmasın — işçi izolasyonu
+    S.manures.length = 0; S.manureBin = 0; S.manureBags = 0;
+    for (let i = 0; i < 4; i++) S.manures.push({ x: 200 + i * 50, y: 320, seed: i });
+    const manB4w = S.stats.manure; // stats.manure sadece toplamada artar — işçi izolasyonu
+    let sawCarry = false;          // işçinin sırtında yığın görüldü mü
+    for (let i = 0; i < 2400 && S.stats.manure - manB4w < 4; i++) {
+      update(0.05);
+      if (S.workers.some(w => w.role === 'worker' && w.carry > 0)) sawCarry = true;
+    }
+    const workerCollected = sawCarry && S.stats.manure - manB4w >= 4;
+    // bakıcı: en yakın tavuğu sevsin → layT düşer, keepCd atanır
+    while (S.chickens.length < 8) window.GAME.spawnChicken();
+    buyItem(wShop('keeper'));
+    const keeperSpawned = S.workers.some(w => w.role === 'keeper');
+    const kCh = S.chickens[0];
+    kCh.layT = 30; kCh.keepCd = 0; kCh.stolen = false; kCh.drag = false;
+    const kp = S.workers.find(w => w.role === 'keeper');
+    if (kp) { kp.x = kCh.x + 16; kp.y = kCh.y + 16; kp.state = 'idle'; kp.t = 0; }
+    const petsB4 = S.stats.pets;
+    for (let i = 0; i < 400 && S.stats.pets === petsB4; i++) update(0.05);
+    const keeperPet = S.stats.pets > petsB4 && kCh.layT < 30;
+    // yükseltmeler: seviye artar
+    buyItem(wShop('wspd')); buyItem(wShop('wcap')); buyItem(wShop('wcare'));
+    const wUpgOk = S.lvl.wspd > 0 && S.lvl.wcap > 0 && S.lvl.wcare > 0; // 10x alımda çok seviye çıkar
+    // kayıt: roller kalıcı
+    window.GAME.writeSave();
+    const wSaved = JSON.parse(localStorage.getItem('tavukciftligi_v1')).workers || [];
+    log.push({ workerSpawned, workerCollected, keeperSpawned, keeperPet, wUpgOk,
+               workerSaved: wSaved.includes('worker') && wSaved.includes('keeper') });
+    S.lvl.scoop = scoopSav;
     // ---- prestij: kazanç → ⭐ → tam sıfırlama ----
     S.stats.earned = 200000; S.prestigeBase = 0; // √ ölçek: sqrt(200000/40000) ≈ 2 ⭐
     document.querySelector('.tab[data-tab="prest"]').click();
     const btn = document.getElementById('btnPrest');
     btn.click(); btn.click(); // iki aşamalı onay
     log.push({ prestige: S.prestige, prestResetOk: S.money === 0 && S.lvl.value === 0
-               && S.chickens.length === 1 && S.eggs.length === 0,
+               && S.chickens.length === 1 && S.eggs.length === 0
+               && S.workers.length === 0, // personel de sıfırlanır
                prestTabRows: document.querySelectorAll('#prestBody .srow').length });
     // prestij 'Efsane Ol' görevini tamamlamalı → zincir biter
     window.GAME.checkQuests();
@@ -279,7 +326,22 @@ setTimeout(() => {
     window.GAME.scareFox();
     const rescued = !f2.stolen && !S.fox.carry && S.chickens.includes(f2);
     for (let i = 0; i < 240 && S.fox; i++) update(0.05);
-    log.push({ foxFled, foxGone, rescued });
+    // fabrikada kurtarılan tavuk kümes sınırına çekilir
+    const f3 = S.chickens[0];
+    S.fox = { x: window.GAME.L.FX + 30, y: f3.y, state: 'flee', t: 0, pause: false,
+              dir: 1, target: null, scare: 0, carry: f3 };
+    f3.stolen = true; f3.x = window.GAME.L.FX + 42;
+    window.GAME.scareFox();
+    const rescuedInPen = !f3.stolen
+      && f3.x <= window.GAME.L.PEN.x + window.GAME.L.PEN.w;
+    for (let i = 0; i < 240 && S.fox; i++) update(0.05);
+    // güvenlik clamp'ı: PEN dışına çıkan tavuk geri çekilir
+    const far = S.chickens[0];
+    far.stolen = false; far.drag = false;
+    far.x = window.GAME.L.FX + 120; far.y = 400; far.state = 'walk';
+    update(0.05);
+    const penClamped = far.x <= window.GAME.L.PEN.x + window.GAME.L.PEN.w;
+    log.push({ foxFled, foxGone, rescued, rescuedInPen, penClamped });
     // ---- kelebek: tıkla yakala → para + kaybolur ----
     S.butterfly = { x: 300, y: 300, t: 0, seed: 1 };
     const mFly = S.money;

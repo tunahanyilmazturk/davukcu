@@ -58,6 +58,7 @@ export function initPrestige() {
     for (const k in S.lvl) S.lvl[k] = 0;
     S.chickens.length = 0;
     S.chicks.length = 0;
+    S.workers.length = 0; // personel de sıfırlanır — yeniden satın alınır
     S.eggs.length = 0;
     S.manures.length = 0;
     S.manureBin = 0; S.manureBags = 0; // gübre zinciri de sıfırlanır

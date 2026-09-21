@@ -60,7 +60,7 @@ export function updateFox(dt) {
   } else { // flee — sağ kenara kaçar; tavukluysa kurtarma penceresi açık
     f.x += 155 * dt;
     if (f.carry) { f.carry.x = f.x + f.dir * 12; f.carry.y = f.y - 16; }
-    if (f.x > L.FX + 70) {
+    if (f.x > L.FX + 42) { // tilki + taşınan tavuk çiftlik ekranının dışında kaybolur
       if (f.carry) {
         S.chickens.splice(S.chickens.indexOf(f.carry), 1);
         S.stats.foxStolen = (S.stats.foxStolen || 0) + 1;
@@ -98,6 +98,9 @@ export function scareFox(byPlayer = true) {
   if (!f) return;
   if (f.carry) {
     f.carry.stolen = false; f.carry.panicT = 1.4;
+    // fabrika tarafında bırakılmasın — kümese geri çek
+    f.carry.x = Math.min(f.carry.x, L.PEN.x + L.PEN.w - 24);
+    f.carry.y = Math.max(L.PEN.y + 20, Math.min(L.PEN.y + L.PEN.h, f.carry.y));
     f.carry = null;
     if (byPlayer) toast('Tavuk kurtarıldı!');
   }

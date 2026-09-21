@@ -7,6 +7,7 @@ import { updateChicks } from './chicks.js';
 import { updateEggs, box } from './eggs.js';
 import { updateTruck } from './truck.js';
 import { updateManure } from './manure.js';
+import { updateWorkers } from './workers.js';
 import { updateFox } from './fox.js';
 import { updateEvents } from './events.js';
 import { pointer, pet, chickenAt, drag, magnet } from '../input.js';
@@ -14,6 +15,7 @@ import { updateCam } from '../camera.js';
 
 export { spawnChicken } from './chickens.js';
 export { spawnChick } from './chicks.js';
+export { spawnWorker } from './workers.js';
 export { tryRefill } from './refill.js';
 export { box };
 
@@ -27,6 +29,10 @@ export function clampEntities() {
   for (const c of S.chicks) {
     c.x = Math.max(P.x + 12, Math.min(P.x + P.w - 12, c.x));
     c.y = Math.max(P.y + 30, Math.min(P.y + P.h, c.y));
+  }
+  for (const w of S.workers) {
+    w.x = Math.max(P.x + 14, Math.min(P.x + P.w - 14, w.x));
+    w.y = Math.max(P.y + 34, Math.min(P.y + P.h, w.y));
   }
   for (const e of S.eggs) {
     if (e.x < L.FX) continue; // çiftlik tarafı — kanala kadar serbest
@@ -50,6 +56,7 @@ export function update(dt) {
   updateEggs(dt);
   updateTruck(dt);
   updateManure(dt);
+  updateWorkers(dt);
   updateFox(dt);
   updateEvents(dt);
 

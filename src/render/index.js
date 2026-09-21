@@ -23,6 +23,7 @@ import { drawFactoryFX } from './facfx.js';
 import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
 import { drawFox } from './fox.js';
+import { drawWorker } from './workers.js';
 import { drawHint, setFps } from './hud.js';
 import { chickenPose } from '../entities/chickens.js';
 
@@ -238,8 +239,10 @@ export function draw(ctx, dt) {
   const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
   _chSorted.length = 0;
   for (const ch of S.chickens) _chSorted.push(ch);
+  for (const w of S.workers) _chSorted.push(w); // karakterler aynı derinlik düzeninde
   const sorted = _chSorted.sort((a, b) => a.y - b.y);
   for (const ch of sorted) {
+    if (ch.role) { drawWorker(ctx, ch); continue; } // işçi/bakıcı
     if (ch.stolen) continue; // tilki ağzında — drawFox'ta çizilir
     const sprs = SPR.chickens[ch.variant] || SPR.chickens.white;
     const pose = chickenPose(ch);
