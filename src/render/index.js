@@ -17,12 +17,12 @@ import { drawRoad, drawTruck } from './truck.js';
 import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
 import { drawHint, drawHud } from './hud.js';
+import { chickenPose } from '../entities/chickens.js';
 
 let fps = 60, fpsAcc = 0, fpsN = 0, fpsT = 0;
 
-// ana içerik ölçeği — tavuk/civciv kompakt çizilir (pixel bütünlüğü için
-// kesirli çarpan yerine hedef boyut sabiti, çizimde piksele oturur)
-const CH_SC = 2.5;   // tavuk: 16px sprite → 40px (~x0.85)
+// ana içerik ölçeği — tam sayı çarpan: piksel bütünlüğü korunur
+const CH_SC = 2;     // tavuk: 20px sprite → 40px
 const TIER_SPR = {
   normal:  [SPR.eggDirty,        SPR.egg],
   bronze:  [SPR.eggBronzeDirty,  SPR.eggBronze],
@@ -130,29 +130,26 @@ export function draw(ctx, dt) {
   // gübre yığınları — kümes zemini, tavukların altında/arkasında
   drawPiles(ctx);
 
-  // tavuklar (y'ye göre sırala — derinlik)
+  // tavuklar (y'ye göre sırala — derinlik); kare+ofsetler chickenPose'dan
   const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
   const sorted = [...S.chickens].sort((a, b) => a.y - b.y);
   for (const ch of sorted) {
     const sprs = SPR.chickens[ch.variant] || SPR.chickens.white;
-    const spr = sprs[ch.frame] || sprs.a;
-    const hopY = ch.hop > 0 ? -Math.sin(ch.hop / 0.35 * Math.PI) * 12 : 0;
-    // yürürken adımlarla senkron hafif zıplama
-    const bobY = ch.state === 'walk' ? -Math.abs(Math.sin(ch.frameT * 8 * Math.PI)) * 2 : 0;
-    const w = spr.w * CH_SC, h = spr.h * CH_SC; // kompakt ölçek (~x0.85)
-    // gölge (hop'ta küçülür)
-    ctx.fillStyle = 'rgba(0,0,0,.18)';
-    ctx.beginPath(); ctx.ellipse(ch.x, ch.y + 2, 13 * (1 + hopY / 50), 4, 0, 0, 7); ctx.fill();
-    if (ch.squat > 0) {
-      ctx.save();
-      ctx.translate(ch.x, ch.y);
-      ctx.scale(1.12, 0.85);
-      if (ch.dir < 0) ctx.scale(-1, 1); // yön korunur — çömelirken ters dönmez
-      ctx.drawImage(spr.c, -w / 2, -h, w, h);
-      ctx.restore();
-    } else {
-      drawSprite(ctx, spr, ch.x - w / 2, ch.y - h + hopY + bobY, CH_SC, ch.dir < 0);
-    }
+    const pose = chickenPose(ch);
+    const spr = sprs[pose.f] || sprs.a;
+    const w = spr.w * CH_SC, h = spr.h * CH_SC;
+    // gölge — havaya kalkınca küçülüp soluklaşır
+    const shK = Math.max(0.5, 1 + pose.lift / 55);
+    ctx.fillStyle = `rgba(0,0,0,${(0.18 * Math.max(0.4, shK)).toFixed(3)})`;
+    ctx.beginPath(); ctx.ellipse(ch.x, ch.y + 2, 13 * shK, 4, 0, 0, 7); ctx.fill();
+    // gövde taban noktasından çizilir — ezilme/yalpa ayak çapasından uygulanır
+    ctx.save();
+    ctx.translate(Math.round(ch.x), Math.round(ch.y));
+    if (pose.lean) ctx.rotate(pose.lean); // dünya uzayında yalpa (dir işaretli)
+    ctx.scale(pose.sx * (ch.dir < 0 ? -1 : 1), pose.sy);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(spr.c, -w / 2, -h + pose.bob + pose.lift, w, h);
+    ctx.restore();
     // açlık işareti: tavuğun ~üçte biri gösterir (kalabalıkta okunaklı kalır)
     if (hungry && !ch.drag && (S.chickens.indexOf(ch) % 3 === 0)) {
       const bt = Math.floor(performance.now() / 400) % 2 === 0;
@@ -164,12 +161,14 @@ export function draw(ctx, dt) {
     }
   }
 
-  // civcivler (küçük, tavuklardan sonra)
+  // civcivler (küçük, tavuklardan sonra) — aynı bob yaklaşımı, tam sayı ölçek
   for (const c of S.chicks) {
-    const spr = SPR.chick[c.frame];
+    const spr = SPR.chick[c.frame] || SPR.chick.a;
     ctx.fillStyle = 'rgba(0,0,0,.15)';
     ctx.beginPath(); ctx.ellipse(c.x, c.y + 1, 6, 2.5, 0, 0, 7); ctx.fill();
-    drawSprite(ctx, spr, c.x - 7, c.y - 14, 1.7, c.dir < 0);
+    const cb = c.state === 'walk' ? -Math.abs(Math.sin(c.frameT * 10 * Math.PI)) * 1.5
+                                  : Math.sin(c.frameT * 3) * 0.5;
+    drawSprite(ctx, spr, c.x - 8, c.y - 12 + cb, 2, c.dir < 0);
   }
 
   // sürüklenen tavuğun fiyat etiketi

@@ -5,6 +5,7 @@ import { sellPrice, autoPetCd } from './economy.js';
 import { sndPet, sndCoin, sndZap } from './audio.js';
 import { tryRefill } from './entities/index.js';
 import { manureAt, collectManure } from './entities/manure.js';
+import { HOP_T } from './entities/chickens.js';
 import { toast } from './toast.js';
 
 export const drag = { current: null }; // {ch, ox, oy, origX, origY, moved}
@@ -27,7 +28,7 @@ export function chickenAt(x, y) {
 // sevme: tavuk zıplar, kalpler çıkar, bir sonraki yumurtlama hızlanır
 // hızlandırma aralıklıdır — spam tıkla sonsuz hız exploit'i yok
 export function pet(ch) {
-  ch.hop = 0.35;
+  ch.hop = HOP_T;
   S.stats.pets++;
   if ((ch.petCd || 0) <= 0) {
     ch.layT = Math.max(0.25, ch.layT * 0.7);

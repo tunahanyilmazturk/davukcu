@@ -40,6 +40,8 @@ export function updateChicks(dt) {
     if (c.state === 'idle') {
       c.frame = 'a';
       if (c.t <= 0) {
+        // ara sıra yerden gagalama — civcivler de boş durmaz
+        if (Math.random() < 0.35) { c.state = 'peck'; c.t = 0.4 + Math.random() * 0.5; continue; }
         // hedef silo şeridine düşmesin + çok yakın olmasın (tavuklarla aynı kural)
         let ok = false;
         for (let i = 0; i < 6; i++) {
@@ -53,6 +55,10 @@ export function updateChicks(dt) {
         if (Math.abs(c.tx - c.x) > 8) c.dir = c.tx > c.x ? 1 : -1; // mini kaymada yönü koru
         c.state = 'walk';
       }
+    } else if (c.state === 'peck') {
+      // iki hızlı dip — civciv gaga vurması
+      c.frame = Math.floor(c.frameT * 7) % 2 ? 'c' : 'a';
+      if (c.t <= 0) { c.state = 'idle'; c.t = 0.4 + Math.random() * 1.6; }
     } else {
       // çapraz yürüyüş — civcivler hem yatay hem dikey seyirtir
       const dx = c.tx - c.x, dy = c.ty - c.y;

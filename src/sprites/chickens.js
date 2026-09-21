@@ -1,64 +1,165 @@
-/* Tavuk sprite'ları: 16x16, dik duruş — baş ve boyun gövdenin üstünde.
-   Üç kare: a=duruş, b=yürüme (bacaklar açık), c=gaga vurma (baş yerde).
+/* Tavuk sprite'ları: 20x19, dik duruş — baş ve boyun gövdenin üstünde.
+   Kareler (animasyon koreografisi entities/chickens.js'te):
+     a  = duruş          b/b2 = yürüme fazları (bacaklar karşılıklı açık)
+     d  = ön-eğilme      c    = gaga vuruşu (baş yerde)
+     e  = çökme (yumurtlama)  f = kanat çırpma (zıplama/sürüklenme)
    W=gövde, w=gölge, t=kuyruk, n=kanat gölgesi, r=ibik,
-   R=ibik parlaması/gerdan, o=gaga, E=göz, l=bacak */
+   R=ibik parlaması/gerdan, o=gaga, E=göz, l=bacak.
+   Tüm karelerde en alt dolu satır = zemin çizgisi (ortak taban). */
 import { makeSprite } from './core.js';
 
-const CHICKEN_ROWS_A = [
-".........r.r....",
-"........rRrRr...",
-"........WWWW....",
-".......WWWWWW...",
-".......WWWEWwoo.",
-"........WWWWoR..",
-"........WWWW....",
-"..ttt..WWWWWW...",
-".tttt.WWWWWWWW..",
-".ttttWWWWWWWWWw.",
-".tttWWWWnnWWWWww",
-"..tWWWWnnnnWWww.",
-"..WWWWWWWWWww...",
-"...WWWWWWww.....",
-".....l....l.....",
-"....ll....ll....",
+const CHICKEN_A = [
+"..........r.r.......",
+".........rRrRr......",
+".........WWWWW......",
+"........WWWWWWW.....",
+"........WWWEWwoo....",
+".........WWWWoR.....",
+".........WWWWW......",
+"..ttt....WWWWWW.....",
+".ttttt..WWWWWWWW....",
+".ttttttWWWWWWWWWw...",
+".ttttWWWWnnWWWWWw...",
+"..ttWWWWnnnnWWWWw...",
+"...WWWWWWWWWWww.....",
+"....WWWWWWWWw.......",
+"......WWWW..........",
+"......l....l........",
+"......l....l........",
+".....ll....ll.......",
+"....................",
 ];
 
-const CHICKEN_ROWS_B = [
-".........r.r....",
-"........rRrRr...",
-"........WWWW....",
-".......WWWWWW...",
-".......WWWEWwoo.",
-"........WWWWoR..",
-"........WWWW....",
-"..ttt..WWWWWW...",
-".tttt.WWWWWWWW..",
-".ttttWWWWWWWWWw.",
-".tttWWWWnnWWWWww",
-"..tWWWWnnnnWWww.",
-"..WWWWWWWWWww...",
-"...WWWWWWww.....",
-"....l......l....",
-"...l........l...",
+const CHICKEN_B = [ // yürüme 1: bacaklar açık — ön ayak ileride
+"..........r.r.......",
+".........rRrRr......",
+".........WWWWW......",
+"........WWWWWWW.....",
+"........WWWEWwoo....",
+".........WWWWoR.....",
+".........WWWWW......",
+"..ttt....WWWWWW.....",
+".ttttt..WWWWWWWW....",
+".ttttttWWWWWWWWWw...",
+".ttttWWWWnnWWWWWw...",
+"..ttWWWWnnnnWWWWw...",
+"...WWWWWWWWWWww.....",
+"....WWWWWWWWw.......",
+".....WWWW...........",
+".....l......l.......",
+"....l........l......",
+"....l.........l.....",
+"...ll.........ll....",
 ];
 
-const CHICKEN_ROWS_C = [
-"................",
-"................",
-"..tttt..........",
-".tttttt.........",
-".tttWWWWWWW.....",
-"..WWWWWWWWWW....",
-".WWWWnnWWWWW....",
-".WWWWnnnnWWWWw..",
-"..WWWWWWWWWWww..",
-"...WWWWWWWWw....",
-"....WWWWWWWWrrr.",
-"....l....lWWWW..",
-"...ll....lWWWEW.",
-"...........WWWoo",
-"............Rw..",
-"................",
+const CHICKEN_B2 = [ // yürüme 2: geçiş — bacaklar toplanır
+"..........r.r.......",
+".........rRrRr......",
+".........WWWWW......",
+"........WWWWWWW.....",
+"........WWWEWwoo....",
+".........WWWWoR.....",
+".........WWWWW......",
+"..ttt....WWWWWW.....",
+".ttttt..WWWWWWWW....",
+".ttttttWWWWWWWWWw...",
+".ttttWWWWnnWWWWWw...",
+"..ttWWWWnnnnWWWWw...",
+"...WWWWWWWWWWww.....",
+"....WWWWWWWWw.......",
+"......WWWW..........",
+".......l..l.........",
+".......l..l.........",
+".......ll.ll........",
+"....................",
+];
+
+const CHICKEN_D = [ // ön-eğilme: baş ileri-yarı aşağı (gaga öncesi hazırlık)
+"....................",
+"....................",
+"..ttt...............",
+".ttttt..............",
+".ttttttWWWWWWWWW....",
+".ttttWWWWWWWWWWWrR..",
+"..ttWWWWnnWWWWWWWW..",
+"...WWWWnnnnWWWWWEWw.",
+"....WWWWWWWWWWWWoo..",
+".....WWWWWWWWwWR....",
+"......WWWWWW........",
+".......WWWW.........",
+"....................",
+"....................",
+"....................",
+"......l....l........",
+"......l....l........",
+"......l....l........",
+".....ll....ll.......",
+];
+
+const CHICKEN_C = [ // gaga vuruşu: baş yere iner, boyun sağa uzanır
+"....................",
+"....................",
+"..ttttt.............",
+".ttttttt............",
+".tttWWWWWWWW........",
+"..WWWWWWWWWWWW......",
+".WWWWnnWWWWWWWW.....",
+".WWWWnnnnWWWWWWw....",
+"..WWWWWWWWWWWWww....",
+"...WWWWWWWWWWW......",
+"....WWWWWWWWW.......",
+"........WWWW........",
+"....l...rWWWr.......",
+"....l..rRWWWW.......",
+"...ll..WWWEWWW......",
+"...l...WWWWWWo......",
+"...l....WWWWoo......",
+".........WWR........",
+"..........w.........",
+];
+
+const CHICKEN_E = [ // çökme: yumurtlama — gövde yere basar, bacaklar gizli
+"....................",
+"....................",
+"..........r.r.......",
+".........rRrRr......",
+".........WWWWW......",
+"........WWWWWWW.....",
+"........WWWEWwoo....",
+".........WWWWoR.....",
+"..ttt....WWWWW......",
+".ttttt..WWWWWWW.....",
+".ttttttWWWWWWWWWW...",
+".ttttWWWWnnWWWWWWw..",
+"..ttWWWWnnnnWWWWww..",
+"...WWWWWWWWWWWWWww..",
+"....WWWWWWWWWWWWw...",
+".....WWWWWWWWWWw....",
+"......WWWWWWWW......",
+".......WWWWWW.......",
+"....................",
+];
+
+const CHICKEN_F = [ // kanat çırpma: kanatlar açık, bacaklar sarkık
+"....................",
+"..........r.r.......",
+".........rRrRr......",
+".........WWWWW......",
+"........WWWWWWW.....",
+"........WWWEWwoo....",
+".........WWWWoR.....",
+".nn......WWWWW......",
+".nnnn....WWWWWW.....",
+"..nnnn..WWWWWWWW....",
+"...nnnnWWWWWWWWWWw..",
+"....nnWWWWWWWWWWw...",
+".....WWWWWWWWWWw....",
+"......WWWWWWw.......",
+".......WWWW.........",
+"......l..l..........",
+".....l....l.........",
+"....................",
+"....................",
 ];
 
 export const CHICKEN_VARIANTS = {
@@ -70,17 +171,17 @@ export const CHICKEN_VARIANTS = {
   rooster: { W:'#d86038', w:'#a84828', t:'#2c4a38', n:'#b04828', r:'#e02828', R:'#ff6858', o:'#f0b028', E:'#181818', l:'#e89830' },
 };
 
+const FRAMES = { a: CHICKEN_A, b: CHICKEN_B, b2: CHICKEN_B2,
+                 d: CHICKEN_D, c: CHICKEN_C, e: CHICKEN_E, f: CHICKEN_F };
+
 export const CHICKEN_SPRITES = {};
 for (const v in CHICKEN_VARIANTS) {
-  CHICKEN_SPRITES[v] = {
-    a: makeSprite(CHICKEN_ROWS_A, CHICKEN_VARIANTS[v]),
-    b: makeSprite(CHICKEN_ROWS_B, CHICKEN_VARIANTS[v]),
-    c: makeSprite(CHICKEN_ROWS_C, CHICKEN_VARIANTS[v]),
-  };
+  CHICKEN_SPRITES[v] = {};
+  for (const f in FRAMES) CHICKEN_SPRITES[v][f] = makeSprite(FRAMES[f], CHICKEN_VARIANTS[v]);
 }
 
-/* Civciv: 8x8, A/B yürüme kareleri */
-const CHICK_ROWS_A = [
+/* Civciv: 8x8 — a/b yürüme + c gaga vurma */
+const CHICK_A = [
 "...WWW..",
 "..WWWWW.",
 ".WWWEWoo",
@@ -90,7 +191,7 @@ const CHICK_ROWS_A = [
 "........",
 "........",
 ];
-const CHICK_ROWS_B = [
+const CHICK_B = [
 "...WWW..",
 "..WWWWW.",
 ".WWWEWoo",
@@ -100,8 +201,19 @@ const CHICK_ROWS_B = [
 "........",
 "........",
 ];
+const CHICK_C = [ // gaga yere iner
+"........",
+"...WWW..",
+"..WWWWW.",
+".WWWWW..",
+"..WWWoo.",
+"....w...",
+"...l.l..",
+"........",
+];
 const CHICK_PAL = { W:'#ffe888', w:'#f0c860', E:'#181818', o:'#f08018', l:'#e89830' };
 export const CHICK_SPRITE = {
-  a: makeSprite(CHICK_ROWS_A, CHICK_PAL),
-  b: makeSprite(CHICK_ROWS_B, CHICK_PAL),
+  a: makeSprite(CHICK_A, CHICK_PAL),
+  b: makeSprite(CHICK_B, CHICK_PAL),
+  c: makeSprite(CHICK_C, CHICK_PAL),
 };

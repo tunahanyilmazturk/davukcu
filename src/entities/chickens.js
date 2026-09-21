@@ -1,10 +1,33 @@
-// Tavuklar: üretim, gezinme ve yumurtlama yapay zekası
+// Tavuklar: üretim, gezinme ve yumurtlama yapay zekası.
+// Animasyon sistemi: davranış → koreografi (ANIMS adım listeleri) →
+// prosedürel ofsetler (chickenPose). Kare geçişleri zaman çizelgesiyle
+// yönetilir; render tarafı sadece pozu okur.
 import { S } from '../state.js';
 import { L } from '../config.js';
 import { layInterval, BREEDS, roosterBoost } from '../economy.js';
 import { CHICKEN_VARIANTS } from '../sprites/index.js';
 import { layEgg } from './eggs.js';
 import { tickManure } from './manure.js';
+
+// ---- animasyon koreografileri: [kare, süre-sn] adım listeleri ----
+// loop=true döner; aksi halde bitince 'idle'a düşer ve stepAnim true döner
+const ANIMS = {
+  idle:  { loop: true, seq: [['a', 1]] },
+  walk:  { loop: true, seq: [['b', .13], ['b2', .13]] },
+  // gaga vurma: ön-eğilme → iki hızlı vuruş → doğrulma
+  peck:  { seq: [['d', .09], ['c', .12], ['d', .05], ['c', .12], ['d', .08], ['a', .05]] },
+  // yemlikte yeme: daha yavaş ve tekrarlı
+  eat:   { loop: true, seq: [['d', .15], ['c', .17], ['d', .09], ['c', .17], ['d', .11]] },
+  squat: { loop: true, seq: [['e', 1]] },   // yumurtlama çökmesi
+  flap:  { loop: true, seq: [['f', .12]] }, // zıplama / sürüklenme paniği
+};
+// davranış durumu → animasyon eşlemesi
+const STATE_ANIM = { idle: 'idle', peck: 'peck', eat: 'eat', walk: 'walk', toTrough: 'walk' };
+
+const HOP_T = 0.42;   // sevilince zıplama süresi (input.js pet() kullanır)
+const TURN_T = 0.09;  // yön değişiminde kısa ezilme
+const LAND_T = 0.14;  // iniş ezilmesi
+export { HOP_T };
 
 // rastgele spawn havuzu — yumurtlamayanlar (horoz) hariç
 const VARIANT_KEYS = Object.keys(CHICKEN_VARIANTS)
@@ -21,10 +44,32 @@ export function spawnChicken(x, y, breed) {
     tx: 0, ty: 0, state: 'idle', t: Math.random() * 2,
     layT: b.lays === false ? Infinity : layInterval() * b.layRate * (0.4 + Math.random() * 0.8),
     dir: Math.random() < 0.5 ? 1 : -1,
-    frame: 'a', frameT: 0,
+    frame: 'a', frameT: Math.random() * 4, // faz kayması — toplu spawn senkron görünmesin
+    anim: 'idle', animT: Math.random(), animI: 0,
+    turnT: 0, landT: 0,
     variant: breed, breed,
     hop: 0, squat: 0, drag: false,
   });
+}
+
+// animasyon geçişi — yeni animasyonsa adım sayacını sıfırlar
+function setAnim(ch, name) {
+  if (ch.anim === name) return;
+  ch.anim = name; ch.animT = 0; ch.animI = 0;
+}
+// adım çizelgesini ilerletir; biten doğrusal animasyonda true döner
+function stepAnim(ch, dt) {
+  const a = ANIMS[ch.anim];
+  ch.animT += dt;
+  while (ch.animT >= a.seq[ch.animI][1]) {
+    ch.animT -= a.seq[ch.animI][1];
+    if (++ch.animI >= a.seq.length) {
+      if (a.loop) ch.animI = 0;
+      else { setAnim(ch, 'idle'); return true; }
+    }
+  }
+  ch.frame = a.seq[ch.animI][0];
+  return false;
 }
 
 // silo şeridi: tank gövdesi yüksekliğinde (y < taban+8) içine girilmez;
@@ -53,24 +98,33 @@ function pickWander(ch, P) {
   }
   return false;
 }
-// ufak yatay kaymalarda yönü koru — tavuk sağa-sola dönmez
+// ufak yatay kaymalarda yönü koru — tavuk sağa-sola dönmez;
+// gerçek dönüşte kısa ezilme animasyonu tetiklenir
 function faceTarget(ch) {
-  if (Math.abs(ch.tx - ch.x) > 8) ch.dir = ch.tx > ch.x ? 1 : -1;
+  if (Math.abs(ch.tx - ch.x) <= 8) return;
+  const nd = ch.tx > ch.x ? 1 : -1;
+  if (nd !== ch.dir) { ch.dir = nd; ch.turnT = TURN_T; }
 }
 
 // fed: tavuklar tok/sulu mu (yem+su > 0) — değilse yumurtlama durur
 export function updateChickens(dt, fed) {
   const P = L.PEN;
   for (const ch of S.chickens) {
-    if (ch.drag) continue;
+    if (ch.drag) {
+      // sürüklenirken panik: kanat çırpma
+      ch.frameT += dt;
+      setAnim(ch, 'flap'); stepAnim(ch, dt);
+      continue;
+    }
     ch.t -= dt; ch.frameT += dt;
     tickManure(ch, dt); // gübre yığını bırakma sayacı
-    if (ch.hop > 0) ch.hop -= dt;
+    if (ch.hop > 0) { ch.hop -= dt; if (ch.hop <= 0) ch.landT = LAND_T; }
+    if (ch.landT > 0) ch.landT -= dt;
     if (ch.squat > 0) ch.squat -= dt;
     if (ch.petCd > 0) ch.petCd -= dt; // Sevgi Eli aralığı
+    if (ch.turnT > 0) ch.turnT -= dt;
 
     if (ch.state === 'idle') {
-      ch.frame = 'a';
       if (ch.t <= 0) {
         const roll = Math.random();
         if (fed && roll < 0.28) {
@@ -82,8 +136,8 @@ export function updateChickens(dt, fed) {
           faceTarget(ch);
           ch.state = 'toTrough';
         } else if (roll < 0.62) {
-          // gagını yere vurur — a/c kareleri hızlı dönüşür (baş iner kalkar)
-          ch.state = 'peck'; ch.t = 0.5 + Math.random() * 0.6;
+          // gaga vurma — koreografi bitince idle'a döner
+          ch.state = 'peck';
         } else if (pickWander(ch, P)) {
           faceTarget(ch);
           ch.state = 'walk';
@@ -92,14 +146,13 @@ export function updateChickens(dt, fed) {
         }
       }
     } else if (ch.state === 'peck' || ch.state === 'eat') {
-      ch.frame = (Math.floor(ch.frameT * 6) % 2) ? 'c' : 'a';
       // yerken küçük kırıntı/damla efekti
       if (ch.state === 'eat' && Math.random() < dt * 3) {
         S.parts.push({ kind: ch.trough === 'water' ? 'drop' : 'spark',
           x: ch.x + (Math.random() - .5) * 16, y: ch.y - 4,
           vy: ch.trough === 'water' ? 60 : -20, t: 0, life: .35 });
       }
-      if (ch.t <= 0) { ch.state = 'idle'; ch.t = 0.4 + Math.random() * 2; }
+      if (ch.state === 'eat' && ch.t <= 0) { ch.state = 'idle'; ch.t = 0.4 + Math.random() * 2; }
     } else { // walk / toTrough
       const dx = ch.tx - ch.x, dy = (ch.ty !== undefined ? ch.ty : ch.y) - ch.y;
       const dist = Math.hypot(dx, dy) || 1;
@@ -109,7 +162,8 @@ export function updateChickens(dt, fed) {
         if (ch.state === 'toTrough') {
           ch.state = 'eat'; ch.t = 1.1 + Math.random() * 0.8;
           const t = ch.trough === 'feed' ? L.FEED : L.WATER;
-          ch.dir = t.x + t.w / 2 > ch.x ? 1 : -1; // depoya dönük yer/içer
+          const nd = t.x + t.w / 2 > ch.x ? 1 : -1; // depoya dönük yer/içer
+          if (nd !== ch.dir) { ch.dir = nd; ch.turnT = TURN_T; }
         } else {
           ch.state = 'idle'; ch.t = 0.8 + Math.random() * 2.6;
         }
@@ -120,9 +174,16 @@ export function updateChickens(dt, fed) {
         ch.stuck = Math.hypot(nx - ch.x, ny - ch.y) < step * 0.35 ? (ch.stuck || 0) + dt : 0;
         if (ch.stuck > 1.2) { ch.stuck = 0; ch.state = 'idle'; ch.t = 0.4 + Math.random(); }
         ch.x = nx; ch.y = ny;
-        ch.frame = (Math.floor(ch.frameT * 8) % 2) ? 'a' : 'b';
       }
     }
+
+    // animasyon önceliği: zıplama > çökme > durum
+    if (ch.hop > 0) setAnim(ch, 'flap');
+    else if (ch.squat > 0) setAnim(ch, 'squat');
+    else setAnim(ch, STATE_ANIM[ch.state] || 'idle');
+    const done = stepAnim(ch, dt);
+    if (done && ch.state === 'peck') { ch.state = 'idle'; ch.t = 0.4 + Math.random() * 1.6; }
+
     const canLay = (BREEDS[ch.breed] || BREEDS.white).lays !== false;
     if (fed && canLay) {
       ch.layT -= dt * roosterBoost(); // horozlar tüm tavukları hızlandırır
@@ -135,4 +196,38 @@ export function updateChickens(dt, fed) {
       ch.layT = Math.min(ch.layT, 0.8); // aç/susuz — dolumdan hemen sonra devam etsin
     }
   }
+}
+
+// ---- görsel poz: render tarafının okuduğu tek çıktı ----
+// Kareyi ve prosedürel ofsetleri döndürür; durum değiştirmez.
+export function chickenPose(ch) {
+  const P = { f: ch.frame, bob: 0, lift: 0, lean: 0, sx: 1, sy: 1 };
+  if (ch.drag) { // sürüklenme paniği — kanat çırpar, havada sallanır
+    P.bob = Math.sin(ch.frameT * 16) * 2.2;
+    P.lean = -ch.dir * 0.08;
+    return P;
+  }
+  if (ch.hop > 0) { // sevilme zıplaması — sinus yayla
+    const p = 1 - ch.hop / HOP_T;
+    P.lift = -Math.sin(p * Math.PI) * 13;
+    P.lean = ch.dir * Math.sin(p * Math.PI) * 0.05;
+    return P;
+  }
+  if (ch.landT > 0) { // iniş ezilmesi — yumuşak geri yaylanma
+    const k = ch.landT / LAND_T;
+    P.sy = 1 - 0.14 * k; P.sx = 1 + 0.12 * k;
+  }
+  if (ch.squat > 0) { // yumurtlama — hafif titreme
+    P.bob = Math.sin(ch.frameT * 24) * 0.5;
+    return P;
+  }
+  if (ch.state === 'walk' || ch.state === 'toTrough') {
+    // adım başına bir bob — b/b2 değişimleriyle senkron
+    P.bob = -Math.abs(Math.sin(ch.animT / 0.13 * Math.PI)) * 2.2;
+    P.lean = ch.dir * 0.05;
+  } else {
+    P.bob = Math.sin(ch.frameT * 2.3) * 0.6; // nefes alma
+  }
+  if (ch.turnT > 0) P.sx *= 0.84 + 0.16 * (1 - ch.turnT / TURN_T); // dönüş ezilmesi
+  return P;
 }
