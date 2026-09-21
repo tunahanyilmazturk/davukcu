@@ -2,7 +2,7 @@
 // OYNA → oyuna girer (kayıt varsa DEVAM ET); YENİ OYUN iki aşamalı onayla
 // kaydı sıfırlar. Menü arkasında dünya canlı çizilmeye devam eder —
 // update durur ama draw çalışır (ambient animasyonlar, dalgalanan bayrak).
-import { readSave, resetSave } from './state.js';
+import { S, readSave, resetSave, writeSave } from './state.js';
 import { fmt } from './config.js';
 import { SPR } from './sprites/index.js';
 import { openSettings } from './settings.js';
@@ -60,6 +60,25 @@ export function initMenu() {
   st.textContent = '⚙  AYARLAR';
   st.addEventListener('click', () => { openSettings(); sndBuy(); });
   card.appendChild(st);
+
+  // hızlı ayarlar — modal açmadan oyundan önce değiştirilebilir
+  const qs = document.createElement('div');
+  qs.className = 'mqset';
+  const mkT = (label, get, set) => {
+    const b = document.createElement('button');
+    b.className = 'mqt';
+    const paint = () => {
+      b.innerHTML = label + '<b>' + (get() ? 'AÇIK' : 'KAPALI') + '</b>';
+      b.classList.toggle('off', !get());
+    };
+    b.addEventListener('click', () => { set(!get()); paint(); writeSave(); sndBuy(); });
+    paint();
+    qs.appendChild(b);
+  };
+  mkT('🔊 Ses',   () => !S.muted,   v => { S.muted = !v; });
+  mkT('🎵 Müzik', () => S.music,    v => { S.music = v; });
+  mkT('✨ Efekt', () => S.fxParts && S.fxAmbient, v => { S.fxParts = S.fxAmbient = v; });
+  card.appendChild(qs);
 
   // YENİ OYUN — kayıt varsa; iki aşamalı onay (ayarlardaki desen)
   if (saved) {
