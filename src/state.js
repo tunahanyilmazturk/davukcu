@@ -40,7 +40,10 @@ export const S = {
 
 export let lastSaveAt = 0; // son başarılı kayıt zamanı (ayarlar modalı gösterir)
 
+let saveSuppressed = false; // sıfırlama sonrası beforeunload'un geri yazmasını engeller
+
 export function writeSave() {
+  if (saveSuppressed) return;
   lastSaveAt = Date.now();
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
@@ -108,5 +111,6 @@ export function applySave(d) {
 }
 
 export function resetSave() {
+  saveSuppressed = true; // bu oturumda artık writeSave no-op — reload taze başlar
   try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
 }

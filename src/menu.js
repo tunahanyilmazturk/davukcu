@@ -66,6 +66,27 @@ export function showMenu() {
   play.textContent = saved ? '▶  DEVAM ET' : '▶  OYNA';
   card.appendChild(play);
 
+  // YENİ OYUN — kayıt varsa; iki aşamalı onayla sıfırdan başlatır
+  if (saved) {
+    const nw = document.createElement('button');
+    nw.className = 'mbtn new';
+    nw.textContent = 'YENİ OYUN';
+    let arm = null;
+    nw.addEventListener('click', () => {
+      if (!arm) {
+        nw.textContent = 'KAYIT SİLİNECEK — EMİN MİSİN?';
+        nw.classList.add('arm'); sndErr();
+        arm = setTimeout(() => { arm = null; nw.textContent = 'YENİ OYUN'; nw.classList.remove('arm'); }, 3000);
+        return;
+      }
+      clearTimeout(arm);
+      resetSave();
+      try { localStorage.removeItem('panelClosed'); localStorage.removeItem('shopCollapsed'); } catch (e) {}
+      location.replace(location.pathname + '?play'); // menüyü atlayıp sıfırdan oyuna
+    });
+    card.appendChild(nw);
+  }
+
   // AYARLAR
   const st = document.createElement('button');
   st.className = 'mbtn sec';
@@ -91,27 +112,6 @@ export function showMenu() {
   mkT('🎵 Müzik', () => S.music,    v => { S.music = v; });
   mkT('✨ Efekt', () => S.fxParts && S.fxAmbient, v => { S.fxParts = S.fxAmbient = v; });
   card.appendChild(qs);
-
-  // YENİ OYUN — kayıt varsa; iki aşamalı onay (ayarlardaki desen)
-  if (saved) {
-    const nw = document.createElement('button');
-    nw.className = 'mbtn subtle';
-    nw.textContent = 'Yeni Oyun';
-    let arm = null;
-    nw.addEventListener('click', () => {
-      if (!arm) {
-        nw.textContent = 'Kayıt silinecek — emin misin?';
-        nw.classList.add('arm'); sndErr();
-        arm = setTimeout(() => { arm = null; nw.textContent = 'Yeni Oyun'; nw.classList.remove('arm'); }, 3000);
-        return;
-      }
-      clearTimeout(arm);
-      resetSave();
-      try { localStorage.removeItem('panelClosed'); localStorage.removeItem('shopCollapsed'); } catch (e) {}
-      location.replace(location.pathname + '?play'); // menüyü atlayıp yeni oyuna
-    });
-    card.appendChild(nw);
-  }
 
   // yakında gelecek bölümler — yeni oyun bölümü ekleneceğinde bu listeyi doldur
   const SOON = ['?', '?', '?'];
