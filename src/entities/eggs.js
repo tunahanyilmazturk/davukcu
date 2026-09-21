@@ -144,9 +144,9 @@ export function updateEggs(dt) {
 
   const WD = L.WD;
   // yumurtalar: çiftlik zemini (yuvarlanma) → kanal → çiftlik bandı (sol) →
-  // depolama bandı (sağ) → kutu. Bant Sv.0'da kurulu ama kapalı — hız 0.
-  const bs1 = S.lvl.beltF > 0 ? farmBeltSpeed() : 0;
-  const bs2 = S.lvl.beltD > 0 ? depoBeltSpeed() : 0;
+  // depolama bandı (sağ) → kutu. Bantlar Sv.0'da yavaş çalışır — yükseltme hızlandırır.
+  const bs1 = farmBeltSpeed();
+  const bs2 = depoBeltSpeed();
 
   // üst bant: sola akar, lider dropX'e varınca alt banda düşer;
   // aralık ihlali (yeni inen yumurta) anında düzeltilmez — yumuşakça geriye kayar

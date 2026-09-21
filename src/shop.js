@@ -71,12 +71,12 @@ export const SHOP = [
         (o.g ? ' · altın %' + Math.round(o.g * 100) : ''); },
     req: () => S.lvl.rooster > 0, reqText: 'Önce horoz al' },
   { id: 'beltF', sec: 'HAT', name: 'Çiftlik Bandı', icon: 'belt', lv: 'beltF',
-    costAt: l => l === 0 ? 80 : Math.ceil(45 * Math.pow(1.9, l)),   // Sv.0→1 = kurulum
-    effAt: l => l === 0 ? 'kurulu değil' : 'x' + (farmBeltSpeed(l) / BASE.belt).toFixed(2) + ' hız' },
+    costAt: l => l === 0 ? 80 : Math.ceil(45 * Math.pow(1.9, l)),   // Sv.0→1 = hız artışı
+    effAt: l => 'x' + (farmBeltSpeed(l) / BASE.belt).toFixed(2) + ' hız' },
   { id: 'beltD', sec: 'HAT', name: 'Depolama Bandı', icon: 'belt', lv: 'beltD',
     costAt: l => l === 0 ? 150 : Math.ceil(60 * Math.pow(1.9, l)),
-    effAt: l => l === 0 ? 'kurulu değil' : 'x' + (depoBeltSpeed(l) / BASE.beltD).toFixed(2) + ' hız',
-    req: () => S.eggsSold >= 10, reqText: 'Önce 10 yumurtayı elle kutuya taşı' },
+    effAt: l => 'x' + (depoBeltSpeed(l) / BASE.beltD).toFixed(2) + ' hız',
+    req: () => S.eggsSold >= 10, reqText: 'Önce 10 yumurta sat' },
   { id: 'wash', sec: 'HAT', name: 'Yumurta Yıkama', icon: 'wash', lv: 'wash',
     costAt: l => Math.ceil(300 * Math.pow(2.5, l)),
     effAt: l => l === 0 ? 'yıkama yok' : 'x' + washMult(l).toFixed(1) + ' değer',

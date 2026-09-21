@@ -32,8 +32,9 @@ function drawRoller(ctx, x, cy, r, ang, st) {
   ctx.fillRect(x - 1.5, cy - 1.5, 3, 3);
 }
 
-// tahrik motoru: gövde + dönen fan + LED (kapalıyken fan durur, LED kırmızı)
-function drawMotor(ctx, x, topY, bottomY, running) {
+// tahrik motoru: gövde + dönen fan + LED (bs=0'da fan durur, LED kırmızı)
+function drawMotor(ctx, x, topY, bottomY, bs) {
+  const running = bs > 0;
   const w = 22;
   ctx.fillStyle = '#1c1220';
   ctx.fillRect(x - w / 2 - 1, topY - 1, w + 2, bottomY - topY + 2);
@@ -44,7 +45,7 @@ function drawMotor(ctx, x, topY, bottomY, running) {
   const cy = topY + (bottomY - topY) / 2;
   ctx.fillStyle = '#241c2c';
   ctx.beginPath(); ctx.arc(x, cy, 6, 0, 7); ctx.fill();
-  const a = running ? performance.now() / 1000 * 7 : 0;
+  const a = running ? performance.now() / 1000 * bs / 12 : 0; // fan bant hızıyla döner
   ctx.strokeStyle = running ? '#6a5a78' : '#4a3c58';
   ctx.lineWidth = 2;
   for (let i = 0; i < 3; i++) {
@@ -156,16 +157,16 @@ function drawStruts(ctx, y, x0, x1, st, bottom) {
 }
 
 export function drawBelts(ctx) {
-  // bantlar her zaman görünür; Sv.0 = kurulu ama kapalı (durur, yumurta üstünde birikir)
-  const fOn = S.lvl.beltF > 0, dOn = S.lvl.beltD > 0;
+  // bantlar her zaman görünür ve çalışır; Sv.0 = yavaş, yükseltme hızlandırır
+  const bs1 = farmBeltSpeed(), bs2 = depoBeltSpeed();
   // çiftlik bandı: kümesten sola → huniye
-  drawBelt(ctx, L.BELT1_Y, false, L.BELT1_X0, L.BELT_X1, fOn ? farmBeltSpeed() : 0, STYLE.farm);
+  drawBelt(ctx, L.BELT1_Y, false, L.BELT1_X0, L.BELT_X1, bs1, STYLE.farm);
   drawStruts(ctx, L.BELT1_Y, L.BELT1_X0, L.BELT_X1, STYLE.farm, L.BELT2_Y - 20);
-  drawMotor(ctx, L.BELT1_X0 + 70, L.BELT1_Y + L.BELT_H + 6, L.BELT1_Y + L.BELT_H + 26, fOn);
+  drawMotor(ctx, L.BELT1_X0 + 70, L.BELT1_Y + L.BELT_H + 6, L.BELT1_Y + L.BELT_H + 26, bs1);
   drawPlate(ctx, L.BELT_X1 - 70, L.BELT1_Y + L.BELT_H + 7, 'ÇİFTLİK');
   // depolama bandı: huni → yıkama → kutuya (sağa)
-  drawBelt(ctx, L.BELT2_Y, true, L.BELT_X0, L.BELT2_X1, dOn ? depoBeltSpeed() : 0, STYLE.depo);
+  drawBelt(ctx, L.BELT2_Y, true, L.BELT_X0, L.BELT2_X1, bs2, STYLE.depo);
   drawStruts(ctx, L.BELT2_Y, L.BELT_X0, L.BELT2_X1, STYLE.depo, L.FLOOR_Y);
-  drawMotor(ctx, L.CRATE_X - 70, L.BELT2_Y + L.BELT_H + 6, L.BELT2_Y + L.BELT_H + 26, dOn);
+  drawMotor(ctx, L.CRATE_X - 70, L.BELT2_Y + L.BELT_H + 6, L.BELT2_Y + L.BELT_H + 26, bs2);
   drawPlate(ctx, 255, L.BELT2_Y + L.BELT_H + 7, 'DEPOLAMA');
 }

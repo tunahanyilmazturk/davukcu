@@ -23,8 +23,9 @@ export function prestGain() {
 export function organicMult(l = S.lvl.organic) { return 1 + 0.12 * l; }
 export function eggValue(l = S.lvl.value)      { return Math.round((BASE.egg + l) * prestMult() * organicMult()); }
 export function layInterval(l = S.lvl.lay)     { return Math.max(0.7, BASE.lay * Math.pow(0.88, l)); }
-export function farmBeltSpeed(l = S.lvl.beltF) { return BASE.belt * Math.pow(1.25, l); }   // üst bant
-export function depoBeltSpeed(l = S.lvl.beltD) { return BASE.beltD * Math.pow(1.22, l); }  // alt bant
+// bantlar Sv.0'da da çalışır ama çok yavaş (%25) — yükseltme tam hıza çıkarır
+export function farmBeltSpeed(l = S.lvl.beltF) { return BASE.belt * (l > 0 ? Math.pow(1.25, l) : 0.25); }   // üst bant
+export function depoBeltSpeed(l = S.lvl.beltD) { return BASE.beltD * (l > 0 ? Math.pow(1.22, l) : 0.25); }  // alt bant
 export function goldenChance(l = S.lvl.golden) { return Math.min(0.25, BASE.golden + 0.015 * l); }
 
 // yumurta nadirlik katmanları: mult = değer çarpanı, pop = para yazısı rengi
