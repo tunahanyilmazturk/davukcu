@@ -16,7 +16,12 @@ export function initMenu() {
   if (!document.getElementById('topbar')) return;
   // herhangi bir parametre doğrudan oyuna girer (?play, ?ff, ?panel, ?foxnow...)
   if (location.search.length > 1) return;
+  showMenu();
+}
 
+// oyun içinden de çağrılabilir — üst bar çıkış butonu menüyü geri açar
+export function showMenu() {
+  if (open || !document.getElementById('topbar')) return;
   const saved = readSave();
   open = true;
 

@@ -18,6 +18,7 @@ import { isMobile } from './mobile.js';
 import { openSettings } from './settings.js';
 import { getFps } from './render/hud.js';
 import { DECOR } from './decor.js';
+import { showMenu } from './menu.js';
 import { drawDecorIcon } from './render/decor.js';
 import { toast } from './toast.js';
 
@@ -451,6 +452,11 @@ export function initTopbar() {
     S.showFps = !S.showFps;
     writeSave(); sndBuy();
     tbShow = null; // sonraki refreshUI'da boyamayı zorla
+  });
+  const tbExit = document.getElementById('tbExit');
+  if (tbExit) tbExit.addEventListener('click', () => {
+    writeSave();      // özet satırı güncel görünsün diye önce kaydet
+    showMenu(); sndBuy();
   });
 }
 
