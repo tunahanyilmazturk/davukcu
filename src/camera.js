@@ -5,11 +5,14 @@ import { L } from './config.js';
 
 export const cam = { x: 0, page: 0, target: 0 };
 
-// gezinme oklarının ekran-uzayı bölgeleri (render + input paylaşır)
+// gezinme oklarının ekran-uzayı bölgeleri (render + input paylaşır).
+// Dikey konum ~%62: panel kapatma kulakçığı (top:%46, 64px) ile çakışmasın,
+// çiftlikte toprak yolun ve sağ silonun, fabrikada boru kanalının altında kalır.
 export function navZones() {
+  const y = Math.round(L.H * 0.62) - 28;
   const z = [];
-  if (cam.x < L.W - 1) z.push({ x: L.W - 30, y: L.H / 2 - 28, w: 26, h: 56, page: 1, dir: 1 });
-  if (cam.x > 1)       z.push({ x: 4,        y: L.H / 2 - 28, w: 26, h: 56, page: 0, dir: -1 });
+  if (cam.x < L.W - 1) z.push({ x: L.W - 30, y, w: 26, h: 56, page: 1, dir: 1 });
+  if (cam.x > 1)       z.push({ x: 4,        y, w: 26, h: 56, page: 0, dir: -1 });
   return z;
 }
 
