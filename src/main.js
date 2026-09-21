@@ -9,6 +9,7 @@ import { draw } from './render/index.js';
 import { initInput, magnet } from './input.js';
 import { buildShop, buildMarket, refreshShop, refreshUI, initPanel, initTopbar, SHOP, buyItem, buyDecor, openTab } from './shop.js';
 import { initSettings } from './settings.js';
+import { initMenu, menuOpen } from './menu.js';
 import { initPrestige } from './prestige.js';
 import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
 import { collectManure } from './entities/manure.js';
@@ -75,6 +76,7 @@ initInput(cv);
 initPanel();
 initTopbar();
 initSettings();
+initMenu();
 initPrestige();
 buildShop();
 buildMarket();
@@ -93,7 +95,7 @@ function loop(now) {
   let dt = (now - last) / 1000;
   last = now;
   if (dt > 0.1) dt = 0.1;
-  update(dt);
+  if (!menuOpen()) update(dt); // ana menüde simülasyon durur, dünya canlı çizilir
   draw(ctx, dt);
   uiT += dt;
   if (uiT > 0.25) { uiT = 0; refreshUI(); }
