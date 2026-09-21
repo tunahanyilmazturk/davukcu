@@ -68,7 +68,7 @@ export function drawMagnet(ctx) {
   ctx.restore();
 
   // kutu ağzı vurgusu — tutulan yumurta ağız bölgesindeyse yeşil parlar (bırak = sat)
-  const z = L.CRATE_ZONE;
+  const z = L.WD.crateZone;
   if (magnet.held.some(e => e.x > z.x0 - 14 && e.x < z.x1 + 14
                          && e.y > z.rimY - 50 && e.y < z.inY + 50)) {
     ctx.fillStyle = 'rgba(159,232,114,.3)';

@@ -8,6 +8,7 @@ import { updateEggs, box } from './eggs.js';
 import { updateTruck } from './truck.js';
 import { updateManure } from './manure.js';
 import { pointer, pet, chickenAt, drag, magnet } from '../input.js';
+import { updateCam } from '../camera.js';
 
 export { spawnChicken } from './chickens.js';
 export { spawnChick } from './chicks.js';
@@ -26,12 +27,14 @@ export function clampEntities() {
     c.y = Math.max(P.y + 30, Math.min(P.y + P.h, c.y));
   }
   for (const e of S.eggs) {
-    e.x = Math.min(e.x, e.phase === 'belt1' ? L.BELT1_LIMIT : L.BELT2_X1 - 4);
+    if (e.x < L.FX) continue; // çiftlik tarafı — kanala kadar serbest
+    e.x = Math.min(e.x, e.phase === 'belt1' ? L.WD.belt1lim : L.WD.belt2x1 - 4);
   }
 }
 
 export function update(dt) {
   S.playTime += dt;
+  updateCam(dt); // sayfa geçiş kayması
 
   const fed = updateResources(dt);
   updateChickens(dt, fed);

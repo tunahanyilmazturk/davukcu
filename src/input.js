@@ -1,4 +1,6 @@
-// Girdi: tavuk sevme/sürükleme + mıknatıs ile yumurta toplama
+// Girdi: tavuk sevme/sürükleme + mıknatıs ile yumurta toplama + sayfa geçişi.
+// pointer/magnet dünya koordinatıdır (ekran x + cam.x). Sayfa geçişi:
+// ekran kenarındaki oklar, kenardan yatay sürükleme, ←/→ tuşları, tekerlek.
 import { S } from './state.js';
 import { L, fmt } from './config.js';
 import { sellPrice, autoPetCd } from './economy.js';
@@ -6,18 +8,27 @@ import { sndPet, sndCoin, sndZap } from './audio.js';
 import { tryRefill } from './entities/index.js';
 import { manureAt, collectManure } from './entities/manure.js';
 import { HOP_T } from './entities/chickens.js';
+import { cam, goToPage, snapCam, navZones } from './camera.js';
 import { toast } from './toast.js';
 
 export const drag = { current: null }; // {ch, ox, oy, origX, origY, moved}
 export const magnet = { active: false, x: 0, y: 0, held: [] }; // basılıyken yumurtaları kapar
-export const pointer = { x: -1, y: -1 }; // imlecin sahne koordinatı (Sevgi Eli için sürekli izlenir)
+export const pointer = { x: -1, y: -1 }; // imlecin DÜNYA koordinatı (Sevgi Eli için sürekli izlenir)
 let cv = null;
+let pan = null; // kenar-sürükleme durumu {sx, camX, active}
+const EDGE = 26; // kenar şeridi genişliği (ekran px değil dünya birimi)
 
 function evPos(e) {
   const r = cv.getBoundingClientRect();
   return { x: (e.clientX - r.left) * (L.W / r.width),
            y: (e.clientY - r.top) * (L.H / r.height),
            cx: e.clientX, rectRight: r.right };
+}
+// kenar şeridi: çiftlikte sağ kenar → fabrika; fabrikada sol kenar → çiftlik
+function edgeZone(x) {
+  if (cam.x < L.W - 1 && x > L.W - EDGE) return 1; // sağ → fabrika
+  if (cam.x > 1 && x < EDGE) return -1;          // sol → çiftlik
+  return 0;
 }
 
 export function chickenAt(x, y) {
@@ -52,12 +63,15 @@ function troughAt(x, y) {
 
 // tutulan yumurtayı bırak: kutu ağzındaysa içeri düşer (satılır), değilse sahneye düşer
 function dropEgg(eg) {
-  const z = L.CRATE_ZONE;
-  eg.x = Math.max(8, Math.min(L.W - 8, eg.x));
+  const z = L.WD.crateZone;
+  eg.x = Math.max(8, Math.min(L.WORLD_W - 8, eg.x));
   if (eg.x > z.x0 && eg.x < z.x1 && eg.y > z.rimY - 30 && eg.y < z.inY + 44) {
     eg.phase = 'in'; eg.vy = 0;
+  } else if (eg.x < L.FX) {
+    eg.phase = 'fall'; eg.vy = 0;          // çiftlik sayfası → zemine, oradan kanala
   } else {
-    eg.phase = eg.y > L.BELT2_Y + 30 ? 'floorfall' : (eg.y < L.BEAM_Y + 20 ? 'fall' : 'fall2');
+    eg.phase = eg.y > L.BELT2_Y + 30 ? 'floorfall'
+             : eg.y < L.BELT1_Y + 30 ? 'fall' : 'fall2';
     eg.vy = 0;
   }
 }
@@ -81,6 +95,7 @@ function cancelDrag() {
   if (d) { d.ch.drag = false; d.ch.x = d.origX; d.ch.y = d.origY; drag.current = null; }
   document.getElementById('panel').classList.remove('sell-hover');
 }
+function cancelPan() { pan = null; cv.style.cursor = 'default'; }
 
 export function initInput(canvas) {
   cv = canvas;
@@ -88,56 +103,97 @@ export function initInput(canvas) {
   cv.addEventListener('contextmenu', e => e.preventDefault());
 
   // imleç pencere dışında bırakılırsa mouseup hiç gelmez — kilitlenmeyi önle
-  window.addEventListener('blur', () => { if (magnet.active) releaseMagnet(); cancelDrag(); });
+  window.addEventListener('blur', () => { if (magnet.active) releaseMagnet(); cancelDrag(); cancelPan(); });
   document.documentElement.addEventListener('mouseleave',
-    () => { if (magnet.active) releaseMagnet(); cancelDrag(); });
+    () => { if (magnet.active) releaseMagnet(); cancelDrag(); cancelPan(); });
+
+  // klavye ile sayfa geçişi
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') goToPage(1);
+    else if (e.key === 'ArrowLeft') goToPage(0);
+  });
+  // tekerlek ile sayfa geçişi
+  cv.addEventListener('wheel', e => {
+    e.preventDefault();
+    goToPage((e.deltaY || e.deltaX) > 0 ? 1 : 0);
+  }, { passive: false });
 
   cv.addEventListener('mousedown', e => {
     if (e.button !== 0) return; // sadece sol tık etkileşim başlatır
     const p = evPos(e);
-    pointer.x = p.x; pointer.y = p.y;
-    const tr = troughAt(p.x, p.y);
+    pointer.x = p.x + cam.x; pointer.y = p.y;
+    const wx = pointer.x;
+    const tr = troughAt(wx, p.y);
     if (tr) { tryRefill(tr); return; }
-    const ch = chickenAt(p.x, p.y);
+    const ch = chickenAt(wx, p.y);
     if (ch) {
-      drag.current = { ch, ox: p.x - ch.x, oy: p.y - ch.y, origX: ch.x, origY: ch.y, moved: false };
+      drag.current = { ch, ox: wx - ch.x, oy: p.y - ch.y, origX: ch.x, origY: ch.y, moved: false };
       ch.drag = true;
       return;
     }
     // gübre yığını — tıkla topla (küçük gelir)
-    const mn = manureAt(p.x, p.y);
+    const mn = manureAt(wx, p.y);
     if (mn) { collectManure(mn); return; }
+    // gezinme okları (ekran uzayı) — varlıkların altında kalmazlar ama okun
+    // üstündeki tavuk/yığın öncelikli: yanlışlıkla sayfa kaymasın
+    for (const z of navZones()) {
+      if (p.x >= z.x && p.x <= z.x + z.w && p.y >= z.y && p.y <= z.y + z.h) {
+        goToPage(z.page); return;
+      }
+    }
+    // kenar şeridinde boş alan → sayfa kaydırma (mıknatıs başlamaz)
+    if (edgeZone(p.x)) { pan = { sx: p.x, camX: cam.x, active: false }; return; }
     // boş alanda basılı tut → mıknatıs devrede (yumurtaları kapar)
     magnet.active = true;
-    magnet.x = p.x; magnet.y = p.y;
+    magnet.x = wx; magnet.y = p.y;
   });
 
   window.addEventListener('mousemove', e => {
     const p = evPos(e);
-    pointer.x = p.x; pointer.y = p.y;
+    pointer.x = p.x + cam.x; pointer.y = p.y;
     const d = drag.current;
+    if (pan) {
+      const dx = p.x - pan.sx;
+      if (!pan.active && Math.abs(dx) > 7) pan.active = true;
+      if (pan.active) {
+        cam.x = cam.target = Math.max(0, Math.min(L.W, pan.camX - dx));
+        cv.style.cursor = 'grabbing';
+      }
+      return;
+    }
     if (d) {
-      if (!d.moved && Math.hypot(p.x - (d.origX + d.ox), p.y - (d.origY + d.oy)) > 10) {
+      if (!d.moved && Math.hypot(pointer.x - (d.origX + d.ox), p.y - (d.origY + d.oy)) > 10) {
         d.moved = true;
       }
       if (d.moved) {
-        d.ch.x = Math.max(10, Math.min(L.W - 10, p.x - d.ox));
+        const P = L.PEN;
+        d.ch.x = Math.max(P.x + 8, Math.min(P.x + P.w - 8, pointer.x - d.ox));
         d.ch.y = Math.max(50, Math.min(L.H - 10, p.y - d.oy));
       }
       document.getElementById('panel').classList.toggle('sell-hover', d.moved && p.cx > p.rectRight);
     } else if (magnet.active) {
-      magnet.x = p.x; magnet.y = p.y;
+      magnet.x = pointer.x; magnet.y = p.y;
       cv.style.cursor = 'none'; // imlecin yerini nal görseli alıyor
     } else {
-      // imleç önceliği tıklamayla aynı: silo → tavuk → gübre → mıknatıs;
+      // imleç önceliği tıklama ile aynı: silo → tavuk → gübre → ok → kenar;
       // yığın üstünde 'none' — yerini render/manure.js'teki kürek alır
-      cv.style.cursor = troughAt(p.x, p.y) ? 'pointer'
-        : chickenAt(p.x, p.y) ? 'grab'
-        : manureAt(p.x, p.y) ? 'none' : 'default';
+      const navHov = navZones().some(z => p.x >= z.x && p.x <= z.x + z.w
+                                         && p.y >= z.y && p.y <= z.y + z.h);
+      cv.style.cursor = troughAt(pointer.x, p.y) ? 'pointer'
+        : chickenAt(pointer.x, p.y) ? 'grab'
+        : manureAt(pointer.x, p.y) ? 'none'
+        : navHov ? 'pointer'
+        : edgeZone(p.x) ? 'ew-resize' : 'default';
     }
   });
 
   window.addEventListener('mouseup', e => {
+    // kenar kaydırması bitti → en yakın sayfaya kenetlen
+    if (pan) {
+      snapCam(pan.active ? evPos(e).x - pan.sx : 0);
+      pan = null; cv.style.cursor = 'default';
+      return;
+    }
     const d = drag.current;
     // sağ tık: mıknatıs tutarken tutulan yumurtalardan birini ayıkla
     if (e.button === 2) {
@@ -157,6 +213,7 @@ export function initInput(canvas) {
     }
     if (!d) return;
     const p = evPos(e);
+    const wx = p.x + cam.x;
     const ch = d.ch;
     ch.drag = false;
     const P = L.PEN;
@@ -171,8 +228,8 @@ export function initInput(canvas) {
       S.chickens.splice(S.chickens.indexOf(ch), 1);
       toast('Tavuk satıldı: +$' + fmt(v));
       sndCoin();
-    } else if (p.x > P.x && p.x < P.x + P.w && p.y > P.y && p.y < P.y + P.h + 30) {
-      ch.x = Math.max(P.x + 16, Math.min(P.x + P.w - 16, p.x - d.ox));
+    } else if (wx > P.x && wx < P.x + P.w && p.y > P.y && p.y < P.y + P.h + 30) {
+      ch.x = Math.max(P.x + 16, Math.min(P.x + P.w - 16, wx - d.ox));
       ch.y = Math.max(P.y + 30, Math.min(P.y + P.h, p.y - d.oy));
     } else {
       ch.x = d.origX; ch.y = d.origY;

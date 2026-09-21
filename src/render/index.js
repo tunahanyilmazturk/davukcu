@@ -1,8 +1,11 @@
-// Sahne çizimi — katman sırası burada yönetilir
-import { L, fmt } from '../config.js';
+// Sahne çizimi — iki sayfalık dünya, kamera cam.x ile kayar.
+// Katmanlar: çiftlik bg → fabrika bg (lokal uzay) → yumurtalar (dünya) →
+// istasyon önleri → tavuklar → fx. HUD ve gezinme okları ekran uzayında.
+import { L, H, fmt } from '../config.js';
 import { S } from '../state.js';
 import { SPR, drawSprite } from '../sprites/index.js';
-import { bg } from '../world.js';
+import { bgFarm, bgFac } from '../world.js';
+import { cam, navZones } from '../camera.js';
 import { sellPrice, feedCap, waterCap, fedOk } from '../economy.js';
 import { drag } from '../input.js';
 import { drawMagnet } from './magnet.js';
@@ -31,9 +34,56 @@ const TIER_SPR = {
   diamond: [SPR.eggDiamondDirty, SPR.eggDiamond],
 };
 
+// gezinme okları + sayfa noktaları (ekran uzayı; bölgeler camera.js/navZones)
+function drawNav(ctx) {
+  const t = performance.now() / 1000;
+  for (const z of navZones()) {
+    const pu = 1.5 + Math.sin(t * 4) * 1.5; // hafif nabız
+    ctx.fillStyle = 'rgba(20,14,26,.55)';
+    ctx.fillRect(z.x, z.y, z.w, z.h);
+    ctx.fillStyle = 'rgba(255,220,120,.85)';
+    ctx.beginPath();
+    const cx = z.x + z.w / 2, cy = z.y + z.h / 2;
+    if (z.dir > 0) {
+      ctx.moveTo(cx - 5 - pu * .3, cy - 10); ctx.lineTo(cx + 6 + pu, cy); ctx.lineTo(cx - 5 - pu * .3, cy + 10);
+    } else {
+      ctx.moveTo(cx + 5 + pu * .3, cy - 10); ctx.lineTo(cx - 6 - pu, cy); ctx.lineTo(cx + 5 + pu * .3, cy + 10);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.font = 'bold 7px "Courier New",monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(240,230,240,.75)';
+    ctx.fillText(z.dir > 0 ? 'FABRİKA' : 'ÇİFTLİK', cx, z.y + z.h + 9);
+  }
+  // sayfa noktaları — üst çubuğun hemen altında
+  ctx.textAlign = 'center';
+  for (let i = 0; i < 2; i++) {
+    ctx.fillStyle = i === cam.page ? '#ffd23e' : 'rgba(240,230,240,.3)';
+    ctx.beginPath(); ctx.arc(L.W / 2 - 10 + i * 20, L.HUD_H + 10, 4, 0, 7); ctx.fill();
+  }
+  ctx.textAlign = 'left';
+}
+
 export function draw(ctx, dt) {
-  ctx.drawImage(bg, 0, 0);
+  ctx.save();
+  ctx.translate(-cam.x, 0); // kamera — dünya uzayı
+
+  // ================= ÇİFTLİK sayfası (dünya x: 0..W) =================
+  ctx.drawImage(bgFarm, 0, 0);
   if (S.fxAmbient) drawAmbient(ctx);
+
+  // yemlik & suluk (kümes zemini, tavukların arkasında)
+  drawTank(ctx, L.FEED,  S.feed  / feedCap(),  'feed',  S.lvl.autoF);
+  drawTank(ctx, L.WATER, S.water / waterCap(), 'water', S.lvl.autoW);
+
+  // gübre haznesi + çuval istifi + yığınlar (çiftlik tarafı)
+  drawManureBin(ctx);
+  drawBagStack(ctx);
+  drawPiles(ctx);
+
+  // ================= FABRİKA sayfası (lokal uzay: translate(FX)) =================
+  ctx.save();
+  ctx.translate(L.FX, 0);
+  ctx.drawImage(bgFac, 0, 0);
   drawRoad(ctx); // lojistik yolu — en altta, her şeyin arkasında
 
   // iki konveyör: çiftlik bandı (sola) + depolama bandı (sağa) — belts.js
@@ -46,32 +96,35 @@ export function draw(ctx, dt) {
 
   // paketleme kutusu (yumurta düşer düşmez satılır)
   drawCrate(ctx);
+  ctx.restore();
 
-  // düşen + banttaki yumurtalar — öndeki en son çizilir (üst üste binebilir),
-  // her yumurtanın kendi boyutu/eğimi var; banttakiler x'e bağlı hafif sallanır
+  // ================= yumurtalar (DÜNYA uzayı: çiftlik zemini → kanal → bant) ==
   const order = [...S.eggs].sort((a, b) =>
     (a.phase === 'belt1' ? -a.x : a.x) - (b.phase === 'belt1' ? -b.x : b.x));
   for (const e of order) {
     const spr = (TIER_SPR[e.tier] || TIER_SPR.normal)[e.clean ? 1 : 0];
     const s = e.sc || 2, w = spr.w * s, h = spr.h * s;
-    const rest = e.phase === 'belt1' || e.phase === 'belt2' || e.phase === 'floor';
+    const rest = e.phase === 'belt1' || e.phase === 'belt2' || e.phase === 'floor'
+              || e.phase === 'roll';
     // uç taşmasında yığılan yumurtalar katman katman yükselir; yükseklik
     // sınırlı, yığın büyüdükçe yanlara genişler (tepe olmaz)
-    const pile = rest && e.phase !== 'floor' ? e.pile || 0 : 0;
+    const pile = rest && (e.phase === 'belt1' || e.phase === 'belt2') ? e.pile || 0 : 0;
     const pl = Math.min(pile, 6);
     const px = pile ? (((e.seed || 0) * 7 | 0) % 2 ? 1 : -1) * (3 + Math.floor(pile / 3) * 4) : 0;
     const fy = e.y + 21 + (rest ? (e.jy || 0) - pl * 7 : 0); // dip hizası (fizik çapası ölçek-3'e göre)
     let rot = e.rot || 0;
     if (e.phase === 'belt1' || e.phase === 'belt2')
       rot += Math.sin(e.x * 0.32 + (e.seed || 0)) * 0.07;
-    if (rest) {
+    if (e.phase === 'duct') {
+      // boru içinde — gölge yok, hafif yuvarlanma rotasyonu update'te
+    } else if (rest) {
       ctx.fillStyle = 'rgba(0,0,0,.15)';
       ctx.beginPath(); ctx.ellipse(e.x + px, fy + 1, w * 0.45, 2, 0, 0, 7); ctx.fill();
     } else if (e.phase !== 'held' && e.phase !== 'pulled' && e.phase !== 'in' && e.phase !== 'gone') {
       // düşen yumurta: hedef yüzeye yaklaştıkça beliren gölge
-      const ty = e.phase === 'fall' ? L.BELT1_Y + 5
+      const ty = e.phase === 'fall' ? (e.x < L.FX ? L.PEN_FLOOR - 4 : L.BELT1_Y + 5)
                : e.phase === 'fall2' ? L.BELT2_Y + 5
-               : e.phase === 'boxfall' ? L.CRATE_ZONE.rimY + 2
+               : e.phase === 'boxfall' ? L.WD.crateZone.rimY + 2
                : L.FLOOR_Y - 4;
       const k = Math.max(0, Math.min(1, 1 - (ty - e.y) / 170));
       ctx.fillStyle = `rgba(0,0,0,${(0.2 * k).toFixed(3)})`;
@@ -109,27 +162,24 @@ export function draw(ctx, dt) {
       ctx.fillStyle = '#241c2c';
       ctx.fillRect(x - 1, y - 8, 2, 5); ctx.fillRect(x - 1, y - 2, 2, 2);
     };
-    if (S.eggs.some(e => e.phase === 'belt1' && (e.pile || 0) >= 2)) jam(L.BELT1_LIMIT + 2, L.BELT1_Y - 16);
-    if (S.eggs.some(e => e.phase === 'belt2' && (e.pile || 0) >= 2)) jam(L.BELT_X0 + 22, L.BELT2_Y - 16);
+    if (S.eggs.some(e => e.phase === 'belt1' && (e.pile || 0) >= 2)) jam(L.WD.belt1lim + 2, L.BELT1_Y - 16);
+    if (S.eggs.some(e => e.phase === 'belt2' && (e.pile || 0) >= 2)) jam(L.WD.beltX0 + 22, L.BELT2_Y - 16);
   }
 
+  // ================= fabrika ön yüzleri + kamyon (lokal uzay) =================
+  ctx.save();
+  ctx.translate(L.FX, 0);
   // istasyon ön yüzleri: cam tünel + jetler/fırçalar (yumurta camın arkasında)
   if (S.lvl.wash > 0) drawWashFront(ctx);
   if (S.lvl.grade > 0) drawGradeFront(ctx);
   if (S.lvl.polish > 0) drawPolishFront(ctx);
   // kutu ön duvarı — içeri düşen yumurta bunun arkasında kaybolur
   drawCrateFront(ctx);
+  // lojistik kamyonu (yolun üstünde, yumurtaların önünde)
+  drawTruck(ctx);
+  ctx.restore();
 
-  // yemlik & suluk (kümes zemini, tavukların arkasında)
-  drawTank(ctx, L.FEED,  S.feed  / feedCap(),  'feed',  S.lvl.autoF);
-  drawTank(ctx, L.WATER, S.water / waterCap(), 'water', S.lvl.autoW);
-
-  // gübre haznesi + çuval istifi (kümes üst kenarı, tavukların arkasında)
-  drawManureBin(ctx);
-  drawBagStack(ctx);
-  // gübre yığınları — kümes zemini, tavukların altında/arkasında
-  drawPiles(ctx);
-
+  // ================= tavuklar + civcivler (çiftlik tarafı) =================
   // tavuklar (y'ye göre sırala — derinlik); kare+ofsetler chickenPose'dan
   const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
   const sorted = [...S.chickens].sort((a, b) => a.y - b.y);
@@ -179,19 +229,18 @@ export function draw(ctx, dt) {
     ctx.fillText('$' + fmt(sellPrice(d.ch.breed)), d.ch.x, d.ch.y - 46);
   }
 
-  // lojistik kamyonu (yolun üstünde, yumurtaların önünde)
-  drawTruck(ctx);
-
-  // parçacıklar
+  // parçacıklar (dünya uzayı)
   drawParticles(ctx);
-
   // mıknatıs aracı (alan halkası + nal + toplam değer)
   drawMagnet(ctx);
   // gübre yığını üstünde kürek imleci
   drawShovelCursor(ctx);
-
-  // ipucu balonu + üst bilgi çubuğu
+  // ipucu balonları (dünya uzayı — sayfa içeriğine bağlı)
   drawHint(ctx);
+  ctx.restore();
+
+  // ================= ekran uzayı: gezinme + HUD =================
+  drawNav(ctx);
   drawHud(ctx, fps);
 
   // fps ölçümü

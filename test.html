@@ -132,17 +132,20 @@ setTimeout(() => {
     S.lvl.truck = 2;
     const moneyBefore = S.money;
     for (let i = 0; i < 6; i++)
-      S.eggs.push({ x: 200 + i * 30, y: L.FLOOR_Y - 10, vy: 0, phase: 'floor',
+      S.eggs.push({ x: L.FX + 200 + i * 30, y: L.FLOOR_Y - 10, vy: 0, phase: 'floor',
                     tier: 'normal', valMult: 1, clean: false, wash: 0, polish: 0,
                     shine: false, graded: true });
     for (let i = 0; i < 2400; i++) update(0.05); // kamyon gelir, yükler, gider
     log.push({ trucked: S.stats.trucked, truckPaid: S.money > moneyBefore,
                floorLeft: S.eggs.filter(e => e.phase === 'floor').length });
     // ---- gübre zinciri: yığın → kürek tık → kova → 20'de çuval → kamyon satışı ----
+    // (kamyon bu bölümde durur — stok çuvalı alıp sayacı bozmasın diye)
+    const truckLvlSav = S.lvl.truck; S.truck = null; S.lvl.truck = 0;
     const pilesBefore = S.manures.length;
     const manBefore = S.stats.manure;
     const binBefore = S.manureBin;
-    if (S.manures.length) window.GAME.collectManure(S.manures[0]); // elle toplama → kovaya
+    if (!S.manures.length) S.manures.push({ x: 300, y: 300, seed: 1 }); // tıklanacak yığın garanti
+    window.GAME.collectManure(S.manures[0]); // elle toplama → kovaya
     const clickedToBin = S.stats.manure === manBefore + 1 && S.manureBin === binBefore + 1;
     // 20 yığın = 1 çuval dönüşümü (kepçe kovaya doldurur)
     S.manureBin = 0; S.manures.length = 0;
@@ -166,7 +169,7 @@ setTimeout(() => {
     const cursorReset = cvEl.style.cursor !== 'none';
     // kamyon çuval satışı: stok koy → kamyon gelip yükleyip ödesin
     const paidBefore = S.money, soldBagsBefore = S.stats.bags;
-    S.manureBags = 2;
+    S.lvl.truck = truckLvlSav; S.manureBags = 2;
     for (let i = 0; i < 3000 && S.stats.bags === soldBagsBefore; i++) update(0.05);
     log.push({ manurePiles: pilesBefore, manureMaxOk: pilesBefore <= 14,
                clickedToBin, binCount: S.manureBin, bagMade,

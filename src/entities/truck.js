@@ -51,7 +51,7 @@ export function updateTruck(dt) {
       tr.worth += eggWorth(e);
       S.eggs.splice(S.eggs.indexOf(e), 1);
       tr.t = 0.16;                       // yumurta başı yükleme süresi
-      S.parts.push({ kind: 'spark', x: tr.x + 6, y: L.ROAD_Y - 18, vy: -50, t: 0, life: .3 });
+      S.parts.push({ kind: 'spark', x: L.FX + tr.x + 6, y: L.ROAD_Y - 18, vy: -50, t: 0, life: .3 });
       sndPop();
       return;
     }
@@ -61,7 +61,7 @@ export function updateTruck(dt) {
       tr.bags++;
       tr.worth += manureBagValue();
       tr.t = 0.22;                       // çuval başı yükleme süresi
-      S.parts.push({ kind: 'spark', x: tr.x + 6, y: L.ROAD_Y - 24, vy: -50, t: 0, life: .3 });
+      S.parts.push({ kind: 'spark', x: L.FX + tr.x + 6, y: L.ROAD_Y - 24, vy: -50, t: 0, life: .3 });
       sndPop();
       return;
     }
@@ -80,7 +80,7 @@ export function updateTruck(dt) {
       S.stats.bags += tr.bags;
       S.parts.push({ kind: 'text', text: '+$' + fmt(tr.worth) + ' kamyon' +
           (tr.bags ? ' (' + tr.bags + ' çuval)' : ''),
-        x: L.DOCK_X - 20, y: L.ROAD_Y - 60, vy: -30, t: 0, life: 1.2, color: '#8fd8ff' });
+        x: L.WD.dockX - 20, y: L.ROAD_Y - 60, vy: -30, t: 0, life: 1.2, color: '#8fd8ff' });
       sndCoin();
     }
     S.truck = null;

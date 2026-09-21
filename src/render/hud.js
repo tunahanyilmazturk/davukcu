@@ -8,8 +8,8 @@ export function drawHint(ctx) {
   if (!S.fxHints) return;
   const eggWaiting = S.eggs.some(e => e.phase === 'belt1' || e.phase === 'belt2' || e.phase === 'floor');
   if (S.eggsSold === 0 && eggWaiting) {
-    // kutuya işaret eden balon — elle taşıma fazı
-    const bx = L.CRATE_X - 168, by = L.BELT2_Y - 104;
+    // kutuya işaret eden balon — elle taşıma fazı (fabrika sayfasında, dünya uzayı)
+    const bx = L.WD.crateX - 168, by = L.BELT2_Y - 104;
     ctx.fillStyle = '#fff';
     ctx.fillRect(bx + 4, by, 128, 46);
     ctx.fillRect(bx, by + 4, 136, 38);
@@ -28,7 +28,7 @@ export function drawHint(ctx) {
     return;
   }
   if (S.eggsSold !== 0 || S.playTime >= 14) return;
-  const bx = 18, by = L.FLOOR_Y - 140;
+  const bx = 18, by = L.PEN_FLOOR - 140;
   ctx.fillStyle = '#fff';
   ctx.fillRect(bx + 4, by, 120, 46);
   ctx.fillRect(bx, by + 4, 128, 38);

@@ -13,6 +13,7 @@ import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
 import { collectManure } from './entities/manure.js';
 import { toast } from './toast.js';
 import { buildBG } from './world.js';
+import { cam, goToPage, syncCam } from './camera.js';
 
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
@@ -29,6 +30,7 @@ function resize() {
   cv.style.width = (lay.W * s) + 'px';
   cv.style.height = r.height + 'px';
   buildBG();
+  syncCam();   // sayfa genişliği değişti — kamera aynı sayfada hizalanır
   clampEntities();
 }
 window.addEventListener('resize', resize);
@@ -87,7 +89,7 @@ requestAnimationFrame(loop);
 // geliştirme: test.html bu kancayı kullanır
 if (import.meta.env && import.meta.env.DEV) {
   window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
-                  QUESTS, checkQuests, refreshQuestBar, collectManure };
+                  QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
   const ff = parseFloat(q.get('ff') || '0');
@@ -110,22 +112,24 @@ if (import.meta.env && import.meta.env.DEV) {
   // ?rost=1&chick=1 → görsel test: horoz + civciv spawn
   if (q.has('rost')) spawnChicken(undefined, undefined, 'rooster');
   if (q.has('chick')) spawnChick();
-  // ?floor=6 → görsel test: zemine yumurta serp (kamyon toplar)
+  // ?floor=6 → görsel test: fabrika zeminine yumurta serp (kamyon toplar)
   const fl = parseInt(q.get('floor') || '0');
   for (let i = 0; i < fl; i++)
-    S.eggs.push({ x: 160 + i * 22 + Math.random() * 10, y: L.FLOOR_Y - 10, vy: 0, phase: 'floor',
+    S.eggs.push({ x: L.FX + 160 + i * 22 + Math.random() * 10, y: L.FLOOR_Y - 10, vy: 0, phase: 'floor',
                   tier: 'normal', valMult: 1, clean: false, wash: 0, polish: 0,
                   shine: false, graded: true, ...eggLooks() });
-  // ?trucknow=1 → görsel test: kamyonu hemen yükleme pozisyonuna koy
+  // ?trucknow=1 → görsel test: kamyonu hemen yükleme pozisyonuna koy (lokal x)
   if (q.has('trucknow')) S.truck = { x: L.W * 0.35, state: 'arrive', cargo: 3, bags: 0, worth: 0, t: 1, bob: 0 };
   // ?bags=3&bin=12 → görsel test: çuval stoğu + kova doluluğu
   if (q.get('bags') !== null) S.manureBags = parseInt(q.get('bags')) || 0;
   if (q.get('bin') !== null) S.manureBin = parseInt(q.get('bin')) || 0;
+  // ?page=1 → fabrika sayfasında başlat (görsel test)
+  if (q.get('page') === '1') { cam.page = 1; cam.x = cam.target = L.W; }
   // ?settings=1 → ayarlar modalını açık başlat (görsel test)
   if (q.has('settings')) document.getElementById('btnSettings').click();
-  // ?mag=1 → mıknatıs görselini sabit konumda aktif tut (görsel test)
+  // ?mag=1 → mıknatıs görselini sabit konumda aktif tut (görsel test, dünya x)
   if (q.has('mag')) {
-    const mx = L.W * 0.45, my = H * 0.58;
+    const mx = L.FX + L.W * 0.45, my = L.BELT2_Y - 40;
     setInterval(() => { magnet.active = true; magnet.x = mx; magnet.y = my; }, 100);
   }
   if (lvls.length || mny || ch) refreshShop();

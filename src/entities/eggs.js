@@ -1,4 +1,6 @@
-// Yumurtalar: yumurtlama, bant akışı, yıkama, kutuya düşüş, ödeme
+// Yumurtalar: yumurtlama → çiftlik zemini → sağa yuvarlanma → kanal borusu →
+// fabrika bandı → yıkama/sınıf/cila → kutuya düşüş → ödeme.
+// x koordinatları DÜNYA uzayındadır; fabrika sabitleri L.WD üzerinden.
 import { S } from '../state.js';
 import { L, fmt, MAXL } from '../config.js';
 import { eggValue, washMult, washTime, polishMult, polishTime, farmBeltSpeed, depoBeltSpeed,
@@ -78,18 +80,19 @@ export function payout(e) {
   if (e.clean) S.stats.washed++;
   if (e.shine) S.stats.polished++;
   S.parts.push({ kind: 'text', text: '+$' + fmt(v) + (lucky ? ' x2!' : ''),
-    x: L.CRATE_X + 36, y: L.BELT2_Y - 40,
+    x: L.WD.crateX + 36, y: L.BELT2_Y - 40,
     vy: -35, t: 0, life: 1.1,
     color: lucky ? '#ffd23e'
          : e.tier && e.tier !== 'normal' ? t.pop : (e.clean ? '#6ad8ff' : '#9fe870') });
-  S.parts.push({ kind: 'coin', x: L.CRATE_X + 44, y: L.BELT2_Y - 16, vx: 40, vy: -90, t: 0, life: .8 });
+  S.parts.push({ kind: 'coin', x: L.WD.crateX + 44, y: L.BELT2_Y - 16, vx: 40, vy: -90, t: 0, life: .8 });
   sndCoin();
 }
 
 // mıknatısın kapabileceği fazlar — çekim ve önizleme bunu paylaşır
+// ('duct': boru içindeki yumurtaya ulaşılamaz)
 export function eggGrabbable(e) {
   return e.phase !== 'held' && e.phase !== 'pulled' && e.phase !== 'boxfall'
-      && e.phase !== 'gone' && e.phase !== 'in';
+      && e.phase !== 'gone' && e.phase !== 'in' && e.phase !== 'duct';
 }
 
 export function updateEggs(dt) {
@@ -139,29 +142,30 @@ export function updateEggs(dt) {
     });
   }
 
-  // yumurtalar: düşme → çiftlik bandı (sol) → depolama bandı (sağ) → kutu
-  // bant Sv.0'da kurulu ama kapalı — hız 0, yumurtalar üstünde birikir
+  const WD = L.WD;
+  // yumurtalar: çiftlik zemini (yuvarlanma) → kanal → çiftlik bandı (sol) →
+  // depolama bandı (sağ) → kutu. Bant Sv.0'da kurulu ama kapalı — hız 0.
   const bs1 = S.lvl.beltF > 0 ? farmBeltSpeed() : 0;
   const bs2 = S.lvl.beltD > 0 ? depoBeltSpeed() : 0;
 
-  // üst bant: sola akar, lider DROP_X'e varınca alt banda düşer;
+  // üst bant: sola akar, lider dropX'e varınca alt banda düşer;
   // aralık ihlali (yeni inen yumurta) anında düzeltilmez — yumuşakça geriye kayar
   const b1 = S.eggs.filter(e => e.phase === 'belt1').sort((a, b) => a.x - b.x);
   const push1 = Math.max(bs1, 70), gap = eggGap();
   let lead1 = -Infinity, pile1 = 0;
   for (let i = 0; i < b1.length; i++) {
     const e = b1[i];
-    const limit = (i === 0) ? L.DROP_X : lead1 + gap;
+    const limit = (i === 0) ? WD.dropX : lead1 + gap;
     if (e.x > limit) e.x = Math.max(limit, e.x - bs1 * dt);
     else if (i > 0 && e.x < limit) e.x = Math.min(limit, e.x + push1 * dt);
-    if (e.x > L.BELT1_LIMIT) e.x = L.BELT1_LIMIT; // sağ uçta sıkışıp kalırlar
+    if (e.x > WD.belt1lim) e.x = WD.belt1lim; // sağ uçta sıkışıp kalırlar
     // uç taşması: aralık sağlanamayan yumurtalar üst üste katmanlanır;
     // katman sınırını aşanlar bandtan dökülür
-    if (i > 0 && e.x >= L.BELT1_LIMIT - 1 && e.x - lead1 < gap - 3) {
+    if (i > 0 && e.x >= WD.belt1lim - 1 && e.x - lead1 < gap - 3) {
       e.pile = ++pile1;
       if (e.pile > PILE_MAX) spill(e);
     } else { e.pile = 0; pile1 = 0; }
-    if (i === 0 && e.x <= L.DROP_X) { e.phase = 'fall2'; e.vy = 0; }
+    if (i === 0 && e.x <= WD.dropX) { e.phase = 'fall2'; e.vy = 0; }
     lead1 = e.x;
     // kirli yumurta bantta tortu bırakır
     if (!e.clean && Math.random() < dt * 0.4) {
@@ -181,7 +185,7 @@ export function updateEggs(dt) {
   let lead2 = Infinity, washerBusy = false, polishBusy = false, pile2 = 0;
   for (let i = 0; i < b2.length; i++) {
     const e = b2[i];
-    let limit = (i === 0) ? L.BELT2_X1 - 4 : lead2 - eggGap();
+    let limit = (i === 0) ? WD.belt2x1 - 4 : lead2 - eggGap();
 
     // geçiş yıkaması: hareket halindeyken tünelde temizlenir (kuyruk tutmaz)
     if (e.washM > 0) {
@@ -218,24 +222,24 @@ export function updateEggs(dt) {
       continue;
     }
     if (washOn && !e.clean) {
-      if (e.x >= L.WASH_X - 1) {
+      if (e.x >= WD.washX - 1) {
         if (washThru) {
           if (e.washM <= 0) e.washM = e.washT = thruDur; // durmadan geçer
         } else if (!washerBusy) {
           e.wash = e.washT = washTime(); washerBusy = true; lead2 = e.x; continue;
         } else {
-          limit = Math.min(limit, L.WASH_X + gap);
+          limit = Math.min(limit, WD.washX + gap);
         }
       }
     }
     if (polishOn && e.clean && !e.shine) {
-      if (e.x >= L.POLISH_X - 1) {
+      if (e.x >= WD.polishX - 1) {
         if (!polishBusy) { e.polish = e.polishT = polishTime(); polishBusy = true; lead2 = e.x; continue; }
-        limit = Math.min(limit, L.POLISH_X + gap);
+        limit = Math.min(limit, WD.polishX + gap);
       }
     }
     // sınıflandırıcı: kemer altından geçerken tek seferlik tarama — durmaz
-    if (gradeOn && !e.graded && e.x >= L.GRADE_X) {
+    if (gradeOn && !e.graded && e.x >= WD.gradeX) {
       e.graded = true;
       const up = NEXT_TIER[e.tier];
       if (up && Math.random() < gradeChance()) {
@@ -251,10 +255,10 @@ export function updateEggs(dt) {
     }
     if (e.x < limit) e.x = Math.min(limit, e.x + bs2 * dt);
     else if (i > 0 && e.x > limit) e.x = Math.max(limit, e.x - push2 * dt); // aralık ihlali → geriye kay
-    if (e.x < L.BELT_X0 + 4) e.x = L.BELT_X0 + 4;
+    if (e.x < WD.beltX0 + 4) e.x = WD.beltX0 + 4;
     // sol uç taşması: kuyruk duvara dayanınca yumurtalar katmanlanır;
     // katman sınırını aşanlar yere dökülür (kamyon toplar)
-    if (i > 0 && e.x <= L.BELT_X0 + 6 && lead2 - e.x < gap - 3) {
+    if (i > 0 && e.x <= WD.beltX0 + 6 && lead2 - e.x < gap - 3) {
       e.pile = ++pile2;
       if (e.pile > PILE_MAX) spill(e);
     } else { e.pile = 0; pile2 = 0; }
@@ -262,7 +266,7 @@ export function updateEggs(dt) {
       S.parts.push({ kind: 'speck', x: e.x + (Math.random() - .5) * 8,
         y: L.BELT2_Y + 2, vy: 20, t: 0, life: .6 });
     }
-    if (i === 0 && e.x >= L.BELT2_X1 - 5) {
+    if (i === 0 && e.x >= WD.belt2x1 - 5) {
       // bant ucundan fırlar: ileri momentum + yerçekimiyle kutu ağzına düşer
       e.phase = 'boxfall'; e.vy = 0;
       e.vx = Math.min(140 + bs2 * 0.2, 200);
@@ -270,7 +274,7 @@ export function updateEggs(dt) {
     lead2 = e.x;
   }
 
-  // düşen yumurtalar
+  // hareket fazları: düşüş, yuvarlanma, kanal, kutu
   for (const e of S.eggs) {
     if (e.sq > 0) e.sq -= dt; // iniş ezilmesi sayacı
     if (e.phase === 'boxfall') {
@@ -278,7 +282,7 @@ export function updateEggs(dt) {
       e.vy += 1400 * dt;
       e.x += (e.vx || 0) * dt;
       e.y += e.vy * dt;
-      const z = L.CRATE_ZONE;
+      const z = WD.crateZone;
       if (e.y >= z.rimY && e.x >= z.x0 && e.x <= z.x1) {
         e.phase = 'in';
       } else if (e.y >= L.FLOOR_Y - 8) {
@@ -292,12 +296,12 @@ export function updateEggs(dt) {
       // kutu içine gömülme: ağız ortasına kayar, ön duvarın arkasında kaybolur
       e.vy += 1600 * dt;
       e.y += e.vy * dt;
-      e.x += (L.MOUTH_X - e.x) * Math.min(1, dt * 10);
-      if (e.y >= L.CRATE_ZONE.inY) { e.phase = 'gone'; box.t = 0.18; payout(e); }
+      e.x += (WD.mouthX - e.x) * Math.min(1, dt * 10);
+      if (e.y >= WD.crateZone.inY) { e.phase = 'gone'; box.t = 0.18; payout(e); }
       continue;
     }
     if (e.phase === 'floorfall') {
-      // zemine düşüş (mıknatısla aşağı bırakılan) — yolda kalır
+      // zemine düşüş (mıknatısla aşağı bırakılan / taşan) — yolda kalır
       e.vy += 1400 * dt;
       e.y += e.vy * dt;
       if (e.y >= L.FLOOR_Y - 10) {
@@ -306,17 +310,51 @@ export function updateEggs(dt) {
       }
       continue;
     }
+    if (e.phase === 'roll') {
+      // çiftlik toprak yolunda sağa yuvarlanır → kanal ağzına varınca boruya girer
+      e.x += 115 * dt;
+      e.rot = (e.rot || 0) + dt * 5.5; // yuvarlanma dönüşü
+      if (e.x >= L.DUCT_IN) { e.phase = 'duct'; e.dt2 = 0; }
+      continue;
+    }
+    if (e.phase === 'duct') {
+      // kanal borusu: sınır altı → yükseliş → üst hat → bırakma ağzı.
+      // e.dt2 = yol boyunca kat edilen mesafe; konum her karede hesaplanır.
+      e.dt2 += 300 * dt;
+      const path = WD.duct;
+      let d = e.dt2, done = true;
+      for (let i = 0; i + 1 < path.length; i++) {
+        const [ax, ay] = path[i], [bx, by] = path[i + 1];
+        const len = Math.hypot(bx - ax, by - ay);
+        if (d <= len) {
+          const k = len ? d / len : 0;
+          e.x = ax + (bx - ax) * k;
+          e.y = ay + (by - ay) * k - 12; // yumurta boru kanalının içinde
+          done = false;
+          break;
+        }
+        d -= len;
+      }
+      e.rot = (e.rot || 0) + dt * 4;
+      if (done) { e.phase = 'fall'; e.vy = 0; } // ağızdan üst banda kısa düşüş
+      continue;
+    }
     if (e.phase !== 'fall' && e.phase !== 'fall2') continue;
     const toBelt1 = e.phase === 'fall';
-    const targetY = toBelt1 ? L.BELT1_Y : L.BELT2_Y;
+    // 'fall': çiftlikte toprak yola, fabrikada üst banda (kanal çıkışı)
+    const onFarm = e.x < L.FX;
+    const targetY = toBelt1 ? (onFarm ? L.PEN_FLOOR : L.BELT1_Y) : L.BELT2_Y;
     e.vy += 1400 * dt;
     e.y += e.vy * dt;
     if (e.y >= targetY - 20) {
       e.y = targetY - 20;
-      e.phase = toBelt1 ? 'belt1' : 'belt2';
-      // düştüğü hizada konumlanır — üst bantta sol uç kanalın sağında kalır
-      e.x = Math.min(Math.max(e.x, (toBelt1 ? L.BELT1_X0 : L.BELT_X0) + 6),
-                     toBelt1 ? L.BELT1_LIMIT : L.BELT2_X1 - 6);
+      if (toBelt1 && onFarm) {
+        e.phase = 'roll'; // toprak yola indi — kanala doğru yuvarlanır
+      } else {
+        e.phase = toBelt1 ? 'belt1' : 'belt2';
+        e.x = Math.min(Math.max(e.x, (toBelt1 ? WD.belt1x0 : WD.beltX0) + 6),
+                       toBelt1 ? WD.belt1lim : WD.belt2x1 - 6);
+      }
       e.sq = 0.14; // iniş ezilmesi
       S.parts.push({ kind: 'puff', x: e.x, y: targetY - 4, t: 0, life: .3 });
       sndPop();

@@ -1,7 +1,8 @@
-// FABRİKA bölgesi (L.LINE): ayıraç kirişi, duvar, bant askıları, huni,
+// FABRİKA sayfası (sayfa 1, LOKAL x: 0..W — çizim translate(FX) bağlamında):
+// tavan kirişi, duvar, bant askıları, huni, yumurta kanalı borusu,
 // hat altı taşıyıcılar, zemin ve depo dekoru — statik arka plan.
-// Otlak çizimi src/world/farm.js'te; bu dosya sadece BEAM_Y ve altını çizer.
-import { L, mulberry32 } from '../config.js';
+// Otlak çizimi src/world/farm.js'te; iki dosya ayrı sayfaları çizer.
+import { L, H, mulberry32 } from '../config.js';
 
 // --- depo dekoru parçaları (yB = zemine basan alt kenar) ---
 function drawCrate(g, x, yB, w, h) {
@@ -39,11 +40,58 @@ function drawBarrel(g, x, yB) {
   g.fillRect(x, yB - 32, 24, 3); g.fillRect(x, yB - 12, 24, 3);
 }
 
+// yumurta kanalı borusu: zemin hattından girer → sol duvar boyunca yükselir →
+// üstten sağa koşar → üst bandın sağ ucu üstüne iner. İç kanal açık renk —
+// yumurtalar borunun içinde görünür geçer.
+function drawDuct(g) {
+  const D = L.DUCT, y0 = D.y, top = D.top, rx = D.rx, outX = D.outX;
+  const P = 22, C = 9; // dış kabuk ±11, iç kanal ±9 — yumurta (~18px) içinde kalır
+  const seg = (x, y, w, h) => { // bir boru parçası: kabuk + iç kanal + cam parlaması
+    g.fillStyle = '#1c1220'; g.fillRect(x - 1, y - 1, w + 2, h + 2);
+    g.fillStyle = '#2e2438'; g.fillRect(x, y, w, h);
+    g.fillStyle = '#191423'; // iç kanal — yumurta burada görünür geçer
+    if (w > h) { g.fillRect(x + 2, y + h / 2 - C, w - 4, C * 2); }
+    else       { g.fillRect(x + w / 2 - C, y + 2, C * 2, h - 4); }
+    g.fillStyle = '#5a5270'; // cam kenar parlaması
+    if (w > h) { g.fillRect(x, y + 2, w, 2); g.fillRect(x, y + h - 4, w, 2); }
+    else       { g.fillRect(x + 2, y, 2, h); g.fillRect(x + w - 4, y, 2, h); }
+  };
+  // zemin hattı: sol kenardan riser'a
+  seg(-2, y0 - P / 2, rx + 4, P);
+  // riser: zeminden üst hatta
+  seg(rx - P / 2, top - 2, P, y0 - top + P / 2 + 2);
+  // üst hat: riser'dan bırakma ağzına
+  seg(rx - P / 2, top - P / 2, outX - rx + P / 2 + 4, P);
+  // iniş ağzı: üst hattan üst banda
+  seg(outX - P / 2, top - 2, P, L.BELT1_Y - 34 - top + 2);
+  // dirsek kapakları
+  for (const [cx, cy] of [[rx, y0], [rx, top], [outX, top]]) {
+    g.fillStyle = '#1c1220'; g.fillRect(cx - P / 2 - 1, cy - P / 2 - 1, P + 2, P + 2);
+    g.fillStyle = '#54445f'; g.fillRect(cx - P / 2, cy - P / 2, P, P);
+    g.fillStyle = '#6a5a78'; g.fillRect(cx - 2, cy - 2, 4, 4);
+  }
+  // bırakma ağzı: açık uç + iç karanlık
+  g.fillStyle = '#1c1220'; g.fillRect(outX - P / 2 - 2, L.BELT1_Y - 38, P + 4, 6);
+  g.fillStyle = '#14101a'; g.fillRect(outX - P / 2 + 2, L.BELT1_Y - 36, P - 4, 4);
+  // üst hat askı kelepçeleri
+  for (let x = rx + 90; x < outX - 20; x += 130) {
+    g.fillStyle = '#1c1220'; g.fillRect(x, top - P / 2 - 8, 4, 8);
+    g.fillRect(x - 3, top - P / 2 - 10, 10, 3);
+  }
+  // 'YUMURTA' etiketi üst hatta
+  g.fillStyle = '#54445f'; g.fillRect(rx + 44, top - P / 2 - 13, 56, 11);
+  g.fillStyle = '#e8e0e8';
+  g.font = 'bold 8px "Courier New",monospace'; g.textAlign = 'center';
+  g.fillText('◄ YUMURTA', rx + 72, top - P / 2 - 5);
+  g.textAlign = 'left';
+}
+
 export function drawFactory(g) {
   const rnd = mulberry32(777);
-  const wTop = L.LINE.y; // duvarın başladığı hat
+  const wTop = L.LINE.y; // duvarın başladığı hat (tavan kirişinin altı)
 
-  // ---- ayraç kirişi: ahşap hat + cıvata sırası ----
+  // ---- tavan kirişi: sayfa üstünde ahşap/metal hat + cıvata sırası ----
+  g.fillStyle = '#241c2c'; g.fillRect(0, 0, L.W, L.BEAM_Y);
   g.fillStyle = '#c07830'; g.fillRect(0, L.BEAM_Y, L.W, 14);
   g.fillStyle = '#e09440'; g.fillRect(0, L.BEAM_Y, L.W, 4);
   g.fillStyle = '#8a5424';
@@ -63,13 +111,15 @@ export function drawFactory(g) {
   }
 
   // ---- fabrika duvarı: koyu tahtalar + payanda dikmeleri ----
-  g.fillStyle = '#3a2430'; g.fillRect(0, wTop, L.W, L.H - wTop);
-  for (let y = wTop; y < L.H; y += 22) {
+  g.fillStyle = '#3a2430'; g.fillRect(0, wTop, L.W, L.FLOOR_Y - wTop);
+  for (let y = wTop; y < L.FLOOR_Y; y += 22) {
     g.fillStyle = '#432b38'; g.fillRect(0, y, L.W, 2);
     for (let x = ((y / 22) | 0) % 2 ? 30 : 70; x < L.W; x += 140) {
       g.fillStyle = '#432b38'; g.fillRect(x, y, 2, 22);
     }
   }
+  // sol kenar dikmesi (sayfa sınırı)
+  g.fillStyle = '#1c1220'; g.fillRect(0, 0, 4, L.FLOOR_Y);
   // payandalar: zemine inen hafif açık dikme + taban bloğu
   for (let x = 150; x < L.CRATE_X - 60; x += 190) {
     g.fillStyle = '#2c1a26'; g.fillRect(x - 1, wTop, 14, L.FLOOR_Y - wTop);
@@ -86,14 +136,15 @@ export function drawFactory(g) {
     g.fillStyle = '#241c2c'; g.fillRect(x, wTop + 9, 3, 5);
   }
 
-  // üst bant askıları: kirişten sarkan L profil + kıskaç
+  // üst bant duvar rayı + konsollar (raydan banta inen L profiller)
+  const railY = L.BELT1_Y - 56;
+  g.fillStyle = '#1c1220'; g.fillRect(40, railY, L.CRATE_X - 60, 7);
+  g.fillStyle = '#3c3048'; g.fillRect(40, railY, L.CRATE_X - 60, 5);
   for (let x = 100; x < L.W - 60; x += 160) {
     g.fillStyle = '#1c1220';
-    g.fillRect(x - 1, wTop + 12, 8, L.BELT1_Y - wTop - 16);
+    g.fillRect(x - 1, railY + 5, 8, L.BELT1_Y - railY - 9);
     g.fillStyle = '#2e2438';
-    g.fillRect(x, wTop + 12, 6, L.BELT1_Y - wTop - 16);
-    g.fillStyle = '#54445f';
-    g.fillRect(x + 1, wTop + 14, 2, L.BELT1_Y - wTop - 20);
+    g.fillRect(x, railY + 5, 6, L.BELT1_Y - railY - 9);
     // banta bağlanan kıskaç + cıvata
     g.fillStyle = '#1c1220';
     g.fillRect(x - 5, L.BELT1_Y - 8, 16, 5);
@@ -103,7 +154,7 @@ export function drawFactory(g) {
   // sol düşme kanalı: metal huni (sol dik duvar, sağ basamaklı eğim)
   // üst bandın ucu huninin sağında kalır; yumurta açık kanala düşer
   g.fillStyle = '#1c1220';
-  g.fillRect(9, L.BELT1_Y - 10, 9, L.BELT2_Y - L.BELT1_Y + L.BELT_H + 16);
+  g.fillRect(26, L.BELT1_Y - 10, 9, L.BELT2_Y - L.BELT1_Y + L.BELT_H + 16);
   // sağ duvar: basamaklı huni → daralınca düz şaft
   let rx = 82;
   for (let y = L.BELT1_Y + 12; y < L.BELT2_Y - 6; y += 16) {
@@ -112,12 +163,12 @@ export function drawFactory(g) {
     rx = Math.max(62, rx - 3);
   }
   g.fillStyle = '#2e2438';
-  g.fillRect(10, L.BELT1_Y - 10, 7, L.BELT2_Y - L.BELT1_Y + L.BELT_H + 14);
+  g.fillRect(27, L.BELT1_Y - 10, 7, L.BELT2_Y - L.BELT1_Y + L.BELT_H + 14);
   // kanal kenar kaplamaları + cıvatalar
   g.fillStyle = '#54445f';
-  g.fillRect(9, L.BELT1_Y - 10, 9, 4);
+  g.fillRect(26, L.BELT1_Y - 10, 9, 4);
   g.fillRect(82, L.BELT1_Y + 12, 9, 4);
-  for (let yy = L.BELT1_Y + 14; yy < L.BELT2_Y; yy += 24) g.fillRect(12, yy, 3, 3);
+  for (let yy = L.BELT1_Y + 14; yy < L.BELT2_Y; yy += 24) g.fillRect(29, yy, 3, 3);
   g.fillRect(70, L.BELT2_Y - 20, 3, 3);
   // alt bant taşıyıcı kirişi (ayakların üstünde)
   g.fillStyle = '#1c1220';
@@ -180,10 +231,10 @@ export function drawFactory(g) {
   g.font = 'bold 8px "Courier New",monospace'; g.textAlign = 'center';
   g.fillText('★ YUMURTA HATTI ★', 208, L.BELT1_Y + 35);
   g.textAlign = 'left';
-  // asma iş lambaları: kirişten sarkan kordon + koni + sıcak hale
+  // asma iş lambaları: raydan sarkan kordon + koni + sıcak hale
   for (let x = 240; x < L.CRATE_X - 60; x += 300) {
     const ly = L.BELT1_Y + 72;
-    g.fillStyle = '#1c1220'; g.fillRect(x, wTop + 6, 2, ly - wTop - 12);
+    g.fillStyle = '#1c1220'; g.fillRect(x, railY + 6, 2, ly - railY - 12);
     g.fillStyle = '#241c2c'; g.fillRect(x - 6, ly - 7, 16, 8);
     g.fillStyle = '#3c3048'; g.fillRect(x - 4, ly - 6, 12, 5);
     g.fillStyle = '#ffd88a'; g.fillRect(x - 2, ly + 1, 6, 3);
@@ -199,14 +250,24 @@ export function drawFactory(g) {
     for (let yy = 0; yy < 12; yy += 5) g.fillRect(x + 3, L.BELT2_Y - 27 + yy, 20, 2);
   }
 
+  // ---- yumurta kanalı borusu (zeminden girer, üst hattan banta iner) ----
+  drawDuct(g);
+  // sol kenar dönüş tabelası
+  g.fillStyle = '#241c14'; g.fillRect(10, L.BEAM_Y + 44, 58, 16);
+  g.fillStyle = '#e8d8b0'; g.fillRect(12, L.BEAM_Y + 46, 54, 12);
+  g.fillStyle = '#7a4030';
+  g.font = 'bold 8px "Courier New",monospace'; g.textAlign = 'center';
+  g.fillText('ÇİFTLİK ◄', 39, L.BEAM_Y + 55);
+  g.textAlign = 'left';
+
   // ---- zemin hattı: süpürgelik, drenaj, yükleme platformu, beton zemin ----
   // duvar eteği (süpürgelik)
   g.fillStyle = '#241420'; g.fillRect(0, L.FLOOR_Y - 14, L.W, 14);
   g.fillStyle = '#4a3444'; g.fillRect(0, L.FLOOR_Y - 14, L.W, 2);
   // huni altı drenaj ızgarası (eteğin içinde)
-  g.fillStyle = '#14101a'; g.fillRect(34, L.FLOOR_Y - 11, 46, 9);
+  g.fillStyle = '#14101a'; g.fillRect(40, L.FLOOR_Y - 11, 46, 9);
   g.fillStyle = '#3c3048';
-  for (let x = 38; x < 76; x += 8) g.fillRect(x, L.FLOOR_Y - 10, 4, 7);
+  for (let x = 44; x < 82; x += 8) g.fillRect(x, L.FLOOR_Y - 10, 4, 7);
   // yükleme platformu: kutu altında beton çıkıntı + sarı kenar + tamponlar
   const dx = L.CRATE_X - 26;
   g.fillStyle = '#1a141e'; g.fillRect(dx - 2, L.FLOOR_Y - 27, L.W - dx - 6, 27);

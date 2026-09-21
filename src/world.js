@@ -1,16 +1,17 @@
-// Statik arka plan: offscreen canvas'a çizilir, resize'da yeniden kurulur.
-// İki bölge ayrı modüllerden gelir — otlak (üst) ve fabrika hattı (alt):
-//   world/farm.js    → L.FARM  (çim, çiçek, çit, sınır çiti)
-//   world/factory.js → L.LINE  (kiriş, duvar, huni, hat taşıyıcıları, zemin)
-import { L } from './config.js';
+// Statik arka planlar: her sayfa kendi offscreen canvas'ına çizilir,
+// resize'da yeniden kurulur. Kamera iki sayfa arasında kayar (camera.js).
+//   world/farm.js    → sayfa 0 ÇİFTLİK (çim, çiçek, çit, yumurta boru ağzı)
+//   world/factory.js → sayfa 1 FABRİKA (tavan, duvar, kanal borusu, hat, zemin)
+import { L, H } from './config.js';
 import { drawFarm } from './world/farm.js';
 import { drawFactory } from './world/factory.js';
 
-export const bg = document.createElement('canvas');
+export const bgFarm = document.createElement('canvas');
+export const bgFac = document.createElement('canvas');
 
 export function buildBG() {
-  bg.width = L.W; bg.height = L.H;
-  const g = bg.getContext('2d');
-  drawFarm(g);     // üst yarı: otlak/kümes zemini
-  drawFactory(g);  // alt yarı: fabrika hattı
+  bgFarm.width = bgFac.width = L.W;
+  bgFarm.height = bgFac.height = H;
+  drawFarm(bgFarm.getContext('2d'));
+  drawFactory(bgFac.getContext('2d'));
 }

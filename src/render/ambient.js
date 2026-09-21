@@ -14,8 +14,8 @@ export function drawAmbient(ctx) {
     ctx.beginPath();
     ctx.moveTo(sx, L.HUD_H);
     ctx.lineTo(sx + 70, L.HUD_H);
-    ctx.lineTo(sx + 130, L.BEAM_Y);
-    ctx.lineTo(sx + 40, L.BEAM_Y);
+    ctx.lineTo(sx + 130, P.y + P.h);
+    ctx.lineTo(sx + 40, P.y + P.h);
     ctx.closePath(); ctx.fill();
   }
   ctx.restore();
