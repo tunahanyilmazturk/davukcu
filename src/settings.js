@@ -30,6 +30,13 @@ function refreshSettings() {
   }
 }
 
+// üst bar v1.0 çipi ve panel dişlisi aynı kapıyı kullanır
+export function openSettings() {
+  if (!ov) return;
+  refreshSettings();
+  ov.classList.remove('hidden');
+}
+
 export function initSettings() {
   ov = document.createElement('div');
   ov.id = 'settingsModal';
@@ -71,9 +78,8 @@ export function initSettings() {
   elVol = ov.querySelector('#setVol');
   elVolPct = ov.querySelector('#setVolPct');
 
-  const open = () => { refreshSettings(); ov.classList.remove('hidden'); };
   const close = () => ov.classList.add('hidden');
-  document.getElementById('btnSettings').addEventListener('click', e => { e.stopPropagation(); open(); });
+  document.getElementById('btnSettings').addEventListener('click', e => { e.stopPropagation(); openSettings(); });
   ov.querySelector('#btnSetClose').addEventListener('click', close);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   window.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });

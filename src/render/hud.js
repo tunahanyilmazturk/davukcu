@@ -1,6 +1,12 @@
-// İpucu balonu + üst bilgi çubuğu
-import { L, fmtTime } from '../config.js';
+// İpucu balonu + FPS ölçüm kanalı (üst bar DOM'a taşındı — index.html #topbar)
+import { L } from '../config.js';
 import { S } from '../state.js';
+
+// render döngüsü her yarım saniyede güncel FPS'i buraya yazar;
+// shop.js üst bar çipi refreshUI'da okur
+let lastFps = 60;
+export function setFps(v) { lastFps = v; }
+export function getFps() { return lastFps; }
 
 // ipucu balonu (yeni oyun): birikmiş yumurta varsa satış yolunu gösterir,
 // yoksa tavuk sürükleme ipucu verir
@@ -46,25 +52,3 @@ export function drawHint(ctx) {
   ctx.fillText('sürükle!', bx + 64, by + 42);
 }
 
-// üst bilgi çubuğu — saat/FPS dizgileri kare başına değil değişince kurulur
-let _hudLeft = '', _hudSec = -1, _hudRight = '', _hudFps = -1,
-    _hudPrest = -1, _hudShow = null;
-export function drawHud(ctx, fps) {
-  ctx.fillStyle = 'rgba(14,10,18,.92)';
-  ctx.fillRect(0, 0, L.W, L.HUD_H);
-  ctx.fillStyle = '#f0e6f0';
-  ctx.font = 'bold 10px "Courier New",monospace';
-  ctx.textAlign = 'left';
-  const sec = S.playTime | 0;
-  if (sec !== _hudSec || S.prestige !== _hudPrest) {
-    _hudSec = sec; _hudPrest = S.prestige;
-    _hudLeft = '⏱ ' + fmtTime(S.playTime) + '  KLASİK' + (S.prestige ? '  ⭐' + S.prestige : '');
-  }
-  ctx.fillText(_hudLeft, 8, 13);
-  ctx.textAlign = 'right';
-  if (fps !== _hudFps || S.showFps !== _hudShow) {
-    _hudFps = fps; _hudShow = S.showFps;
-    _hudRight = 'v1.0' + (S.showFps ? ' | ' + fps + ' FPS' : '');
-  }
-  ctx.fillText(_hudRight, L.W - 8, 13);
-}

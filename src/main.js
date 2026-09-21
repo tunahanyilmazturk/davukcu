@@ -7,7 +7,7 @@ import { spawnChicken, spawnChick, update, clampEntities } from './entities/inde
 import { eggLooks } from './entities/eggs.js';
 import { draw } from './render/index.js';
 import { initInput, magnet } from './input.js';
-import { buildShop, refreshShop, refreshUI, initPanel, SHOP, buyItem } from './shop.js';
+import { buildShop, refreshShop, refreshUI, initPanel, initTopbar, SHOP, buyItem } from './shop.js';
 import { initSettings } from './settings.js';
 import { initPrestige } from './prestige.js';
 import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
@@ -73,6 +73,7 @@ if (gain > 0) {
 // ---- arayüz ----
 initInput(cv);
 initPanel();
+initTopbar();
 initSettings();
 initPrestige();
 buildShop();

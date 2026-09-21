@@ -39,6 +39,51 @@ html, body {
   touch-action: none; /* dokunma jestleri oyuna gitsin, tarayıcı yakalamasın */
 }
 
+/* ---------- ÜST BAR (oyun alanından ayrı, seçilebilir çipler) ---------- */
+#topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 6;                       /* canvas + mektup-kutusu kenarların üstünde */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px;
+  background: linear-gradient(#1c1226, #0e0a14);
+  border-bottom: 2px solid #34244a;
+  box-shadow: 0 2px 8px rgba(0,0,0,.45);
+}
+.tb-gap { flex: 1; }
+.tb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 9px;
+  background: #241c2c;
+  border: 1px solid #3a2c48;
+  border-bottom-width: 2px;         /* piksel hissi — alttan koyu çizgi */
+  border-radius: 4px;
+  color: #f0e6f0;
+  font: bold 10px "Courier New", monospace;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, transform .06s;
+}
+.tb-chip:hover  { background: #332540; border-color: #54406a; }
+.tb-chip:active { transform: translateY(1px); border-bottom-width: 1px; }
+.tb-chip b { color: #ffd23e; font: inherit; }
+.tb-chip .tb-ico { font-size: 11px; }
+.tb-chip.dim { color: #8a7a9a; }
+.tb-chip.dim:hover { color: #f0e6f0; }
+.tb-chip.off { opacity: .5; }
+.tb-chip.off b { color: #8a7a9a; }
+#tbMode.star span { color: #ffd23e; }
+
+/* mobil: çipler parmak hedefi kadar büyür */
+body.mob #topbar { height: 36px; padding: 0 10px; gap: 8px; }
+body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
+
 /* ---------- SAĞ PANEL ---------- */
 #panel {
   width: clamp(300px, 26vw, 380px);

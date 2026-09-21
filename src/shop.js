@@ -1,5 +1,5 @@
 // Sağ panel: sekmeli mağaza, toplu alım, üst durum çubuğu
-import { S } from './state.js';
+import { S, writeSave } from './state.js';
 import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
@@ -15,6 +15,8 @@ import { SPR } from './sprites/index.js';
 import { buildStats, refreshStats } from './stats.js';
 import { buildAchv, refreshAchv, checkAchv } from './achievements.js';
 import { isMobile } from './mobile.js';
+import { openSettings } from './settings.js';
+import { getFps } from './render/hud.js';
 
 /* ---------------- Mağaza tanımları ----------------
    lv: seviye anahtarı (S.lvl), costAt(i): i. seviyenin fiyatı,
@@ -335,19 +337,23 @@ export function refreshShop() {
 
 /* ---------------- Sekmeler + toplu alım ---------------- */
 const TAB_IDS = { shop: 'tabShop', stats: 'tabStats', achv: 'tabAchv', prest: 'tabPrest' };
+// programatik sekme seçimi — sekme butonları ve üst bar çipleri paylaşır
+function selectTab(t) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === t));
+  for (const k in TAB_IDS) {
+    const el = document.getElementById(TAB_IDS[k]);
+    if (el) el.classList.toggle('hidden', k !== t);
+  }
+  if (t === 'stats') refreshStats();
+  if (t === 'achv') refreshAchv();
+  if (t === 'prest') refreshPrestige();
+}
+// üst bar çipleri: paneli açıp doğrudan ilgili sekmeye atlar
+export function openTab(t) { setPanel(false); selectTab(t); }
+
 function initTabs() {
   document.querySelectorAll('.tab').forEach(b => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
-      const t = b.dataset.tab;
-      for (const k in TAB_IDS) {
-        const el = document.getElementById(TAB_IDS[k]);
-        if (el) el.classList.toggle('hidden', k !== t);
-      }
-      if (t === 'stats') refreshStats();
-      if (t === 'achv') refreshAchv();
-      if (t === 'prest') refreshPrestige();
-    });
+    b.addEventListener('click', () => selectTab(b.dataset.tab));
   });
   const q = document.getElementById('btnQty');
   q.addEventListener('click', () => {
@@ -376,6 +382,27 @@ const elWaterPct = document.getElementById('pctWater');
 let lastMoney = -1;
 let lastFlash = 0; // para flaşı reflow throttle — kare başına layout yaptırmaz
 
+/* ---------------- Üst bar çipleri (her biri ayrı seçilebilir) ---------------- */
+const elTbTime = document.getElementById('tbTimeV');
+const elTbMode = document.getElementById('tbModeV');
+const elTbModeC = document.getElementById('tbMode');
+const elTbFps = document.getElementById('tbFpsV');
+const elTbFpsC = document.getElementById('tbFps');
+let tbSec = -1, tbPrest = -1, tbFpsV = -1, tbShow = null;
+
+export function initTopbar() {
+  if (!elTbTime) return; // test harness'larında üst bar yok
+  // süre → istatistik, mod → efsane, sürüm → ayarlar, FPS → gösterge aç/kapat
+  document.getElementById('tbTime').addEventListener('click', () => { openTab('stats'); sndBuy(); });
+  elTbModeC.addEventListener('click', () => { openTab('prest'); sndBuy(); });
+  document.getElementById('tbVer').addEventListener('click', () => { openSettings(); sndBuy(); });
+  elTbFpsC.addEventListener('click', () => {
+    S.showFps = !S.showFps;
+    writeSave(); sndBuy();
+    tbShow = null; // sonraki refreshUI'da boyamayı zorla
+  });
+}
+
 export function refreshUI() {
   checkAchv(); // koşulu dolan başarım varsa ödül + bildirim
   checkQuests();
@@ -392,6 +419,22 @@ export function refreshUI() {
   elChickens.textContent = S.chickens.length;
   elRate.textContent = '+$' + fmt(ratePerSec()) + '/sn';
   elFoot.textContent = '⏱ ' + fmtTime(S.playTime) + '  ·  🥚 ' + fmt(S.eggsSold);
+  // üst bar çipleri — panel kapalıyken de görünür, değer değişince DOM yaz
+  if (elTbTime) {
+    const sec = S.playTime | 0;
+    if (sec !== tbSec) { tbSec = sec; elTbTime.textContent = fmtTime(S.playTime); }
+    if (S.prestige !== tbPrest) {
+      tbPrest = S.prestige;
+      elTbMode.textContent = 'KLASİK' + (S.prestige ? ' ⭐' + S.prestige : '');
+      elTbModeC.classList.toggle('star', S.prestige > 0);
+    }
+    const fps = getFps();
+    if (fps !== tbFpsV || S.showFps !== tbShow) {
+      tbFpsV = fps; tbShow = S.showFps;
+      elTbFps.textContent = fps;
+      elTbFpsC.classList.toggle('off', !S.showFps);
+    }
+  }
   // kaynak barları
   const fr = S.feed / feedCap(), wr = S.water / waterCap();
   elFeedBar.style.width = Math.round(fr * 100) + '%';
@@ -401,7 +444,7 @@ export function refreshUI() {
   elFeedBar.classList.toggle('low', fr < 0.12);
   elWaterBar.classList.toggle('low', wr < 0.12);
   // panel kapalıyken kart/sekme güncellemeleri görünmez — DOM işini atla
-  if (document.getElementById('panel').classList.contains('closed')) return;
+  if (panelEl.classList.contains('closed')) return;
   refreshShop();
   const tabEl = id => document.getElementById(id);
   if (!tabEl('tabStats').classList.contains('hidden')) refreshStats();
@@ -409,29 +452,30 @@ export function refreshUI() {
   if (tabEl('tabPrest') && !tabEl('tabPrest').classList.contains('hidden')) refreshPrestige();
 }
 
+/* ---------------- Panel aç/kapat (üst bar çipleri de kullanır) ---------------- */
+const panelEl = document.getElementById('panel');
+const bpEl = document.getElementById('btnPanel');
+function setPanel(closed) {
+  panelEl.classList.toggle('closed', closed);
+  // ok yönü: masaüstünde yatay (◀/▶), mobilde dikey (▲/▼)
+  const mob = isMobile();
+  bpEl.innerHTML = closed ? (mob ? '&#9650;' : '&#9666;')
+                        : (mob ? '&#9660;' : '&#9654;');
+  bpEl.title = closed ? 'Paneli aç' : 'Paneli kapat';
+  try { localStorage.setItem('panelClosed', closed ? '1' : ''); } catch (e) {}
+  // sahne genişliği değişti — canvas/layout'u yeniden hesaplat
+  window.dispatchEvent(new Event('resize'));
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+}
+
 export function initPanel() {
-  // panel aç/kapat kulakçığı — durum localStorage'da kalıcı
-  const panel = document.getElementById('panel');
-  const bp = document.getElementById('btnPanel');
-  const setPanel = closed => {
-    panel.classList.toggle('closed', closed);
-    // ok yönü: masaüstünde yatay (◀/▶), mobilde dikey (▲/▼)
-    const mob = isMobile();
-    bp.innerHTML = closed ? (mob ? '&#9650;' : '&#9666;')
-                          : (mob ? '&#9660;' : '&#9654;');
-    bp.title = closed ? 'Paneli aç' : 'Paneli kapat';
-    try { localStorage.setItem('panelClosed', closed ? '1' : ''); } catch (e) {}
-    // sahne genişliği değişti — canvas/layout'u yeniden hesaplat
-    window.dispatchEvent(new Event('resize'));
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
-  };
-  bp.addEventListener('click', e => {
+  bpEl.addEventListener('click', e => {
     e.stopPropagation();
-    setPanel(!panel.classList.contains('closed'));
+    setPanel(!panelEl.classList.contains('closed'));
   });
   // kapalı rayın tamamı tıklanabilir — butonu ıskalasa da panel açılır
-  panel.addEventListener('click', () => {
-    if (panel.classList.contains('closed')) setPanel(false);
+  panelEl.addEventListener('click', () => {
+    if (panelEl.classList.contains('closed')) setPanel(false);
   });
   // kayıtlı durum; mobilde ilk açılış varsayılanı kapalı bar (oyun görünsün)
   try {

@@ -21,7 +21,7 @@ import { drawFactoryFX } from './facfx.js';
 import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
 import { drawFox } from './fox.js';
-import { drawHint, drawHud } from './hud.js';
+import { drawHint, setFps } from './hud.js';
 import { chickenPose } from '../entities/chickens.js';
 
 // çizim sırası taslak tamponları — her kare tahsis yerine yeniden kullanılır
@@ -275,7 +275,7 @@ export function draw(ctx, dt) {
 
   // ================= ekran uzayı: gezinme + HUD =================
   drawNav(ctx);
-  drawHud(ctx, fps);
+  setFps(fps); // üst bar DOM'da — FPS ölçümünü kanala yaz
 
   // fps ölçümü
   fpsAcc += 1 / Math.max(dt, 1e-4); fpsN++; fpsT += dt;
