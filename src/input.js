@@ -97,8 +97,12 @@ function releaseMagnet() {
     if (eg.phase === 'held') dropEgg(eg);
   }
   magnet.held = [];
-  cv.style.cursor = 'default';
+  setCur('default');
 }
+
+// imleç önbelleği — pointermove başına DOM yazmasın
+let _cur = '';
+function setCur(c) { if (c !== _cur) { _cur = c; cv.style.cursor = c; } }
 
 // sürükleme iptali (pencere odağı kaybolunca) — tavuk eski yerine döner
 function cancelDrag() {
@@ -106,7 +110,7 @@ function cancelDrag() {
   if (d) { d.ch.drag = false; d.ch.x = d.origX; d.ch.y = d.origY; drag.current = null; }
   document.getElementById('panel').classList.remove('sell-hover');
 }
-function cancelPan() { pan = null; cv.style.cursor = 'default'; }
+function cancelPan() { pan = null; setCur('default'); }
 
 export function initInput(canvas) {
   cv = canvas;
@@ -180,7 +184,7 @@ export function initInput(canvas) {
       if (!pan.active && Math.abs(dx) > 7) pan.active = true;
       if (pan.active) {
         cam.x = cam.target = Math.max(0, Math.min(L.W, pan.camX - dx));
-        cv.style.cursor = 'grabbing';
+        setCur('grabbing');
       }
       return;
     }
@@ -196,7 +200,7 @@ export function initInput(canvas) {
       document.getElementById('panel').classList.toggle('sell-hover', d.moved && overSellZone(p));
     } else if (magnet.active) {
       magnet.x = pointer.x; magnet.y = p.y;
-      cv.style.cursor = 'none'; // imlecin yerini nal görseli alıyor
+      setCur('none'); // imlecin yerini nal görseli alıyor
     } else {
       // imleç önceliği tıklama ile aynı: silo → tavuk → gübre → ok → kenar;
       // yığın üstünde 'none' — yerini render/manure.js'teki kürek alır
@@ -204,12 +208,12 @@ export function initInput(canvas) {
                                          && p.y >= z.y && p.y <= z.y + z.h);
       const fxHov = S.fox && Math.hypot(pointer.x - S.fox.x, p.y - (S.fox.y - 16)) < 34;
       const bfHov = S.butterfly && Math.hypot(pointer.x - S.butterfly.x, p.y - S.butterfly.y) < 28;
-      cv.style.cursor = troughAt(pointer.x, p.y) ? 'pointer'
+      setCur(troughAt(pointer.x, p.y) ? 'pointer'
         : (fxHov || bfHov) ? 'pointer'
         : chickenAt(pointer.x, p.y) ? 'grab'
         : manureAt(pointer.x, p.y) ? 'none'
         : navHov ? 'pointer'
-        : edgeZone(p.x) ? 'ew-resize' : 'default';
+        : edgeZone(p.x) ? 'ew-resize' : 'default');
     }
   });
 
@@ -218,7 +222,7 @@ export function initInput(canvas) {
     // kenar kaydırması bitti → en yakın sayfaya kenetlen
     if (pan) {
       snapCam(pan.active ? evPos(e).x - pan.sx : 0);
-      pan = null; cv.style.cursor = 'default';
+      pan = null; setCur('default');
       return;
     }
     const d = drag.current;

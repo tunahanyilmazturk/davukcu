@@ -24,6 +24,9 @@ import { drawFox } from './fox.js';
 import { drawHint, drawHud } from './hud.js';
 import { chickenPose } from '../entities/chickens.js';
 
+// çizim sırası taslak tamponları — her kare tahsis yerine yeniden kullanılır
+const _eggOrder = [], _chSorted = [];
+
 let fps = 60, fpsAcc = 0, fpsN = 0, fpsT = 0;
 
 // ana içerik ölçeği — tam sayı çarpan: piksel bütünlüğü korunur
@@ -116,7 +119,10 @@ export function draw(ctx, dt) {
     }
     return ductClip = p;
   };
-  const order = [...S.eggs].sort((a, b) =>
+  // sıralama taslakları — kare başına tahsis yerine tampon yeniden kullanımı
+  _eggOrder.length = 0;
+  for (const e of S.eggs) _eggOrder.push(e);
+  const order = _eggOrder.sort((a, b) =>
     (a.phase === 'belt1' ? -a.x : a.x) - (b.phase === 'belt1' ? -b.x : b.x));
   for (const e of order) {
     const spr = (TIER_SPR[e.tier] || TIER_SPR.normal)[e.clean ? 1 : 0];
@@ -144,8 +150,9 @@ export function draw(ctx, dt) {
                : e.phase === 'boxfall' ? L.WD.crateZone.rimY + 2
                : L.FLOOR_Y - 4;
       const k = Math.max(0, Math.min(1, 1 - (ty - e.y) / 170));
-      ctx.fillStyle = `rgba(0,0,0,${(0.2 * k).toFixed(3)})`;
+      ctx.fillStyle = '#000'; ctx.globalAlpha = 0.2 * k;
       ctx.beginPath(); ctx.ellipse(e.x, ty, w * 0.42 * k + 2, 2.2, 0, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
     }
     ctx.save();
     if (e.phase === 'duct') ctx.clip(buildDuctClip()); // tüp koridoru dışına taşma
@@ -202,7 +209,9 @@ export function draw(ctx, dt) {
   // ================= tavuklar + civcivler (çiftlik tarafı) =================
   // tavuklar (y'ye göre sırala — derinlik); kare+ofsetler chickenPose'dan
   const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
-  const sorted = [...S.chickens].sort((a, b) => a.y - b.y);
+  _chSorted.length = 0;
+  for (const ch of S.chickens) _chSorted.push(ch);
+  const sorted = _chSorted.sort((a, b) => a.y - b.y);
   for (const ch of sorted) {
     if (ch.stolen) continue; // tilki ağzında — drawFox'ta çizilir
     const sprs = SPR.chickens[ch.variant] || SPR.chickens.white;
@@ -211,8 +220,9 @@ export function draw(ctx, dt) {
     const w = spr.w * CH_SC, h = spr.h * CH_SC;
     // gölge — havaya kalkınca küçülüp soluklaşır
     const shK = Math.max(0.5, 1 + pose.lift / 55);
-    ctx.fillStyle = `rgba(0,0,0,${(0.18 * Math.max(0.4, shK)).toFixed(3)})`;
+    ctx.fillStyle = '#000'; ctx.globalAlpha = 0.18 * Math.max(0.4, shK);
     ctx.beginPath(); ctx.ellipse(ch.x, ch.y + 2, 13 * shK, 4, 0, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
     // gövde taban noktasından çizilir — ezilme/yalpa ayak çapasından uygulanır
     ctx.save();
     ctx.translate(Math.round(ch.x), Math.round(ch.y));

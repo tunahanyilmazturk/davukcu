@@ -62,9 +62,10 @@ export function drawFactoryFX(ctx) {
   for (let x = 140, i = 0; x < L.CRATE_X - 90; x += 230, i++) {
     const ph = (t * 0.22 + i * 0.53) % 1; // yavaş yükselme döngüsü
     if (ph < 0.55) {
-      ctx.fillStyle = `rgba(220,215,230,${(0.16 * (1 - ph / 0.55)).toFixed(3)})`;
+      ctx.fillStyle = 'rgb(220,215,230)'; ctx.globalAlpha = 0.16 * (1 - ph / 0.55);
       const sy = py - 10 - ph * 46;
       ctx.beginPath(); ctx.arc(x + 2 + Math.sin(ph * 9) * 3, sy, 4 + ph * 7, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
     }
   }
 

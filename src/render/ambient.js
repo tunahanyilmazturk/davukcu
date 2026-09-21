@@ -41,12 +41,12 @@ export function drawAmbient(ctx) {
   // gölet — genişleyen dalga halkası + süzülen parlama çizgisi
   const PO = L.POND, pcx = PO.x + PO.w / 2, pcy = PO.y + PO.h / 2;
   const rp = (t * 0.4) % 1;
-  ctx.strokeStyle = `rgba(190,225,245,${(0.4 * (1 - rp)).toFixed(3)})`;
+  ctx.strokeStyle = 'rgb(190,225,245)'; ctx.globalAlpha = 0.4 * (1 - rp);
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.ellipse(pcx, pcy, 6 + rp * (PO.w / 2 - 10), 3 + rp * (PO.h / 2 - 8), 0, 0, 7);
   ctx.stroke();
-  ctx.lineWidth = 1;
+  ctx.globalAlpha = 1; ctx.lineWidth = 1;
   const gl = (t * 26) % (PO.w - 40);
   ctx.fillStyle = 'rgba(220,240,255,.4)';
   ctx.fillRect(PO.x + 20 + gl, pcy - 12 + Math.sin(t * 1.4) * 6, 8, 2);
@@ -125,8 +125,9 @@ export function drawAmbient(ctx) {
     for (let i = 0; i < 12; i++) {
       const sx = P.x + ((i * 179 + t * 60) % P.w);
       const sp = (t * 2.6 + i * .63) % 1;
-      ctx.strokeStyle = `rgba(185,205,245,${(0.4 * (1 - sp)).toFixed(3)})`;
+      ctx.strokeStyle = 'rgb(185,205,245)'; ctx.globalAlpha = 0.4 * (1 - sp);
       ctx.beginPath(); ctx.ellipse(sx, P.y + P.h - 8 - (i % 3) * 10, 2 + sp * 8, 1 + sp * 2.5, 0, 0, 7); ctx.stroke();
+      ctx.globalAlpha = 1;
     }
     // küçük durum yazısı — yağmur suyu kaynak tasarrufu sağlar
     ctx.font = 'bold 10px "Courier New",monospace'; ctx.textAlign = 'left';

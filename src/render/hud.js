@@ -46,15 +46,25 @@ export function drawHint(ctx) {
   ctx.fillText('sürükle!', bx + 64, by + 42);
 }
 
-// üst bilgi çubuğu
+// üst bilgi çubuğu — saat/FPS dizgileri kare başına değil değişince kurulur
+let _hudLeft = '', _hudSec = -1, _hudRight = '', _hudFps = -1,
+    _hudPrest = -1, _hudShow = null;
 export function drawHud(ctx, fps) {
   ctx.fillStyle = 'rgba(14,10,18,.92)';
   ctx.fillRect(0, 0, L.W, L.HUD_H);
   ctx.fillStyle = '#f0e6f0';
   ctx.font = 'bold 10px "Courier New",monospace';
   ctx.textAlign = 'left';
-  ctx.fillText('⏱ ' + fmtTime(S.playTime) + '  KLASİK' +
-               (S.prestige ? '  ⭐' + S.prestige : ''), 8, 13);
+  const sec = S.playTime | 0;
+  if (sec !== _hudSec || S.prestige !== _hudPrest) {
+    _hudSec = sec; _hudPrest = S.prestige;
+    _hudLeft = '⏱ ' + fmtTime(S.playTime) + '  KLASİK' + (S.prestige ? '  ⭐' + S.prestige : '');
+  }
+  ctx.fillText(_hudLeft, 8, 13);
   ctx.textAlign = 'right';
-  ctx.fillText('v1.0' + (S.showFps ? ' | ' + fps + ' FPS' : ''), L.W - 8, 13);
+  if (fps !== _hudFps || S.showFps !== _hudShow) {
+    _hudFps = fps; _hudShow = S.showFps;
+    _hudRight = 'v1.0' + (S.showFps ? ' | ' + fps + ' FPS' : '');
+  }
+  ctx.fillText(_hudRight, L.W - 8, 13);
 }

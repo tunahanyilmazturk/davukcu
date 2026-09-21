@@ -85,28 +85,38 @@ export function inSilo(x, y, t) {
 }
 // gübre kovası + çuval istifi de kümes üst kenarında — silo gibi davranır;
 // kümes ve rüzgar gülü de üst-ankrajlı bina: arkasına/üstüne çıkılmaz
-function blockedZones() {
-  return [L.FEED, L.WATER, L.MANURE_BIN,
-          { ...L.BAG_STACK, w: 96, h: 30, y: L.BAG_STACK.y - 30 },
-          L.COOP, L.MILL];
-}
-// zemin engelleri — orta alandaki dekorlar, her yönden geçilmez
-function groundZones() {
-  return [{ x: L.POND.x - 8, y: L.POND.y - 8, w: L.POND.w + 16, h: L.POND.h + 16 },
-          { x: L.HAY.x - 4, y: L.HAY.y - 4, w: L.HAY.w + 8, h: L.HAY.h + 8 }];
+// (performans: tavuk başına her tik'te liste kurulmasın — bz/gz update
+// başına bir kez hesaplanıp parametre geçirilir; bagZone nesnesi tek)
+const _bagZone = { x: 0, y: 0, w: 96, h: 30 };
+const _gzr1 = { x: 0, y: 0, w: 0, h: 0 }, _gzr2 = { x: 0, y: 0, w: 0, h: 0 };
+const _bz = [], _gz = [_gzr1, _gzr2];
+function fillZones() {
+  _bagZone.x = L.BAG_STACK.x; _bagZone.y = L.BAG_STACK.y - 30;
+  _bz.length = 0;
+  _bz.push(L.FEED, L.WATER, L.MANURE_BIN, _bagZone, L.COOP, L.MILL);
+  _gzr1.x = L.POND.x - 8; _gzr1.y = L.POND.y - 8; _gzr1.w = L.POND.w + 16; _gzr1.h = L.POND.h + 16;
+  _gzr2.x = L.HAY.x - 4; _gzr2.y = L.HAY.y - 4; _gzr2.w = L.HAY.w + 8; _gzr2.h = L.HAY.h + 8;
 }
 export function inRect(x, y, r) {
   return x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h;
 }
-export function inGroundZone(x, y) {
-  return groundZones().some(r => inRect(x, y, r));
+function inGZ(x, y) { // doldurmasız — updateChickens içi sıcak yol
+  return _gz[0].w && inRect(x, y, _gz[0]) || _gz[1].w && inRect(x, y, _gz[1]);
 }
-// civcivler ve hedef seçimi için birleşik kontrol
+export function inGroundZone(x, y) { // seyrek/dış çağrı — taze liste
+  fillZones();
+  return inGZ(x, y);
+}
+// civcivler ve hedef seçimi için birleşik kontrol (seyrek çağrı — taze liste)
 export function posBlocked(x, y) {
-  return blockedZones().some(t => inSilo(x, y, t)) || inGroundZone(x, y);
+  fillZones();
+  return posBlockedZ(x, y);
+}
+function posBlockedZ(x, y) {
+  return _bz.some(t => inSilo(x, y, t)) || inGZ(x, y);
 }
 function siloBlocked(ch, nx, ny) {
-  for (const t of blockedZones()) {
+  for (const t of _bz) {
     if (!inSilo(ch.x, ch.y, t) && inSilo(nx, ny, t)) return true;
   }
   return false;
@@ -117,8 +127,9 @@ function pickWander(ch, P) {
   for (let i = 0; i < 8; i++) {
     const tx = P.x + 20 + Math.random() * (P.w - 40);
     const ty = P.y + 30 + Math.random() * (P.h - 34);
-    if (posBlocked(tx, ty)) continue;
-    if (Math.hypot(tx - ch.x, ty - ch.y) < 60) continue;
+    if (posBlockedZ(tx, ty)) continue;
+    const ddx = tx - ch.x, ddy = ty - ch.y;
+    if (ddx * ddx + ddy * ddy < 3600) continue; // 60px²
     ch.tx = tx; ch.ty = ty;
     return true;
   }
@@ -135,6 +146,7 @@ function faceTarget(ch) {
 // fed: tavuklar tok/sulu mu (yem+su > 0) — değilse yumurtlama durur
 export function updateChickens(dt, fed) {
   const P = L.PEN;
+  fillZones(); // engel listeleri bu tik için taze — tavuk başına kurulmaz
   for (const ch of S.chickens) {
     if (ch.stolen) continue; // tilki ağzında — konum tilki tarafından taşınır
     if (ch.drag) {
@@ -148,7 +160,7 @@ export function updateChickens(dt, fed) {
       ch.panicT -= dt;
       const f = S.fox;
       if (f) {
-        const dx = ch.x - f.x, dy = ch.y - f.y, d = Math.hypot(dx, dy) || 1;
+        const dx = ch.x - f.x, dy = ch.y - f.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
         const sp = 95 * dt;
         const nx = ch.x + dx / d * sp, ny = ch.y + dy / d * sp;
         ch.x = Math.max(P.x + 12, Math.min(P.x + P.w - 12, nx));
@@ -210,7 +222,7 @@ export function updateChickens(dt, fed) {
       if (ch.state === 'eat' && ch.t <= 0) { ch.state = 'idle'; ch.t = 0.4 + Math.random() * 2; }
     } else { // walk / toTrough
       const dx = ch.tx - ch.x, dy = (ch.ty !== undefined ? ch.ty : ch.y) - ch.y;
-      const dist = Math.hypot(dx, dy) || 1;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       const step = 36 * dt;
       if (dist <= step + 1) {
         ch.x = ch.tx; ch.y = ch.ty;
@@ -227,8 +239,9 @@ export function updateChickens(dt, fed) {
         let ny = ch.y + dy / dist * step;
         if (siloBlocked(ch, nx, ny)) nx = ch.x; // silo şeridi — dikey kayıp kenarından geçer
         // gölet/balya gibi zemin engelleri — iki eksende de geçiş yok
-        if (!inGroundZone(ch.x, ch.y) && inGroundZone(nx, ny)) { nx = ch.x; ny = ch.y; }
-        ch.stuck = Math.hypot(nx - ch.x, ny - ch.y) < step * 0.35 ? (ch.stuck || 0) + dt : 0;
+        if (!inGZ(ch.x, ch.y) && inGZ(nx, ny)) { nx = ch.x; ny = ch.y; }
+        const sdx = nx - ch.x, sdy = ny - ch.y;
+        ch.stuck = Math.sqrt(sdx * sdx + sdy * sdy) < step * 0.35 ? (ch.stuck || 0) + dt : 0;
         if (ch.stuck > 1.2) { ch.stuck = 0; ch.state = 'idle'; ch.t = 0.4 + Math.random(); }
         ch.x = nx; ch.y = ny;
       }
@@ -257,8 +270,12 @@ export function updateChickens(dt, fed) {
 
 // ---- görsel poz: render tarafının okuduğu tek çıktı ----
 // Kareyi ve prosedürel ofsetleri döndürür; durum değiştirmez.
+// poz nesnesi paylaşılır — tavuk başına karede tahsis yerine sıfırlanıp döner
+// (çağıran anında tüketir; iç içe kullanım yok)
+const _pose = { f: 'a', bob: 0, lift: 0, lean: 0, sx: 1, sy: 1 };
 export function chickenPose(ch) {
-  const P = { f: ch.frame, bob: 0, lift: 0, lean: 0, sx: 1, sy: 1 };
+  const P = _pose;
+  P.f = ch.frame; P.bob = 0; P.lift = 0; P.lean = 0; P.sx = 1; P.sy = 1;
   if (ch.drag) { // sürüklenme paniği — kanat çırpar, havada sallanır
     P.bob = Math.sin(ch.frameT * 16) * 2.2;
     P.lean = -ch.dir * 0.08;

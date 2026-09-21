@@ -104,6 +104,7 @@ export function overCrate(x, y) {
 }
 
 let feedT = 0; // kutu besleme sayacı — tutulanlar aralıklarla ağıza akar
+const _b1 = [], _b2 = []; // bant sıralama taslakları — her kare yeniden kullanılır (tahsis yok)
 
 export function updateEggs(dt) {
   // mıknatıs: basılıyken yarıçap içindeki yumurtalar imlece ÇEKİLİR,
@@ -117,7 +118,7 @@ export function updateEggs(dt) {
     for (const e of S.eggs) {
       if (e.phase !== 'pulled') continue;
       const dx = magnet.x - e.x, dy = magnet.y - 10 - e.y;
-      const d = Math.hypot(dx, dy) || 1;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
       const f = pull * (0.45 + 1.1 * Math.max(0, 1 - d / r));
       e.vx = ((e.vx || 0) + dx / d * f * dt) * damp;
       e.vy = ((e.vy || 0) + dy / d * f * dt) * damp;
@@ -134,12 +135,14 @@ export function updateEggs(dt) {
       }
     }
     // yeni yumurtaları çekmeye başla (kapasite dolana dek)
-    let room = cap - magnet.held.length
-             - S.eggs.reduce((n, e) => n + (e.phase === 'pulled' ? 1 : 0), 0);
+    let pulled = 0;
+    for (const e of S.eggs) if (e.phase === 'pulled') pulled++;
+    let room = cap - magnet.held.length - pulled;
     for (const e of S.eggs) {
       if (room <= 0) break;
       if (!eggGrabbable(e)) continue;
-      if (Math.hypot(e.x - magnet.x, e.y + 10 - magnet.y) < r) {
+      const mdx = e.x - magnet.x, mdy = e.y + 10 - magnet.y;
+      if (mdx * mdx + mdy * mdy < r * r) {
         e.phase = 'pulled'; e.wash = 0; e.washM = 0; e.polish = 0; e.vx = 0; e.vy = 0;
         room--;
       }
@@ -149,7 +152,7 @@ export function updateEggs(dt) {
     const k = Math.min(1, dt * 11);
     let px = magnet.x, py = magnet.y - 4;
     for (const e of magnet.held) {
-      const dx = px - e.x, dy = py - e.y, d = Math.hypot(dx, dy) || 1;
+      const dx = px - e.x, dy = py - e.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
       const tx = px - dx / d * 12, ty = py - dy / d * 12;
       e.x += (tx - e.x) * k; e.y += (ty - e.y) * k;
       px = e.x; py = e.y;
@@ -176,7 +179,13 @@ export function updateEggs(dt) {
 
   // üst bant: sola akar, lider dropX'e varınca alt banda düşer;
   // aralık ihlali (yeni inen yumurta) anında düzeltilmez — yumuşakça geriye kayar
-  const b1 = S.eggs.filter(e => e.phase === 'belt1').sort((a, b) => a.x - b.x);
+  // (taslak diziye bölüştür + yerinde sırala — kare başına tahsis yok)
+  _b1.length = 0; _b2.length = 0;
+  for (const e of S.eggs) {
+    if (e.phase === 'belt1') _b1.push(e);
+    else if (e.phase === 'belt2') _b2.push(e);
+  }
+  const b1 = _b1.sort((a, b) => a.x - b.x);
   const push1 = Math.max(bs1, 70), gap = eggGap();
   let lead1 = -Infinity, pile1 = 0;
   for (let i = 0; i < b1.length; i++) {
@@ -206,7 +215,7 @@ export function updateEggs(dt) {
   // maks hız seviyesinde tünel durmadan yıkar: yumurta bantta akarken temizlenir
   const washThru = S.lvl.washS >= MAXL.washS;
   const thruDur = Math.max(0.12, 40 / Math.max(bs2, 20));
-  const b2 = S.eggs.filter(e => e.phase === 'belt2').sort((a, b) => b.x - a.x);
+  const b2 = _b2.sort((a, b) => b.x - a.x);
   const push2 = Math.max(bs2, 70);
   let lead2 = Infinity, washerBusy = false, polishBusy = false, pile2 = 0;
   for (let i = 0; i < b2.length; i++) {
@@ -216,7 +225,7 @@ export function updateEggs(dt) {
     // geçiş yıkaması: hareket halindeyken tünelde temizlenir (kuyruk tutmaz)
     if (e.washM > 0) {
       e.washM -= dt;
-      if (Math.random() < 0.7) {
+      if (Math.random() < dt * 5) {
         S.parts.push({ kind: 'drop', x: e.x - 8 + Math.random() * 16,
           y: L.BELT2_Y - 40, vy: 140, t: 0, life: .3 });
       }
@@ -226,7 +235,7 @@ export function updateEggs(dt) {
     if (e.wash > 0) {
       // yıkanıyor: yerinde dur, su püskürt
       e.wash -= dt;
-      if (Math.random() < 0.6) {
+      if (Math.random() < dt * 5) {
         S.parts.push({ kind: 'drop', x: e.x - 8 + Math.random() * 16,
           y: L.BELT2_Y - 40, vy: 140, t: 0, life: .3 });
       }
@@ -238,7 +247,7 @@ export function updateEggs(dt) {
     if (e.polish > 0) {
       // cilalanıyor: yerinde dur, parıltı saç
       e.polish -= dt;
-      if (Math.random() < 0.5) {
+      if (Math.random() < dt * 4) {
         S.parts.push({ kind: 'spark', x: e.x - 8 + Math.random() * 16,
           y: L.BELT2_Y - 34 - Math.random() * 8, vy: -40 - Math.random() * 30, t: 0, life: .4 });
       }
@@ -305,7 +314,7 @@ export function updateEggs(dt) {
     if (e.sq > 0) e.sq -= dt; // iniş ezilmesi sayacı
     if (e.phase === 'load2') {
       // kamyon kasasına uçuş — varınca yutulur (sayım truck.js'te alındı)
-      const dx = e.tx - e.x, dy = e.ty - e.y, d = Math.hypot(dx, dy) || 1;
+      const dx = e.tx - e.x, dy = e.ty - e.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
       const sp = 340 * dt;
       if (d <= sp) e.phase = 'gone';
       else { e.x += dx / d * sp; e.y += dy / d * sp; }
@@ -359,7 +368,7 @@ export function updateEggs(dt) {
       let d = e.dt2, done = true;
       for (let i = 0; i + 1 < path.length; i++) {
         const [ax, ay] = path[i], [bx, by] = path[i + 1];
-        const len = Math.hypot(bx - ax, by - ay);
+        const len = Math.sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
         if (d <= len) {
           const k = len ? d / len : 0;
           e.x = ax + (bx - ax) * k;
@@ -394,5 +403,9 @@ export function updateEggs(dt) {
       sndPop();
     }
   }
-  S.eggs = S.eggs.filter(e => e.phase !== 'gone');
+  // 'gone' yumurtaları yerinde sıkıştır — kare başına yeni dizi tahsisi yok
+  let w = 0;
+  for (let i = 0; i < S.eggs.length; i++)
+    if (S.eggs[i].phase !== 'gone') S.eggs[w++] = S.eggs[i];
+  S.eggs.length = w;
 }

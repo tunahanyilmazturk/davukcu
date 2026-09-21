@@ -22,19 +22,24 @@ export function updateTruck(dt) {
 
   // zemin yığılımı sınırı — üstü eski usul sessizce satılır
   // (kamyon istatistiğine yazılmaz: trucked = sadece kamyonun taşıdığı)
-  const floorEggs = S.eggs.filter(e => e.phase === 'floor');
-  if (floorEggs.length > FLOOR_CAP) {
-    const e = floorEggs[0];
-    e.phase = 'gone';
-    S.money += eggWorth(e);
+  // (tahsis yok: sayaç + ilk yerde yumurta referansı yeterli)
+  let floorN = 0, firstFloor = null;
+  for (const e of S.eggs) {
+    if (e.phase !== 'floor') continue;
+    if (!firstFloor) firstFloor = e;
+    floorN++;
+  }
+  if (floorN > FLOOR_CAP) {
+    firstFloor.phase = 'gone';
+    S.money += eggWorth(firstFloor);
     S.eggsSold++;
-    S.stats.earned += eggWorth(e);
+    S.stats.earned += eggWorth(firstFloor);
   }
 
   if (!S.truck) {
     // taşınacak şey (yerde yumurta / stokta çuval) yoksa gelmez
     // (S.truckOff: test/dev kancası — sim kamyonu durdurur)
-    if (S.truckOff || (!floorEggs.length && !S.manureBags)) { timer = Math.max(1.5, timer); return; }
+    if (S.truckOff || (!floorN && !S.manureBags)) { timer = Math.max(1.5, timer); return; }
     timer -= dt;
     if (timer <= 0) {
       S.truck = { x: -150, state: 'arrive', cargo: 0, bags: 0, worth: 0,

@@ -35,7 +35,7 @@ export function updateFox(dt) {
       f.t = f.pause ? (0.3 + Math.random() * 0.4) : (0.55 + Math.random() * 0.5);
     }
     const dx = f.target.x - f.x, dy = f.target.y - f.y;
-    const d = Math.hypot(dx, dy) || 1;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
     if (!f.pause && d > 4) {
       f.x += dx / d * 62 * dt;
       f.y += dy / d * 62 * dt;
@@ -45,7 +45,8 @@ export function updateFox(dt) {
       // kapma — yakındaki tavuklar panikleyerek kaçışır
       f.state = 'grab'; f.t = 0.45;
       for (const c of S.chickens) {
-        if (c !== f.target && Math.hypot(c.x - f.x, c.y - f.y) < 170) c.panicT = 1.7;
+        const cdx = c.x - f.x, cdy = c.y - f.y;
+        if (c !== f.target && cdx * cdx + cdy * cdy < 170 * 170) c.panicT = 1.7;
       }
       sndCluck(); sndCluck();
     }
@@ -74,7 +75,8 @@ export function updateFox(dt) {
   if (f.state !== 'flee') {
     for (const r of S.chickens) {
       if (r.breed !== 'rooster' || r.stolen) continue;
-      if (Math.hypot(r.x - f.x, r.y - f.y) < 240) {
+      const rdx = r.x - f.x, rdy = r.y - f.y;
+      if (rdx * rdx + rdy * rdy < 240 * 240) {
         f.scare += dt * 0.55;
         r.alertT = 0.5;
         crowT -= dt;

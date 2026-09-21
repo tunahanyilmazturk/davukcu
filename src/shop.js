@@ -374,14 +374,16 @@ const elFeedPct = document.getElementById('pctFeed');
 const elWaterBar = document.getElementById('barWater');
 const elWaterPct = document.getElementById('pctWater');
 let lastMoney = -1;
+let lastFlash = 0; // para flaşı reflow throttle — kare başına layout yaptırmaz
 
 export function refreshUI() {
   checkAchv(); // koşulu dolan başarım varsa ödül + bildirim
   checkQuests();
   refreshQuestBar();
   elMoney.textContent = fmt(S.money);
-  // para artınca kısa yeşil flaş
-  if (lastMoney >= 0 && S.money > lastMoney) {
+  // para artınca kısa yeşil flaş — reflow'u seyrekleştir (600ms'de en çok bir)
+  if (lastMoney >= 0 && S.money > lastMoney && performance.now() - lastFlash > 600) {
+    lastFlash = performance.now();
     elMoney.classList.remove('up');
     void elMoney.offsetWidth; // animasyonu yeniden tetikle
     elMoney.classList.add('up');
@@ -398,6 +400,8 @@ export function refreshUI() {
   elWaterPct.textContent = '%' + Math.round(wr * 100);
   elFeedBar.classList.toggle('low', fr < 0.12);
   elWaterBar.classList.toggle('low', wr < 0.12);
+  // panel kapalıyken kart/sekme güncellemeleri görünmez — DOM işini atla
+  if (document.getElementById('panel').classList.contains('closed')) return;
   refreshShop();
   const tabEl = id => document.getElementById(id);
   if (!tabEl('tabStats').classList.contains('hidden')) refreshStats();

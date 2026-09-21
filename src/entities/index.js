@@ -57,14 +57,18 @@ export function update(dt) {
   if (box.t > 0) box.t -= dt;
 
   // parçacıklar (ayarlar → görsel kapalıysa üretilmez)
+  // yerinde sıkıştırma + sınır: birikim GC baskısı yaratmasın
   if (S.fxParts) {
-    for (const p of S.parts) {
+    const ps = S.parts;
+    for (let i = ps.length - 1; i >= 0; i--) {
+      const p = ps[i];
       p.t += dt;
       p.x += (p.vx || 0) * dt;
       p.y += (p.vy || 0) * dt;
       if (p.kind === 'feather') { p.vy += 60 * dt; p.vx = Math.sin(p.t * 6) * 15; }
       if (p.kind === 'coin') { p.vy += 260 * dt; }
+      if (p.t >= p.life) { ps[i] = ps[ps.length - 1]; ps.pop(); }
     }
-    S.parts = S.parts.filter(p => p.t < p.life);
+    if (ps.length > 500) ps.splice(0, ps.length - 500); // en eskileri at
   } else if (S.parts.length) S.parts.length = 0;
 }
