@@ -95,8 +95,7 @@ function loop(now) {
   let dt = (now - last) / 1000;
   last = now;
   if (dt > 0.1) dt = 0.1;
-  if (!menuOpen()) update(dt); // ana menüde simülasyon durur, dünya canlı çizilir
-  draw(ctx, dt);
+  if (!menuOpen()) { update(dt); draw(ctx, dt); } // menü tam ekran sahne — oyun arkada çizilmez
   uiT += dt;
   if (uiT > 0.25) { uiT = 0; refreshUI(); }
   requestAnimationFrame(loop);
