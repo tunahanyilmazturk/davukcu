@@ -4,6 +4,31 @@
 import { L } from '../config.js';
 import { S } from '../state.js';
 
+// Türk bayrağı kumaşı — bir kez offscreen'de dokunur (ay-yıldız dahil);
+// kare başına sütun sütun sinüs ofsetiyle dilimlenerek dalgalandırılır
+let flagTex = null;
+function buildFlag() {
+  const c = document.createElement('canvas');
+  c.width = 42; c.height = 27;
+  const g = c.getContext('2d');
+  g.fillStyle = '#e30a17'; g.fillRect(0, 0, 42, 27);
+  g.fillStyle = '#b8081a'; g.fillRect(0, 0, 3, 27); // uçkurluk (direk tarafı)
+  g.fillStyle = '#f8f4f0';                          // hilal
+  g.beginPath(); g.arc(13.5, 13.5, 7, 0, 7); g.fill();
+  g.fillStyle = '#e30a17';
+  g.beginPath(); g.arc(16.2, 13.5, 5.6, 0, 7); g.fill();
+  g.fillStyle = '#f8f4f0';                          // yıldız — bir köşesi hilale bakar
+  g.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 ? 1.6 : 4.2;
+    const a = Math.PI + i * Math.PI / 5;
+    const x = 27 + Math.cos(a) * r, y = 13.5 + Math.sin(a) * r;
+    i ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.fill();
+  return c;
+}
+
 export function drawAmbient(ctx) {
   const t = performance.now() / 1000;
   const P = L.PEN;
@@ -64,6 +89,34 @@ export function drawAmbient(ctx) {
   }
   ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
   ctx.restore();
+
+  // Türk bayrağı — kümesin sağındaki direkte dalgalanır;
+  // kumaş uca doğru büyüyen sinüs dalgasıyla sütun sütun çizilir,
+  // faz-kaymalı gölge geçişi kumaşa derinlik verir
+  if (!flagTex) flagTex = buildFlag();
+  const FL = L.FLAG, fx = FL.x + FL.w / 2, fgy = FL.y + FL.h;
+  const poleTop = fgy - 112;
+  ctx.fillStyle = '#8a8478'; ctx.fillRect(fx - 7, fgy - 4, 15, 4);  // taş kaide
+  ctx.fillStyle = '#a8a294'; ctx.fillRect(fx - 5, fgy - 7, 11, 3);
+  ctx.fillStyle = '#e8e4da'; ctx.fillRect(fx - 2, poleTop, 4, 112); // direk
+  ctx.fillStyle = '#b8b4aa'; ctx.fillRect(fx, poleTop, 2, 112);     // direk gölgesi
+  ctx.fillStyle = '#ffd23e';                                        // altın topuz
+  ctx.beginPath(); ctx.arc(fx, poleTop - 2, 3, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff0a8'; ctx.fillRect(fx - 1, poleTop - 4, 1, 1);
+  const fw = flagTex.width, fh = flagTex.height;
+  for (let i = 0; i < fw; i++) {
+    const k = i / fw;
+    const wob = Math.sin(t * 4.4 + i * 0.38) * k * 3.2;
+    const dy = poleTop + 2 + wob;
+    ctx.drawImage(flagTex, i, 0, 1, fh, fx + 2 + i, dy, 1, fh);
+    const sh = Math.sin(t * 4.4 + i * 0.38 + 1.3) * k;
+    if (sh > 0.01) {
+      ctx.globalAlpha = sh * 0.15;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(fx + 2 + i, dy, 1, fh);
+      ctx.globalAlpha = 1;
+    }
+  }
 
   // kelebekler — otlak üstünde süzülüp kanat çırpan 3 kelebek
   const bf = ['#fff4d8', '#ffd23e', '#c894e8'];

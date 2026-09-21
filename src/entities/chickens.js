@@ -93,7 +93,7 @@ const _bz = [], _gz = [_gzr1, _gzr2];
 function fillZones() {
   _bagZone.x = L.BAG_STACK.x; _bagZone.y = L.BAG_STACK.y - 30;
   _bz.length = 0;
-  _bz.push(L.FEED, L.WATER, L.MANURE_BIN, _bagZone, L.COOP, L.MILL);
+  _bz.push(L.FEED, L.WATER, L.MANURE_BIN, _bagZone, L.COOP, L.MILL, L.FLAG);
   _gzr1.x = L.POND.x - 8; _gzr1.y = L.POND.y - 8; _gzr1.w = L.POND.w + 16; _gzr1.h = L.POND.h + 16;
   _gzr2.x = L.HAY.x - 4; _gzr2.y = L.HAY.y - 4; _gzr2.w = L.HAY.w + 8; _gzr2.h = L.HAY.h + 8;
 }

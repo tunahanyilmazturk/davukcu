@@ -35,6 +35,7 @@ export function computeLayout(stageW, stageH) {
   // çiftlik dekorları: kümes + rüzgar gülü üstte, gölet sol altta,
   // buğday tarlası sağ altta, saman balyası orta alan
   L.COOP  = { x: 84, y: 58, w: 150, h: 104 };              // kırmızı kümes
+  L.FLAG  = { x: 258, y: 122, w: 18, h: 28 };              // bayrak direği (kümes sağı)
   L.MILL  = { x: w - 172, y: 50, w: 44, h: 120 };          // rüzgar gülü kulesi
   L.POND  = { x: 42, y: 548, w: 148, h: 76 };              // gölet
   L.WHEAT = { x: w - 336, y: 552, w: 200, h: 100 };        // buğday tarlası
