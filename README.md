@@ -1,27 +1,31 @@
 # Tavuk Çiftliği
 
-The MachinEGG tarzında idle clicker oyunu. Tavuklar otlar, yumurtalar
-konveyör bandına düşer, paketleme makinesi satar, parayla yeni tavuklar
-ve yükseltmeler alırsın.
+Piksel grafikli idle çiftlik/fabrika oyunu. Tavuklar otlar, yumurtalar
+konveyör hattından geçip süpürge→yıkama→cila→sınıflandırma sonrası
+sandıkta satılır; parayla tavuk, yükseltme ve çiftlik manzarası alırsın.
 
 ## Çalıştırma
 
 ```bash
 npm install
 npm run dev      # http://localhost:8137
-npm run build    # dist/ çıktısı (file:// ile de açılır)
+npm run build    # dist/ çıktısı
 npm run preview  # build'i önizle
 ```
 
 ## Oynanış
 
-- **Tavuklar** kendiliğinden yumurtlar; yumurta banda düşer, makineye gider, satılır.
-- **Tavuğa tıkla** → sev (kalpler çıkar, bir sonraki yumurtasını hızlandırır).
-- **Tavuğu sürükleyip sağdaki panele bırak** → sat.
-- **Pazar** panelinden tavuk ve yükseltme satın al: yumurta değeri,
-  yumurtlama hızı, konveyör hızı, makine hızı, altın yumurta şansı (10x değerli).
-- İlerleme `localStorage`'a kaydedilir; kapalıyken %50 verimle
-  çevrimdışı kazanç birikir (en fazla 4 saat).
+- Ana menüden zorluk seç (Kolay / Standart / Zor / Aşırı Zor) → OYNA.
+- **Tavuklar** kendiliğinden yumurtlar; yumurta borudan fabrika hattına
+  düşer, istasyonlardan geçip sandıkta otomatik satılır.
+- **Tavuğa tıkla** → sev; **sürükleyip panele bırak** → sat.
+- **YEM/SU** barlarına (veya siloya) tıkla → paran yettiği kadar doldur.
+- **Pazar** sekmesi: tavuk, hat istasyonları ve ekonomi yükseltmeleri.
+- **Mağaza** sekmesi: kümes, gölet, değirmen, bayrak gibi manzaralar ve
+  kozmetik süsler — satın alınca arsalarına yerleşir.
+- Fabrika sayfasında **mıknatıs**: basılı tut, yumurtaları çeker.
+- İlerleme `localStorage`'a kaydedilir; kapalıyken çevrimdışı kazanç
+  birikir.
 
 ## Proje yapısı
 
@@ -29,19 +33,30 @@ npm run preview  # build'i önizle
 index.html        sayfa iskeleti + sağ panel
 style.css         pixel-art arayüz stilleri
 src/
-  main.js         giriş noktası: kayıt yükleme, çevrimdışı kazanç, ana döngü
-  config.js       saha geometrisi, ekonomi sabitleri, fmt yardımcıları
+  main.js         giriş noktası: kayıt, çevrimdışı kazanç, ana döngü
+  config.js       saha geometrisi, sabitler, fmt yardımcıları
   state.js        oyun durumu (S) + localStorage kayıt/yükle
-  economy.js      seviyelerden türetilen değerler (fiyat, hız, şans)
-  entities.js     tavuk/yumurta/makine/parçacık güncelleme mantığı
-  render.js       canvas sahne çizimi
-  world.js        statik arka plan (tek seferlik offscreen canvas)
-  input.js        tavuk sevme + sürükleyip satma
-  shop.js         pazar kartları, istatistikler, toast
-  sprites.js      string satırlarından üretilen pixel sprite'lar
-  audio.js        WebAudio ses efektleri
-test.html         headless mantık testi (window.GAME kancası, sadece dev'de)
-spritetest.html   sprite önizleme sayfası
+  economy.js      seviyelerden türetilen değerler + zorluk çarpanları
+  decor.js        satın alınabilir süs ve manzara kataloğu
+  menu.js         ana menü sahnesi
+  settings.js     ayarlar modalı
+  shop.js         panel: sekmeler, kartlar, üst bar
+  quests.js       görev zinciri
+  achievements.js başarımlar
+  prestige.js     prestij/efsane
+  stats.js        istatistik sekmesi
+  input.js        tavuk sevme, sürükleme, mıknatıs
+  belts.js        konveyör segmentleri
+  toast.js        bilgi mesajları
+  audio.js        WebAudio efektleri
+  camera.js       sayfa geçişi / kamera
+  mobile.js       dokunmatik düzen
+  entities/       tavuk, civciv, yumurta, gübre, tilki, kamyon, olaylar
+  render/         canvas çizim katmanları (bant, istasyonlar, HUD, fx)
+  world/          statik arka plan (çiftlik + fabrika, offscreen canvas)
+  sprites/        string satırlarından üretilen pixel sprite'lar
+test.html         headless mantık testi (window.GAME kancası, dev'de)
+probe.html        hızlı sağlık sondası (dev'de)
 ```
 
 Yeni özellik eklerken: ekonomi değerleri `economy.js`, mağaza
