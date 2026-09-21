@@ -181,6 +181,32 @@ setTimeout(() => {
                clickedToBin, binCount: S.manureBin, bagMade,
                bagsSold: S.stats.bags - soldBagsBefore, bagPaid: S.money > paidBefore,
                shovelCursor, cursorReset });
+    // ---- yeni yükseltmeler: organik / toptancı / tedarik / bereket / pazarlık / seleksiyon ----
+    const evBase = window.GAME.eggValue();
+    S.lvl.organic = 2; // x1.24 çarpan
+    const organicOk = Math.abs(window.GAME.eggValue() / evBase - 1.24) < 0.03;
+    S.lvl.organic = 0;
+    S.feed = 0; // dolum maliyeti >1 olsun
+    const refillBase = window.GAME.refillCost('feed');
+    S.lvl.supply = 3; // -%36
+    const supplyOk = window.GAME.refillCost('feed') < refillBase;
+    S.lvl.supply = 0;
+    const sellBase = window.GAME.sellPrice('white');
+    S.lvl.bargain = 4; // %50 → %82
+    const bargainOk = window.GAME.sellPrice('white') > sellBase;
+    S.lvl.bargain = 0;
+    const geneOk = window.GAME.chickOdds(0).w === 0.7
+      && window.GAME.chickOdds(5).g > 0 && window.GAME.chickOdds(5).w < 0.7;
+    const fertOk = Math.abs(window.GAME.fertileRate(2) - 1.6) < 1e-9;
+    // toptancı primi: giden kamyon worth × (1 + 0.15·lv) öder
+    S.lvl.dealer = 2;
+    S.eggs.length = 0; // kutu satışı deltayı bozmasın
+    const eBefore = S.stats.earned; // ödüller earned'e dokunmaz — sadece satışlar
+    S.truck = { x: L.W + 60, state: 'leave', cargo: 1, bags: 0, worth: 1000, t: 0, bob: 0 };
+    for (let i = 0; i < 30; i++) update(0.05);
+    const dealerOk = S.stats.earned - eBefore === 1300;
+    S.lvl.dealer = 0;
+    log.push({ organicOk, supplyOk, bargainOk, geneOk, fertOk, dealerOk });
     // ---- görev zinciri: koşullar sağlandı → sıralı ilerleme ----
     window.GAME.checkQuests();
     const qAfter = S.questIdx;

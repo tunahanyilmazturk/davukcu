@@ -19,7 +19,9 @@ export function prestMult()                    { return 1 + 0.12 * S.prestige; }
 export function prestGain() {
   return Math.floor(Math.sqrt(Math.max(0, S.stats.earned - S.prestigeBase) / 40000));
 }
-export function eggValue(l = S.lvl.value)      { return Math.round((BASE.egg + l) * prestMult()); }
+// Organik Sertifika: tüm yumurta (ve dolayısıyla gübre) değerine çarpan
+export function organicMult(l = S.lvl.organic) { return 1 + 0.12 * l; }
+export function eggValue(l = S.lvl.value)      { return Math.round((BASE.egg + l) * prestMult() * organicMult()); }
 export function layInterval(l = S.lvl.lay)     { return Math.max(0.7, BASE.lay * Math.pow(0.88, l)); }
 export function farmBeltSpeed(l = S.lvl.beltF) { return BASE.belt * Math.pow(1.25, l); }   // üst bant
 export function depoBeltSpeed(l = S.lvl.beltD) { return BASE.beltD * Math.pow(1.22, l); }  // alt bant
@@ -70,9 +72,11 @@ export function magnetPull(l = S.lvl.magnet)   { return 900 + 380 * l; } // çek
 export const FEED_RATE = 0.05, WATER_RATE = 0.08;
 export function feedCap(l = S.lvl.feedCap)   { return 100 + 100 * l; }
 export function waterCap(l = S.lvl.waterCap) { return 100 + 100 * l; }
+// Tedarik Anlaşması: yem/su dolum maliyeti indirimi (en çok %60 indirim)
+export function supplyMult(l = S.lvl.supply) { return Math.max(0.4, 1 - 0.12 * l); }
 export function refillCost(kind) {
   const cap = kind === 'feed' ? feedCap() : waterCap();
-  return Math.max(1, Math.ceil((cap - S[kind]) * 0.05));
+  return Math.max(1, Math.ceil((cap - S[kind]) * 0.05 * supplyMult()));
 }
 // otomatik dolum: seviye başına kapasitenin %25'i (Sv.4 = tam dolum)
 export function autoFillPct(l)  { return 0.25 * l; }
@@ -96,10 +100,28 @@ export function chickInterval(roosters, l = S.lvl.hatch) {
 }
 // civciv büyüme süresi: 'Hızlı Büyüme' yükseltmesi seviye başına %12 kısaltır
 export function chickGrowT(l = S.lvl.grow) { return CHICK_GROW_T * Math.pow(0.88, l); }
+// Seleksiyon: civcivin cins zarı — seviye yükseldikçe beyaz yerine esmer/kara;
+// Sv.3+ az da olsa altın civciv şansı
+export function chickOdds(l = S.lvl.gene) {
+  return { g: l >= 3 ? 0.03 * (l - 2) : 0,
+           k: 0.05 + 0.03 * l,
+           w: Math.max(0.15, 0.7 - 0.11 * l) };
+}
+export function chickBreed() {
+  const o = chickOdds(), r = Math.random();
+  if (r < o.g) return 'gold';
+  if (r < o.g + o.k) return 'black';
+  if (r < o.g + o.k + o.w) return 'white';
+  return 'brown';
+}
 
 // lojistik kamyonu: geliş sıklığı ve kasa kapasitesi seviyeyle iyileşir
 export function truckInterval(l = S.lvl.truck) { return Math.max(5, 26 * Math.pow(0.85, l)); }
 export function truckCap(l = S.lvl.truck)      { return 3 + l; }
+// Toptancı Anlaşması: kamyonun toptan ödemesine seviye başına +%15 prim
+export function truckBonus(l = S.lvl.dealer)   { return 1 + 0.15 * l; }
+// Bereketli Yem: gübre yığını düşme sıklığı çarpanı
+export function fertileRate(l = S.lvl.fertile) { return 1 + 0.30 * l; }
 // Sevgi Eli: imlecin üstündeki tavuğun otomatik sevilme aralığı (tavuk başına)
 export function autoPetCd(l = S.lvl.autopet)   { return 5.5 - l; }
 // Gübre Kepçesi: tüm yığınları toplama aralığı (sn)
@@ -110,9 +132,11 @@ export function manureValue()                  { return Math.max(1, Math.ceil(eg
 export function manureBagValue()               { return Math.round(manureValue() * BAG_AT * 1.25); }
 
 export function chickenCost(n = S.chickens.length) { return Math.ceil(12 * Math.pow(1.23, n)); }
+// Pazarlık Ustası: tavuk satışı maliyetin %50'sinden başlar, seviye başına +%8 (azami %90)
+export function sellFrac(l = S.lvl.bargain)    { return Math.min(0.9, 0.5 + 0.08 * l); }
 export function sellPrice(breed = 'white') {
   const b = BREEDS[breed] || BREEDS.white;
-  return Math.max(1, Math.floor(chickenCost() * 0.5 * b.costMult));
+  return Math.max(1, Math.floor(chickenCost() * sellFrac() * b.costMult));
 }
 export function avgEggValue()   {
   // yıkama kuruluysa tüm yumurtalar yıkanır; cila da kuruluysa hepsi parlatılır

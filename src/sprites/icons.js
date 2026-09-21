@@ -497,3 +497,123 @@ export const ICON_SCOOP = makeSprite([
 "................",
 "................",
 ], { W:'#a07850', b:'#5a4028' });
+
+// seleksiyon: DNA sarmalı — civcivler daha iyi cins doğar
+export const ICON_GENE = makeSprite([
+"................",
+"..CC......CC....",
+"...CC....CC.....",
+"....CCCCCC......",
+".....CCCC.......",
+"....CCCCCC......",
+"...CC....CC.....",
+"..CC......CC....",
+"...CC....CC.....",
+"....CCCCCC......",
+".....CCCC.......",
+"....CCCCCC......",
+"...CC....CC.....",
+"..CC......CC....",
+"................",
+"................",
+], { C:'#4fd8e8' });
+
+// toptancı anlaşması: dolar işareti — kamyon ödemesine prim
+export const ICON_DEALER = makeSprite([
+"................",
+".....$$.........",
+"....$$$$$$......",
+"...$$..$$.......",
+"...$$..$........",
+"....$$$$$.......",
+".....$$$$$......",
+"......$$$$$.....",
+"...$$..$$$......",
+"...$$..$$.......",
+"....$$$$$$......",
+".....$$.........",
+"................",
+"................",
+"................",
+"................",
+], { $:'#ffd23e' });
+
+// organik sertifika: damarlı yaprak — yumurta değeri çarpanı
+export const ICON_ORGANIC = makeSprite([
+"................",
+"..........GG....",
+".........GGGG...",
+"........GGGGG...",
+".......GGGgGG...",
+"......GGGggGG...",
+".....GGGggGG....",
+"....GGGggGG.....",
+"...GGGggGG......",
+"..GGGggGG.......",
+"..GGggGG........",
+"..GggGG.........",
+"..ggG...........",
+"................",
+"................",
+"................",
+], { G:'#5cb648', g:'#357a28' });
+
+// bereketli yem: etiketli gübre çuvalı — yığınlar daha sık
+export const ICON_FERTILE = makeSprite([
+"................",
+"......BBB.......",
+".....BBBBB......",
+"......BBB.......",
+".....BBBBB......",
+"....BBBBBBB.....",
+"...BBBBBBBBB....",
+"..BBBBBBBBBBB...",
+"..BBwwwwwBBBB...",
+"..BBwwwwwBBBB...",
+"..BBBBBBBBBBB...",
+"..BBBBBBBBBBB...",
+"...BBBBBBBBB....",
+"....BBBBBBB.....",
+"................",
+"................",
+], { B:'#9a6a3a', w:'#e8d8a0' });
+
+// tedarik anlaşması: katlanmış sözleşme belgesi — dolum maliyeti düşer
+export const ICON_SUPPLY = makeSprite([
+"................",
+"....DDDDDD......",
+"....DDDDDDD.....",
+"....DDDDDDd.....",
+"....DWWWWWWD....",
+"....DDDDDDDD....",
+"....DWWWWWWD....",
+"....DDDDDDDD....",
+"....DWWWWWWD....",
+"....DDDDDDDD....",
+"....DWWWDDDD....",
+"....DDDDDDDD....",
+"................",
+"................",
+"................",
+"................",
+], { D:'#ddd2ae', d:'#b8a988', W:'#9a8a68' });
+
+// pazarlık ustası: ipli fiyat etiketi — tavuk satışı daha kârlı
+export const ICON_BARGAIN = makeSprite([
+"................",
+"................",
+"...ss...........",
+"....ss..........",
+".....TTTTTTTTT..",
+"....TtTTTTTTTT..",
+"...TTTTTTTTTTT..",
+"...TTTTTTTTTTT..",
+"...TTTTTTTTTTT..",
+"....TTTTTTTTTT..",
+".....TTTTTTTTT..",
+"................",
+"................",
+"................",
+"................",
+"................",
+], { T:'#e8b838', t:'#7a5c20', s:'#c8c0a8' });

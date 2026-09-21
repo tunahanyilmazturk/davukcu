@@ -5,7 +5,8 @@ import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rare
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
          chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, autoPetCd,
-         scoopInterval } from './economy.js';
+         scoopInterval, organicMult, truckBonus, fertileRate, supplyMult, sellFrac,
+         chickOdds } from './economy.js';
 import { checkQuests, refreshQuestBar } from './quests.js';
 import { refreshPrestige } from './prestige.js';
 import { spawnChicken } from './entities/index.js';
@@ -63,6 +64,12 @@ export const SHOP = [
     costAt: l => Math.ceil(300 * Math.pow(2.0, l)),
     effAt: l => Math.round(chickGrowT(l)) + ' sn büyüme',
     req: () => S.lvl.rooster > 0, reqText: 'Önce horoz al' },
+  { id: 'gene', sec: 'ÜRETİM', name: 'Seleksiyon', icon: 'gene', lv: 'gene',
+    costAt: l => Math.ceil(900 * Math.pow(2.4, l)),
+    effAt: l => { const o = chickOdds(l);
+      return 'beyaz %' + Math.round(o.w * 100) + ' · kara %' + Math.round(o.k * 100) +
+        (o.g ? ' · altın %' + Math.round(o.g * 100) : ''); },
+    req: () => S.lvl.rooster > 0, reqText: 'Önce horoz al' },
   { id: 'beltF', sec: 'HAT', name: 'Çiftlik Bandı', icon: 'belt', lv: 'beltF',
     costAt: l => l === 0 ? 80 : Math.ceil(45 * Math.pow(1.9, l)),   // Sv.0→1 = kurulum
     effAt: l => l === 0 ? 'kurulu değil' : 'x' + (farmBeltSpeed(l) / BASE.belt).toFixed(2) + ' hız' },
@@ -94,6 +101,11 @@ export const SHOP = [
     costAt: l => Math.ceil(600 * Math.pow(2.2, l)),
     effAt: l => l === 0 ? 'kapalı — yerdekileri toplar'
       : Math.round(truckInterval(l)) + ' sn · ' + truckCap(l) + ' kasa' },
+  { id: 'dealer', sec: 'HAT', name: 'Toptancı Anlaşması', icon: 'dealer', lv: 'dealer',
+    costAt: l => Math.ceil(800 * Math.pow(2.5, l)),
+    effAt: l => l === 0 ? 'kamyon primi yok'
+      : 'kamyon ödemesi +%' + Math.round((truckBonus(l) - 1) * 100),
+    req: () => S.lvl.truck > 0, reqText: 'Önce kamyon al' },
   { id: 'value', sec: 'DEĞER', name: 'Yumurta Değeri', icon: 'egg', lv: 'value',
     costAt: l => Math.ceil(25 * Math.pow(1.75, l)),
     effAt: l => '$' + fmt(eggValue(l)) + '/yumurta' },
@@ -105,6 +117,10 @@ export const SHOP = [
     costAt: l => Math.ceil(600 * Math.pow(3.0, l)),
     effAt: l => '%' + Math.round(rareChance(l) * 100) + ' şans · ' + (l >= 3 ? 'x2-20' : 'x2-4'),
     req: () => S.lvl.golden >= 2, reqText: 'Altın Yumurta Sv.2 gerekli' },
+  { id: 'organic', sec: 'DEĞER', name: 'Organik Sertifika', icon: 'organic', lv: 'organic',
+    costAt: l => Math.ceil(700 * Math.pow(2.3, l)),
+    effAt: l => 'x' + organicMult(l).toFixed(2) + ' tüm değer',
+    req: () => S.lvl.value >= 5, reqText: 'Yumurta Değeri Sv.5 gerekli' },
   { id: 'feedCap', sec: 'BAKIM', name: 'Büyük Yemlik', icon: 'feed', lv: 'feedCap',
     costAt: l => Math.ceil(50 * Math.pow(1.9, l)),
     effAt: l => fmt(feedCap(l)) + ' birim' },
@@ -119,10 +135,19 @@ export const SHOP = [
     costAt: l => Math.ceil(300 * Math.pow(2.4, l)),
     effAt: l => l === 0 ? 'kapalı'
       : 'düşükken %' + Math.round(autoTrigger(l) * 100) + "'de · %" + Math.round(autoFillPct(l) * 100) + ' dolar' },
+  { id: 'supply', sec: 'BAKIM', name: 'Tedarik Anlaşması', icon: 'supply', lv: 'supply',
+    costAt: l => Math.ceil(180 * Math.pow(2.0, l)),
+    effAt: l => 'dolum maliyeti -%' + Math.round((1 - supplyMult(l)) * 100),
+    req: () => S.lvl.feedCap > 0 || S.lvl.waterCap > 0,
+    reqText: 'Önce yemlik veya suluk büyüt' },
   { id: 'scoop', sec: 'BAKIM', name: 'Gübre Kepçesi', icon: 'scoop', lv: 'scoop',
     costAt: l => Math.ceil(150 * Math.pow(2.2, l)),
     effAt: l => l === 0 ? 'kapalı — tıkla da kovaya alınır'
       : 'her ' + Math.round(scoopInterval(l)) + ' sn tüm gübreyi kovaya doldurur' },
+  { id: 'fertile', sec: 'BAKIM', name: 'Bereketli Yem', icon: 'fertile', lv: 'fertile',
+    costAt: l => Math.ceil(250 * Math.pow(2.1, l)),
+    effAt: l => l === 0 ? 'normal gübre sıklığı'
+      : '+%' + Math.round((fertileRate(l) - 1) * 100) + ' daha sık yığın' },
   { id: 'magnet', sec: 'ARAÇLAR', name: 'Mıknatıs', icon: 'magnet', lv: 'magnet',
     costAt: l => Math.ceil(60 * Math.pow(2.0, l)),
     effAt: l => magnetRadius(l) + 'px · ' + magnetCap(l) + ' yumurta' },
@@ -138,6 +163,10 @@ export const SHOP = [
     costAt: l => Math.ceil(500 * Math.pow(2.5, l)),
     effAt: l => '%' + Math.round(luckyChance(l) * 100) + ' şansla x2 ödeme',
     req: () => S.eggsSold >= 100, reqText: '100 yumurta satınca açılır' },
+  { id: 'bargain', sec: 'PASİF', name: 'Pazarlık Ustası', icon: 'bargain', lv: 'bargain',
+    costAt: l => Math.ceil(350 * Math.pow(2.3, l)),
+    effAt: l => 'satış maliyetin %' + Math.round(sellFrac(l) * 100) + "'i",
+    req: () => S.stats.sold >= 1, reqText: 'Önce bir tavuk sat' },
   { id: 'saver', sec: 'PASİF', name: 'Tutumlu Kaynak', icon: 'saver', lv: 'saver',
     costAt: l => Math.ceil(120 * Math.pow(2.1, l)),
     effAt: l => 'tüketim -%' + Math.round((1 - consumeMult(l)) * 100) },
@@ -402,7 +431,9 @@ export function initPanel() {
   });
   // kayıtlı durum; mobilde ilk açılış varsayılanı kapalı bar (oyun görünsün)
   try {
-    if (localStorage.getItem('panelClosed') || isMobile()) setPanel(true);
+    const q = new URLSearchParams(location.search);
+    if (q.get('panel') === '1') setPanel(false);
+    else if (localStorage.getItem('panelClosed') || isMobile()) setPanel(true);
   } catch (e) {}
 
   initTabs();

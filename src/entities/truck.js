@@ -2,7 +2,7 @@
 // toplar, giderken satar
 import { S } from '../state.js';
 import { L, fmt } from '../config.js';
-import { truckInterval, truckCap, manureBagValue } from '../economy.js';
+import { truckInterval, truckCap, manureBagValue, truckBonus } from '../economy.js';
 import { eggWorth } from './eggs.js';
 import { sndCoin, sndPop } from '../audio.js';
 
@@ -73,12 +73,13 @@ export function updateTruck(dt) {
   tr.x += 190 * dt;
   if (tr.x > L.W + 80) {
     if (tr.worth > 0) {
-      S.money += tr.worth;
+      const pay = Math.round(tr.worth * truckBonus()); // toptancı primi
+      S.money += pay;
       S.eggsSold += tr.cargo;
-      S.stats.earned += tr.worth;
+      S.stats.earned += pay;
       S.stats.trucked += tr.cargo;
       S.stats.bags += tr.bags;
-      S.parts.push({ kind: 'text', text: '+$' + fmt(tr.worth) + ' kamyon' +
+      S.parts.push({ kind: 'text', text: '+$' + fmt(pay) + ' kamyon' +
           (tr.bags ? ' (' + tr.bags + ' çuval)' : ''),
         x: L.WD.dockX - 20, y: L.ROAD_Y - 60, vy: -30, t: 0, life: 1.2, color: '#8fd8ff' });
       sndCoin();

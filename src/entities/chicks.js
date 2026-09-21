@@ -1,7 +1,7 @@
 // Civcivler: kümesde horoz varken periyodik çıkar, süresi dolunca tavuğa dönüşür
 import { S } from '../state.js';
 import { L, MAX_CHICKENS } from '../config.js';
-import { chickInterval, chickGrowT } from '../economy.js';
+import { chickInterval, chickGrowT, chickBreed } from '../economy.js';
 import { spawnChicken, posBlocked } from './chickens.js';
 import { sndPop, sndCluck } from '../audio.js';
 
@@ -84,8 +84,7 @@ export function updateChicks(dt) {
     const c = S.chicks[i];
     if (c.growT > 0) continue;
     S.chicks.splice(i, 1);
-    const r = Math.random();
-    spawnChicken(c.x, c.y, r < 0.7 ? 'white' : r < 0.95 ? 'brown' : 'black');
+    spawnChicken(c.x, c.y, chickBreed()); // seleksiyon seviyesine göre cins zarı
     for (let k = 0; k < 4; k++) {
       S.parts.push({ kind: 'feather', x: c.x + (Math.random() - .5) * 14, y: c.y - 12,
         vx: (Math.random() - .5) * 40, vy: -30 - Math.random() * 30, t: 0, life: 1 });

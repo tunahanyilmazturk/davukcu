@@ -2,7 +2,7 @@
 // kova dolunca çuval olur, çuvalları lojistik kamyonu satar
 import { S } from '../state.js';
 import { L, BAG_AT, fmt } from '../config.js';
-import { manureBagValue, scoopInterval, BREEDS } from '../economy.js';
+import { manureBagValue, scoopInterval, fertileRate, BREEDS } from '../economy.js';
 import { sndCoin, sndPop } from '../audio.js';
 import { toast } from '../toast.js';
 
@@ -14,7 +14,7 @@ export function tickManure(ch, dt) {
   if ((BREEDS[ch.breed] || BREEDS.white).lays === false) return; // horoz bırakmaz
   ch.manureT = (ch.manureT ?? 10 + Math.random() * 25) - dt;
   if (ch.manureT <= 0) {
-    ch.manureT = 22 + Math.random() * 30;
+    ch.manureT = (22 + Math.random() * 30) / fertileRate();
     if (S.manures.length < MAX_PILES) {
       S.manures.push({ x: ch.x + (Math.random() - .5) * 22, y: ch.y - 2,
                        seed: Math.random() * 7 });

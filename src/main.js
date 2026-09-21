@@ -1,7 +1,8 @@
 // Giriş noktası: yükleme, çevrimdışı kazanç, ana döngü
 import { S, readSave, applySave, writeSave } from './state.js';
 import { H, L, computeLayout, fmt } from './config.js';
-import { ratePerSec, offlineEff, offlineCapH } from './economy.js';
+import { ratePerSec, offlineEff, offlineCapH, eggValue, sellPrice,
+         refillCost, truckBonus, fertileRate, chickOdds } from './economy.js';
 import { spawnChicken, spawnChick, update, clampEntities } from './entities/index.js';
 import { eggLooks } from './entities/eggs.js';
 import { draw } from './render/index.js';
@@ -99,7 +100,8 @@ requestAnimationFrame(loop);
 // geliştirme: test.html bu kancayı kullanır
 if (import.meta.env && import.meta.env.DEV) {
   window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
-                  QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage };
+                  QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage,
+                  eggValue, sellPrice, refillCost, truckBonus, fertileRate, chickOdds };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
   const ff = parseFloat(q.get('ff') || '0');
@@ -137,8 +139,7 @@ if (import.meta.env && import.meta.env.DEV) {
   if (q.get('page') === '1') { cam.page = 1; cam.x = cam.target = L.W; }
   // ?settings=1 → ayarlar modalını açık başlat (görsel test)
   if (q.has('settings')) document.getElementById('btnSettings').click();
-  // ?panel=1 → pazar panelini açık başlat (mobil sheet görsel test)
-  if (q.has('panel')) document.getElementById('btnPanel').click();
+  // ?panel=1 → pazar paneli açık başlar (initPanel uygular)
   // ?mag=1 → mıknatıs görselini sabit konumda aktif tut (görsel test, dünya x)
   if (q.has('mag')) {
     const mx = L.FX + L.W * 0.45, my = L.BELT2_Y - 40;

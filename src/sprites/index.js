@@ -8,7 +8,9 @@ import { ICON_EGG, ICON_GOLDEGG, ICON_FASTLAY, ICON_BELT, ICON_MACHINE,
          ICON_WASH, ICON_WASHSPD, ICON_POLISH, ICON_RARE, ICON_FEED, ICON_WATER,
          ICON_AUTOF, ICON_AUTOW, ICON_MAGNET,
          ICON_TWIN, ICON_LUCKY, ICON_SAVER, ICON_OFFLINE, ICON_PACK,
-         ICON_HATCH, ICON_GROW, ICON_GRADE, ICON_TRUCK, ICON_PET, ICON_SCOOP } from './icons.js';
+         ICON_HATCH, ICON_GROW, ICON_GRADE, ICON_TRUCK, ICON_PET, ICON_SCOOP,
+         ICON_GENE, ICON_DEALER, ICON_ORGANIC, ICON_FERTILE, ICON_SUPPLY,
+         ICON_BARGAIN } from './icons.js';
 
 export { makeSprite, drawSprite } from './core.js';
 export { CHICKEN_VARIANTS } from './chickens.js';
@@ -57,5 +59,11 @@ export const SPR = {
     truck: ICON_TRUCK,
     pet: ICON_PET,
     scoop: ICON_SCOOP,
+    gene: ICON_GENE,
+    dealer: ICON_DEALER,
+    organic: ICON_ORGANIC,
+    fertile: ICON_FERTILE,
+    supply: ICON_SUPPLY,
+    bargain: ICON_BARGAIN,
   },
 };
