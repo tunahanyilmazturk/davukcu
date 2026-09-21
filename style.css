@@ -79,8 +79,8 @@ html, body {
   color: #f0e6f0;
   text-shadow: 3px 3px 0 #120a18, 0 0 20px rgba(255,210,62,.3);
 }
-.msub { color: #b090c0; font-size: 10px; letter-spacing: 2px; margin-top: 3px; }
-.msave { font-size: 10px; color: #b090c0; letter-spacing: .5px; }
+.msub { color: #c8a8d8; font-size: 11px; letter-spacing: 1.5px; margin-top: 3px; }
+.msave { font-size: 11px; color: #c8a8d8; letter-spacing: .5px; }
 .mbtn {
   width: 100%;
   padding: 11px;
@@ -104,7 +104,7 @@ html, body {
 .mqt {
   flex: 1;
   padding: 6px 2px 5px;
-  font: bold 9px "Courier New", monospace;
+  font: bold 10px "Courier New", monospace;
   letter-spacing: .5px;
   color: #d8b8e8;
   background: #1a0f24;
@@ -112,7 +112,7 @@ html, body {
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
-.mqt b { color: #9fd47a; font-size: 8px; }
+.mqt b { color: #9fd47a; font-size: 9px; }
 .mqt.off { opacity: .55; }
 .mqt.off b { color: #ff8090; }
 .mqt:hover { background: #241430; }
@@ -128,9 +128,9 @@ html, body {
 .mson .mq { font: bold 15px "Courier New", monospace; color: #6a5580; animation: mqpulse 2.2s infinite; }
 .mson:nth-child(2) .mq { animation-delay: .7s; }
 .mson:nth-child(3) .mq { animation-delay: 1.4s; }
-.mson span { font-size: 7px; letter-spacing: 1.5px; color: #6a5580; }
+.mson span { font-size: 9px; letter-spacing: 1.5px; color: #8a6aa0; }
 @keyframes mqpulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-.mver { font-size: 9px; color: #5a4a6a; letter-spacing: 1px; }
+.mver { font-size: 10px; color: #7a5a8a; letter-spacing: 1px; }
 
 /* ---------- ÜST BAR (oyun alanından ayrı, seçilebilir çipler) ---------- */
 #topbar {
@@ -158,7 +158,7 @@ html, body {
   border-bottom-width: 2px;         /* piksel hissi — alttan koyu çizgi */
   border-radius: 4px;
   color: #f0e6f0;
-  font: bold 10px "Courier New", monospace;
+  font: bold 11px "Courier New", monospace;
   letter-spacing: .5px;
   cursor: pointer;
   transition: background .12s, border-color .12s, transform .06s;
@@ -412,7 +412,7 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
 .mcard canvas { width: 100%; height: 56px; image-rendering: pixelated;
                 background: #1c1024; border: 2px solid #120a18; }
 .mcard b { font-size: 11px; color: #f0e6f0; }
-.mcard small { font-size: 9px; color: #b090c0; line-height: 1.4; }
+.mcard small { font-size: 10px; color: #b090c0; line-height: 1.4; }
 .mbuy {
   background: #4a6a34;
   color: #f0ffd8;
@@ -699,7 +699,7 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   color: #9fe870;
   border: 2px solid #2c1834;
   font-family: inherit;
-  font-size: 9px;
+  font-size: 10px;
   resize: none;
   padding: 4px;
 }
@@ -787,8 +787,8 @@ body.mob #btnPanel {
   border: 3px solid #2c1834;
   border-bottom: none;
   border-radius: 9px 9px 0 0;
-  font-size: 9px;
-  line-height: 11px;
+  font-size: 10px;
+  line-height: 12px;
 }
 body.mob #btnPanel:hover { background: #6e4a80; }
 
