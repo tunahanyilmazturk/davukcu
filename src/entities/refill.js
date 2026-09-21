@@ -1,7 +1,7 @@
 // Yem & su: tüketim, tıkla/otomatik dolum
 import { S } from '../state.js';
 import { L, fmt } from '../config.js';
-import { feedCap, waterCap, autoFillPct, autoTrigger, consumeMult, FEED_RATE, WATER_RATE } from '../economy.js';
+import { feedCap, waterCap, autoFillPct, autoTrigger, consumeMult, refillRate, FEED_RATE, WATER_RATE } from '../economy.js';
 import { sndBuy, sndErr } from '../audio.js';
 import { toast } from '../toast.js';
 
@@ -20,7 +20,7 @@ export function tryRefill(kind, auto = false) {
     if (!auto) toast((kind === 'feed' ? 'Yemlik' : 'Suluk') + ' zaten dolu');
     return false;
   }
-  const cost = Math.max(1, Math.ceil(amount * 0.05));
+  const cost = Math.max(1, Math.ceil(amount * refillRate())); // paneldeki göstergeyle aynı fiyat
   if (S.money < cost) {
     if (!auto) { toast('Para yetmez — $' + fmt(cost) + ' gerekli'); sndErr(); }
     return false;

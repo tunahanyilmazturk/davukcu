@@ -82,9 +82,14 @@ export function feedCap(l = S.lvl.feedCap)   { return 100 + 100 * l; }
 export function waterCap(l = S.lvl.waterCap) { return 100 + 100 * l; }
 // Tedarik Anlaşması: yem/su dolum maliyeti indirimi (en çok %60 indirim)
 export function supplyMult(l = S.lvl.supply) { return Math.max(0.4, 1 - 0.12 * l); }
+// lojistik maliyeti sürüyle büyür: birim fiyat tavuk başına artar
+// (1 tavuk ≈ $0.11/birim, 20 tavuk ≈ $0.64/birim — dolum gelirin kayda değer dilimi olur)
+export function refillRate() {
+  return (0.08 + 0.028 * S.chickens.length) * supplyMult() * diffPrice();
+}
 export function refillCost(kind) {
   const cap = kind === 'feed' ? feedCap() : waterCap();
-  return Math.max(1, Math.ceil((cap - S[kind]) * 0.05 * supplyMult() * diffPrice()));
+  return Math.max(1, Math.ceil((cap - S[kind]) * refillRate()));
 }
 // otomatik dolum: seviye başına kapasitenin %25'i (Sv.4 = tam dolum)
 export function autoFillPct(l)  { return 0.25 * l; }
