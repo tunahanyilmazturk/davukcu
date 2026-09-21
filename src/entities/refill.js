@@ -16,15 +16,21 @@ export function tryRefill(kind, auto = false) {
     const need = cap * autoTrigger(l) - S[kind];
     amount = Math.min(amount, Math.max(cap * autoFillPct(l), need + 1));
   }
+  const rate = refillRate();
+  // para yettiği kadar dolar — tam dolum yetmiyorsa kısmi dolum;
+  // bütçe tam dolara yuvarlanır ki ceil(cost) bakiyeyi aşmasın
+  const afford = Math.floor(Math.floor(S.money) / rate);
+  const partial = amount > afford;
+  if (partial) amount = afford;
   if (amount < 1) {
-    if (!auto) toast((kind === 'feed' ? 'Yemlik' : 'Suluk') + ' zaten dolu');
+    if (!auto) {
+      toast(S[kind] >= cap - 1 ? (kind === 'feed' ? 'Yemlik' : 'Suluk') + ' zaten dolu'
+        : 'Para yetmez — hiç ' + (kind === 'feed' ? 'yem' : 'su') + ' alınamadı');
+      if (S[kind] < cap - 1) sndErr();
+    }
     return false;
   }
-  const cost = Math.max(1, Math.ceil(amount * refillRate())); // paneldeki göstergeyle aynı fiyat
-  if (S.money < cost) {
-    if (!auto) { toast('Para yetmez — $' + fmt(cost) + ' gerekli'); sndErr(); }
-    return false;
-  }
+  const cost = Math.max(1, Math.ceil(amount * rate));
   S.money -= cost;
   S[kind] += amount;
   S.stats.fills++;
@@ -32,7 +38,8 @@ export function tryRefill(kind, auto = false) {
   S.parts.push({ kind: 'text', text: kind === 'feed' ? '+YEM' : '+SU',
     x: t.x + t.w / 2 - 12, y: t.y - 6, vy: -30, t: 0, life: 1,
     color: kind === 'feed' ? '#e8c040' : '#4aa8e8' });
-  toast((auto ? 'Oto dolum' : 'Dolduruldu') + ': ' + (kind === 'feed' ? 'Yemlik' : 'Suluk') + ' -$' + fmt(cost));
+  toast((auto ? 'Oto dolum' : 'Dolduruldu') + ': ' + (kind === 'feed' ? 'Yemlik' : 'Suluk')
+    + ' +%' + Math.round(amount / cap * 100) + ' -$' + fmt(cost) + (partial ? ' (kısmi)' : ''));
   sndBuy();
   return true;
 }

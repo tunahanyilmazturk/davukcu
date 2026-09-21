@@ -2,8 +2,8 @@
 import { S, readSave, applySave, writeSave } from './state.js';
 import { H, L, computeLayout, fmt } from './config.js';
 import { ratePerSec, offlineEff, offlineCapH, eggValue, sellPrice,
-         refillCost, truckBonus, truckTier, fertileRate, chickOdds, consumeMult } from './economy.js';
-import { spawnChicken, spawnChick, update, clampEntities } from './entities/index.js';
+         refillCost, refillRate, truckBonus, truckTier, fertileRate, chickOdds, consumeMult } from './economy.js';
+import { spawnChicken, spawnChick, update, clampEntities, tryRefill } from './entities/index.js';
 import { eggLooks } from './entities/eggs.js';
 import { draw } from './render/index.js';
 import { initInput, magnet } from './input.js';
@@ -106,7 +106,7 @@ requestAnimationFrame(loop);
 if (import.meta.env && import.meta.env.DEV) {
   window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
                   QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage,
-                  eggValue, sellPrice, refillCost, truckBonus, fertileRate, chickOdds, consumeMult,
+                  eggValue, sellPrice, refillCost, refillRate, tryRefill, truckBonus, fertileRate, chickOdds, consumeMult,
                   scareFox, catchButterfly, buyDecor, openTab };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
