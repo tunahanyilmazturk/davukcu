@@ -14,6 +14,7 @@ import { collectManure } from './entities/manure.js';
 import { toast } from './toast.js';
 import { buildBG } from './world.js';
 import { cam, goToPage, syncCam } from './camera.js';
+import { applyMobClass } from './mobile.js';
 
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
@@ -21,19 +22,28 @@ const stage = document.getElementById('stage');
 
 // ---- boyutlandırma: dünya genişliği sahneye göre ----
 function resize() {
+  applyMobClass(); // önce mobil düzen sınıfı — sahne ölçüsü ona göre değişir
   const r = stage.getBoundingClientRect();
-  if (r.width < 10 || r.height < 10) return;
+  // yerleşim henüz oturmadıysa (CSS yükleniyor) sonraki karede tekrar dene;
+  // L boşsa varsayılan boyutla doldur — spawn/çizim çökmez
+  if (r.width < 10 || r.height < 10) {
+    if (!L.PEN) computeLayout(660, 800);
+    requestAnimationFrame(resize); return;
+  }
   const lay = computeLayout(r.width, r.height);
   cv.width = lay.W; cv.height = H;
   ctx.imageSmoothingEnabled = false;
-  const s = r.height / H;
+  // contain-fit: canvas sahneye sığsın — dar/dikey ekranda dünya kenarları
+  // (nav okları, sürükleme şeridi) görünür kalır; genişte yükseklik belirler
+  const s = Math.min(r.height / H, r.width / lay.W);
   cv.style.width = (lay.W * s) + 'px';
-  cv.style.height = r.height + 'px';
+  cv.style.height = (H * s) + 'px';
   buildBG();
   syncCam();   // sayfa genişliği değişti — kamera aynı sayfada hizalanır
   clampEntities();
 }
 window.addEventListener('resize', resize);
+window.addEventListener('load', resize); // stylesheet geç gelirse yerleşimi tazele
 resize(); // L'i doldur — tavuklar PEN'e göre spawn oluyor
 
 // ---- kayıt yükle ----
@@ -127,6 +137,8 @@ if (import.meta.env && import.meta.env.DEV) {
   if (q.get('page') === '1') { cam.page = 1; cam.x = cam.target = L.W; }
   // ?settings=1 → ayarlar modalını açık başlat (görsel test)
   if (q.has('settings')) document.getElementById('btnSettings').click();
+  // ?panel=1 → pazar panelini açık başlat (mobil sheet görsel test)
+  if (q.has('panel')) document.getElementById('btnPanel').click();
   // ?mag=1 → mıknatıs görselini sabit konumda aktif tut (görsel test, dünya x)
   if (q.has('mag')) {
     const mx = L.FX + L.W * 0.45, my = L.BELT2_Y - 40;

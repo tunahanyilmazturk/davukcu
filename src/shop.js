@@ -13,6 +13,7 @@ import { sndBuy, sndErr } from './audio.js';
 import { SPR } from './sprites/index.js';
 import { buildStats, refreshStats } from './stats.js';
 import { buildAchv, refreshAchv, checkAchv } from './achievements.js';
+import { isMobile } from './mobile.js';
 
 /* ---------------- Mağaza tanımları ----------------
    lv: seviye anahtarı (S.lvl), costAt(i): i. seviyenin fiyatı,
@@ -381,7 +382,10 @@ export function initPanel() {
   const bp = document.getElementById('btnPanel');
   const setPanel = closed => {
     panel.classList.toggle('closed', closed);
-    bp.innerHTML = closed ? '&#9666;' : '&#9654;';
+    // ok yönü: masaüstünde yatay (◀/▶), mobilde dikey (▲/▼)
+    const mob = isMobile();
+    bp.innerHTML = closed ? (mob ? '&#9650;' : '&#9666;')
+                          : (mob ? '&#9660;' : '&#9654;');
     bp.title = closed ? 'Paneli aç' : 'Paneli kapat';
     try { localStorage.setItem('panelClosed', closed ? '1' : ''); } catch (e) {}
     // sahne genişliği değişti — canvas/layout'u yeniden hesaplat
@@ -396,7 +400,10 @@ export function initPanel() {
   panel.addEventListener('click', () => {
     if (panel.classList.contains('closed')) setPanel(false);
   });
-  try { if (localStorage.getItem('panelClosed')) setPanel(true); } catch (e) {}
+  // kayıtlı durum; mobilde ilk açılış varsayılanı kapalı bar (oyun görünsün)
+  try {
+    if (localStorage.getItem('panelClosed') || isMobile()) setPanel(true);
+  } catch (e) {}
 
   initTabs();
   buildStats();

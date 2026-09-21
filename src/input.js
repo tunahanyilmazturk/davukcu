@@ -10,19 +10,28 @@ import { manureAt, collectManure } from './entities/manure.js';
 import { HOP_T } from './entities/chickens.js';
 import { cam, goToPage, snapCam, navZones } from './camera.js';
 import { toast } from './toast.js';
+import { COARSE, isMobile } from './mobile.js';
 
 export const drag = { current: null }; // {ch, ox, oy, origX, origY, moved}
 export const magnet = { active: false, x: 0, y: 0, held: [] }; // basılıyken yumurtaları kapar
 export const pointer = { x: -1, y: -1 }; // imlecin DÜNYA koordinatı (Sevgi Eli için sürekli izlenir)
 let cv = null;
 let pan = null; // kenar-sürükleme durumu {sx, camX, active}
-const EDGE = 26; // kenar şeridi genişliği (ekran px değil dünya birimi)
+const EDGE = COARSE ? 48 : 26;   // kenar şeridi — dokunmada daha geniş
+const MOVE_T = COARSE ? 16 : 10; // sevme/sürükleme ayrımı — parmak titreşimi payı
 
 function evPos(e) {
   const r = cv.getBoundingClientRect();
   return { x: (e.clientX - r.left) * (L.W / r.width),
            y: (e.clientY - r.top) * (L.H / r.height),
-           cx: e.clientX, rectRight: r.right };
+           cx: e.clientX, cy: e.clientY,
+           rectRight: r.right, rectBottom: r.bottom };
+}
+
+// tavuk satış bölgesi: masaüstünde panel sağda (sağ kenar dışı),
+// mobilde alt bar altta (canvas alt kenarı dışı)
+function overSellZone(p) {
+  return p.cx > p.rectRight || (isMobile() && p.cy > p.rectBottom);
 }
 // kenar şeridi: çiftlikte sağ kenar → fabrika; fabrikada sol kenar → çiftlik
 function edgeZone(x) {
@@ -106,6 +115,9 @@ export function initInput(canvas) {
   window.addEventListener('blur', () => { if (magnet.active) releaseMagnet(); cancelDrag(); cancelPan(); });
   document.documentElement.addEventListener('mouseleave',
     () => { if (magnet.active) releaseMagnet(); cancelDrag(); cancelPan(); });
+  // OS dokunmayı iptal ederse (scroll devralma, çağrı) pointerup gelmez — temizle
+  cv.addEventListener('pointercancel',
+    () => { if (magnet.active) releaseMagnet(); cancelDrag(); cancelPan(); });
 
   // klavye ile sayfa geçişi
   window.addEventListener('keydown', e => {
@@ -118,8 +130,10 @@ export function initInput(canvas) {
     goToPage((e.deltaY || e.deltaX) > 0 ? 1 : 0);
   }, { passive: false });
 
-  cv.addEventListener('mousedown', e => {
-    if (e.button !== 0) return; // sadece sol tık etkileşim başlatır
+  cv.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || !e.isPrimary) return; // birincil dokunma/tık; ikinci parmak durumu bozmasın
+    e.preventDefault();
+    try { cv.setPointerCapture(e.pointerId); } catch (err) {}
     const p = evPos(e);
     pointer.x = p.x + cam.x; pointer.y = p.y;
     const wx = pointer.x;
@@ -148,7 +162,8 @@ export function initInput(canvas) {
     magnet.x = wx; magnet.y = p.y;
   });
 
-  window.addEventListener('mousemove', e => {
+  window.addEventListener('pointermove', e => {
+    if (!e.isPrimary) return;
     const p = evPos(e);
     pointer.x = p.x + cam.x; pointer.y = p.y;
     const d = drag.current;
@@ -162,7 +177,7 @@ export function initInput(canvas) {
       return;
     }
     if (d) {
-      if (!d.moved && Math.hypot(pointer.x - (d.origX + d.ox), p.y - (d.origY + d.oy)) > 10) {
+      if (!d.moved && Math.hypot(pointer.x - (d.origX + d.ox), p.y - (d.origY + d.oy)) > MOVE_T) {
         d.moved = true;
       }
       if (d.moved) {
@@ -170,7 +185,7 @@ export function initInput(canvas) {
         d.ch.x = Math.max(P.x + 8, Math.min(P.x + P.w - 8, pointer.x - d.ox));
         d.ch.y = Math.max(50, Math.min(L.H - 10, p.y - d.oy));
       }
-      document.getElementById('panel').classList.toggle('sell-hover', d.moved && p.cx > p.rectRight);
+      document.getElementById('panel').classList.toggle('sell-hover', d.moved && overSellZone(p));
     } else if (magnet.active) {
       magnet.x = pointer.x; magnet.y = p.y;
       cv.style.cursor = 'none'; // imlecin yerini nal görseli alıyor
@@ -187,7 +202,8 @@ export function initInput(canvas) {
     }
   });
 
-  window.addEventListener('mouseup', e => {
+  window.addEventListener('pointerup', e => {
+    if (!e.isPrimary) return;
     // kenar kaydırması bitti → en yakın sayfaya kenetlen
     if (pan) {
       snapCam(pan.active ? evPos(e).x - pan.sx : 0);
@@ -219,7 +235,7 @@ export function initInput(canvas) {
     const P = L.PEN;
     if (!d.moved) {
       pet(ch); // tıkla sevme — aralık beklemeden her zaman çalışır
-    } else if (p.cx > p.rectRight) {
+    } else if (overSellZone(p)) {
       // panele bırakıldı → sat (cins fiyatıyla)
       const v = sellPrice(ch.breed);
       S.money += v;

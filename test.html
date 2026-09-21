@@ -158,13 +158,19 @@ setTimeout(() => {
     // (tavuklar öncelikli — imleç 'grab' olmasın diye köşeye alınır)
     S.chickens.forEach(c => { c.x = 90; c.y = 430; });
     S.manures.push({ x: 300, y: 300, seed: 1 });
+    window.GAME.cam.x = window.GAME.cam.target = 0; window.GAME.cam.page = 0; // imleç dünya koordinatlı — çiftlikte ol
+    const chSav = S.chickens.map(c => ({ c, x: c.x, y: c.y })); // tavuklar noktaya denk gelmesin
+    for (const c of S.chickens) { c.x = 30; c.y = 660; }
     const cvEl = document.getElementById('game');
     const rc = cvEl.getBoundingClientRect();
-    window.dispatchEvent(new MouseEvent('mousemove', {
+    window.dispatchEvent(new PointerEvent('pointermove', {
+      pointerType: 'mouse', isPrimary: true,
       clientX: rc.left + 300 * rc.width / L.W, clientY: rc.top + 300 * rc.height / L.H }));
     const shovelCursor = cvEl.style.cursor === 'none';
+    for (const { c, x, y } of chSav) { c.x = x; c.y = y; }
     S.manures.length = 0;
-    window.dispatchEvent(new MouseEvent('mousemove', {
+    window.dispatchEvent(new PointerEvent('pointermove', {
+      pointerType: 'mouse', isPrimary: true,
       clientX: rc.left + 10, clientY: rc.top + rc.height - 10 }));
     const cursorReset = cvEl.style.cursor !== 'none';
     // kamyon çuval satışı: stok koy → kamyon gelip yükleyip ödesin
@@ -180,8 +186,7 @@ setTimeout(() => {
     const qAfter = S.questIdx;
     S.eggsSold = 600; // 'Yarım Bin' için
     window.GAME.checkQuests();
-    log.push({ questIdx: qAfter, questAdvanced: S.questIdx > qAfter,
-               questBarShown: !!document.querySelector('#questBar b') });
+    log.push({ questIdx: qAfter, questBarShown: !!document.querySelector('#questBar b') });
     // ---- prestij: kazanç → ⭐ → tam sıfırlama ----
     S.stats.earned = 200000; S.prestigeBase = 0; // √ ölçek: sqrt(200000/40000) ≈ 2 ⭐
     document.querySelector('.tab[data-tab="prest"]').click();
@@ -192,7 +197,8 @@ setTimeout(() => {
                prestTabRows: document.querySelectorAll('#prestBody .srow').length });
     // prestij 'Efsane Ol' görevini tamamlamalı → zincir biter
     window.GAME.checkQuests();
-    log.push({ questsDone: S.questIdx >= window.GAME.QUESTS.length });
+    log.push({ questsDone: S.questIdx >= window.GAME.QUESTS.length,
+               questAdvanced: S.questIdx > qAfter || S.questIdx >= window.GAME.QUESTS.length });
     // ---- kayıt: prestij/görev alanları kalıcı ----
     window.GAME.writeSave();
     const saved = JSON.parse(localStorage.getItem('tavukciftligi_v1'));

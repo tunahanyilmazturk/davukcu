@@ -8,11 +8,14 @@ export const cam = { x: 0, page: 0, target: 0 };
 // gezinme oklarının ekran-uzayı bölgeleri (render + input paylaşır).
 // Dikey konum ~%62: panel kapatma kulakçığı (top:%46, 64px) ile çakışmasın,
 // çiftlikte toprak yolun ve sağ silonun, fabrikada boru kanalının altında kalır.
+// Mobil (body.mob): parmak için ~1.5x büyük bölge.
 export function navZones() {
-  const y = Math.round(L.H * 0.62) - 28;
+  const mob = document.body.classList.contains('mob');
+  const w = mob ? 38 : 26, h = mob ? 80 : 56;
+  const y = Math.round(L.H * 0.62) - h / 2;
   const z = [];
-  if (cam.x < L.W - 1) z.push({ x: L.W - 30, y, w: 26, h: 56, page: 1, dir: 1 });
-  if (cam.x > 1)       z.push({ x: 4,        y, w: 26, h: 56, page: 0, dir: -1 });
+  if (cam.x < L.W - 1) z.push({ x: L.W - w - 4, y, w, h, page: 1, dir: 1 });
+  if (cam.x > 1)       z.push({ x: 4,           y, w, h, page: 0, dir: -1 });
   return z;
 }
 
