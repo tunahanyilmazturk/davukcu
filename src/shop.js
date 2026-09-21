@@ -120,8 +120,8 @@ export const SHOP = [
       : 'düşükken %' + Math.round(autoTrigger(l) * 100) + "'de · %" + Math.round(autoFillPct(l) * 100) + ' dolar' },
   { id: 'scoop', sec: 'BAKIM', name: 'Gübre Kepçesi', icon: 'scoop', lv: 'scoop',
     costAt: l => Math.ceil(150 * Math.pow(2.2, l)),
-    effAt: l => l === 0 ? 'kapalı — tıkla da toplanır'
-      : 'her ' + Math.round(scoopInterval(l)) + ' sn tüm gübreyi toplar' },
+    effAt: l => l === 0 ? 'kapalı — tıkla da kovaya alınır'
+      : 'her ' + Math.round(scoopInterval(l)) + ' sn tüm gübreyi kovaya doldurur' },
   { id: 'magnet', sec: 'ARAÇLAR', name: 'Mıknatıs', icon: 'magnet', lv: 'magnet',
     costAt: l => Math.ceil(60 * Math.pow(2.0, l)),
     effAt: l => magnetRadius(l) + 'px · ' + magnetCap(l) + ' yumurta' },

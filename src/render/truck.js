@@ -52,7 +52,13 @@ export function drawTruck(ctx) {
   ctx.fillRect(x, y - 20, 46, 26);
   ctx.fillStyle = '#b8b0a0';
   ctx.fillRect(x, y - 20, 46, 4);
-  // kasa üzerinde taşınan yumurtalar (kargo görünür)
+  // kasa üzerinde taşınan gübre çuvalları (arkada) + yumurtalar (kargo görünür)
+  for (let i = 0; i < Math.min(tr.bags || 0, 6); i++) {
+    const bx = x + 4 + i * 7;
+    ctx.fillStyle = '#4a3420'; ctx.fillRect(bx, y - 30, 6, 9);
+    ctx.fillStyle = '#8a6a3e'; ctx.fillRect(bx, y - 29, 5, 8);
+    ctx.fillStyle = '#5e4526'; ctx.fillRect(bx + 1, y - 31, 3, 2);
+  }
   ctx.fillStyle = '#f8f2e6';
   for (let i = 0; i < Math.min(tr.cargo, 8); i++) ctx.fillRect(x + 4 + i * 5, y - 24, 3, 4);
   // kasa yazısı

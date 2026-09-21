@@ -32,8 +32,10 @@ export function spawnChicken(x, y, breed) {
 export function inSilo(x, y, t) {
   return y < t.y + t.h + 8 && x > t.x - 12 && x < t.x + t.w + 12;
 }
+// gübre kovası + çuval istifi de kümes üst kenarında — silo gibi davranır
+function blockedZones() { return [L.FEED, L.WATER, L.MANURE_BIN, { ...L.BAG_STACK, w: 96, h: 30, y: L.BAG_STACK.y - 30 }]; }
 function siloBlocked(ch, nx, ny) {
-  for (const t of [L.FEED, L.WATER]) {
+  for (const t of blockedZones()) {
     if (!inSilo(ch.x, ch.y, t) && inSilo(nx, ny, t)) return true;
   }
   return false;
@@ -44,7 +46,7 @@ function pickWander(ch, P) {
   for (let i = 0; i < 8; i++) {
     const tx = P.x + 20 + Math.random() * (P.w - 40);
     const ty = P.y + 30 + Math.random() * (P.h - 34);
-    if (inSilo(tx, ty, L.FEED) || inSilo(tx, ty, L.WATER)) continue;
+    if (blockedZones().some(t => inSilo(tx, ty, t))) continue;
     if (Math.hypot(tx - ch.x, ty - ch.y) < 60) continue;
     ch.tx = tx; ch.ty = ty;
     return true;

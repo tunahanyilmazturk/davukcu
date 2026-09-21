@@ -60,6 +60,7 @@ export function initPrestige() {
     S.chicks.length = 0;
     S.eggs.length = 0;
     S.manures.length = 0;
+    S.manureBin = 0; S.manureBags = 0; // gübre zinciri de sıfırlanır
     S.parts.length = 0;
     S.truck = null;
     S.feed = 100; S.water = 100;
@@ -67,7 +68,7 @@ export function initPrestige() {
     magnet.active = false; magnet.held.length = 0;
     if (drag.current) { drag.current.ch.drag = false; drag.current = null; }
     S.stats = { earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0,
-                bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0 };
+                bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 };
     spawnChicken(undefined, undefined, 'white');
     toast('⭐ +' + gain + ' Altın Yem! Kalıcı çarpan: x' + prestMult().toFixed(2));
     sndAchv();

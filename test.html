@@ -138,15 +138,40 @@ setTimeout(() => {
     for (let i = 0; i < 2400; i++) update(0.05); // kamyon gelir, yükler, gider
     log.push({ trucked: S.stats.trucked, truckPaid: S.money > moneyBefore,
                floorLeft: S.eggs.filter(e => e.phase === 'floor').length });
-    // ---- gübre: yığınlar oluşmuş olmalı, tıkla topla + kepçe ----
+    // ---- gübre zinciri: yığın → kürek tık → kova → 20'de çuval → kamyon satışı ----
     const pilesBefore = S.manures.length;
     const manBefore = S.stats.manure;
-    if (S.manures.length) window.GAME.collectManure(S.manures[0]); // elle toplama
-    S.lvl.scoop = Math.max(S.lvl.scoop, 1);                        // kepçe açık
-    for (let i = 0; i < 600; i++) update(0.05);                    // kepçe turlar
+    const binBefore = S.manureBin;
+    if (S.manures.length) window.GAME.collectManure(S.manures[0]); // elle toplama → kovaya
+    const clickedToBin = S.stats.manure === manBefore + 1 && S.manureBin === binBefore + 1;
+    // 20 yığın = 1 çuval dönüşümü (kepçe kovaya doldurur)
+    S.manureBin = 0; S.manures.length = 0;
+    for (let i = 0; i < 20; i++) S.manures.push({ x: 120 + i * 6, y: 300, seed: i });
+    S.lvl.scoop = Math.max(S.lvl.scoop, 1);
+    const bagsBefore = S.manureBags;
+    for (let i = 0; i < 900 && S.manureBags === bagsBefore; i++) update(0.05);
+    const bagMade = S.manureBags > bagsBefore;
+    // kürek imleci: yığın üstünde sistem imleci 'none' (canvas kürek çizer)
+    // (tavuklar öncelikli — imleç 'grab' olmasın diye köşeye alınır)
+    S.chickens.forEach(c => { c.x = 90; c.y = 430; });
+    S.manures.push({ x: 300, y: 300, seed: 1 });
+    const cvEl = document.getElementById('game');
+    const rc = cvEl.getBoundingClientRect();
+    window.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: rc.left + 300 * rc.width / L.W, clientY: rc.top + 300 * rc.height / L.H }));
+    const shovelCursor = cvEl.style.cursor === 'none';
+    S.manures.length = 0;
+    window.dispatchEvent(new MouseEvent('mousemove', {
+      clientX: rc.left + 10, clientY: rc.top + rc.height - 10 }));
+    const cursorReset = cvEl.style.cursor !== 'none';
+    // kamyon çuval satışı: stok koy → kamyon gelip yükleyip ödesin
+    const paidBefore = S.money, soldBagsBefore = S.stats.bags;
+    S.manureBags = 2;
+    for (let i = 0; i < 3000 && S.stats.bags === soldBagsBefore; i++) update(0.05);
     log.push({ manurePiles: pilesBefore, manureMaxOk: pilesBefore <= 14,
-               manureClicked: manBefore + 1 <= S.stats.manure,
-               scoopCollected: S.stats.manure });
+               clickedToBin, binCount: S.manureBin, bagMade,
+               bagsSold: S.stats.bags - soldBagsBefore, bagPaid: S.money > paidBefore,
+               shovelCursor, cursorReset });
     // ---- görev zinciri: koşullar sağlandı → sıralı ilerleme ----
     window.GAME.checkQuests();
     const qAfter = S.questIdx;

@@ -3,14 +3,14 @@
 import { L, MAXL } from '../config.js';
 import { S } from '../state.js';
 
-const GR_W = 48;
+const GR_W = 44;
 const grSX = () => L.GRADE_X - GR_W / 2;
 
 // arka: üst ünite (kamera + ekran) + kolon tabanları — yumurtaların ARKASINDA
 export function drawGradeBack(ctx) {
   const sx = grSX(), W = GR_W;
-  const cavTop = L.BELT2_Y - 24;
-  const top = L.BELT2_Y - 86, uh = 58;
+  const cavTop = L.BELT2_Y - 20;
+  const top = L.BELT2_Y - 62, uh = 40;
   const t = performance.now() / 1000;
   const inZone = S.eggs.some(e => e.phase === 'belt2' && e.x > sx && e.x < sx + W);
 
@@ -45,38 +45,38 @@ export function drawGradeBack(ctx) {
   // kamera/kaplin göbeği — taramayı yapan optik
   const lx = sx + W / 2;
   ctx.fillStyle = '#0e181e';
-  ctx.fillRect(lx - 7, top + uh - 22, 14, 12);
+  ctx.fillRect(lx - 6, top + uh - 16, 12, 10);
   ctx.fillStyle = '#24404e';
-  ctx.fillRect(lx - 6, top + uh - 21, 12, 10);
+  ctx.fillRect(lx - 5, top + uh - 15, 10, 8);
   ctx.fillStyle = inZone ? '#7df0ff' : '#2e5a66';
-  ctx.fillRect(lx - 2, top + uh - 17, 4, 4);   // mercek — yumurta geçerken parlar
+  ctx.fillRect(lx - 2, top + uh - 12, 4, 4);   // mercek — yumurta geçerken parlar
   ctx.fillStyle = 'rgba(125,240,255,.35)';
-  ctx.fillRect(lx - 1, top + uh - 10, 2, 4);   // mercek altı huzme
+  ctx.fillRect(lx - 1, top + uh - 6, 2, 4);    // mercek altı huzme
 
   // ön panel: SINIF etiketi + seviye LED'leri + durum lambası
   ctx.fillStyle = '#12242c';
-  ctx.fillRect(sx + 4, top + 8, W - 8, 16);
+  ctx.fillRect(sx + 4, top + 6, W - 8, 14);
   ctx.fillStyle = '#7df0ff';
   ctx.font = 'bold 8px "Courier New",monospace'; ctx.textAlign = 'left';
-  ctx.fillText('SINIF', sx + 7, top + 19);
+  ctx.fillText('SINIF', sx + 7, top + 15);
   for (let i = 0; i < MAXL.grade; i++) {
     ctx.fillStyle = i < S.lvl.grade ? '#7df0ff' : '#16323a';
-    ctx.fillRect(sx + 6 + i * 6, top + 30, 4, 4);
+    ctx.fillRect(sx + 6 + i * 5, top + 22, 4, 3);
   }
   ctx.fillStyle = inZone && Math.floor(t * 8) % 2 ? '#7df0ff' : '#1e4a52';
-  ctx.fillRect(sx + W - 11, top + 11, 5, 5);
+  ctx.fillRect(sx + W - 10, top + 8, 5, 5);
 
   // yan kablo borusu
   ctx.fillStyle = '#0e181e';
-  ctx.fillRect(sx + W + 2, top + 6, 5, uh - 16);
+  ctx.fillRect(sx + W + 2, top + 5, 5, uh - 12);
   ctx.fillStyle = '#24404e';
-  ctx.fillRect(sx + W + 3, top + 7, 3, uh - 18);
+  ctx.fillRect(sx + W + 3, top + 6, 3, uh - 14);
 }
 
 // ön: tarama perdesi + süpürme huzmesi — yumurtaların ÜSTÜNE
 export function drawGradeFront(ctx) {
   const sx = grSX(), W = GR_W;
-  const cavTop = L.BELT2_Y - 24;
+  const cavTop = L.BELT2_Y - 20;
   const glassBot = L.BELT2_Y + L.BELT_H + 6;
   const t = performance.now() / 1000;
   const inZone = S.eggs.some(e => e.phase === 'belt2' && e.x > sx && e.x < sx + W);
@@ -86,7 +86,7 @@ export function drawGradeFront(ctx) {
   ctx.fillRect(sx + 8, cavTop, W - 16, glassBot - cavTop);
 
   // süpüren dikey huzme — kemer içinde sağa-sola kayar
-  const sw = sx + 10 + ((t * 46) % (W - 24));
+  const sw = sx + 9 + ((t * 40) % (W - 20));
   ctx.fillStyle = inZone ? 'rgba(180,255,255,.85)' : 'rgba(125,240,255,.5)';
   ctx.fillRect(sw, cavTop, 2, glassBot - cavTop);
   ctx.fillStyle = 'rgba(125,240,255,.3)';
@@ -106,9 +106,9 @@ export function drawGradeFront(ctx) {
   // yükseltme parıltısı — yumurta kemerdeyken ekstra kıvılcım
   if (inZone) {
     for (let i = 0; i < 3; i++) {
-      const px = sx + 12 + ((t * 30 + i * 11) % (W - 24));
+      const px = sx + 10 + ((t * 30 + i * 10) % (W - 20));
       ctx.fillStyle = i % 2 ? '#d8fbff' : '#7df0ff';
-      ctx.fillRect(px, L.BELT2_Y - 8 - (i * 5), 2, 2);
+      ctx.fillRect(px, L.BELT2_Y - 6 - (i * 4), 2, 2);
     }
   }
 }
@@ -119,9 +119,9 @@ export function drawGradeSlot(ctx) {
   ctx.strokeStyle = 'rgba(125,240,255,.22)';
   ctx.lineWidth = 2;
   ctx.setLineDash([4, 4]);
-  ctx.strokeRect(sx + 6, L.BELT2_Y - 46, GR_W - 12, 42);
+  ctx.strokeRect(sx + 6, L.BELT2_Y - 40, GR_W - 12, 34);
   ctx.setLineDash([]);
   ctx.fillStyle = 'rgba(125,240,255,.32)';
   ctx.font = 'bold 9px "Courier New",monospace'; ctx.textAlign = 'center';
-  ctx.fillText('SINIF YUVASI', L.GRADE_X, L.BELT2_Y - 22);
+  ctx.fillText('SINIF YUVASI', L.GRADE_X, L.BELT2_Y - 20);
 }

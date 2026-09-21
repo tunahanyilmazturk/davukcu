@@ -14,11 +14,15 @@ import { drawAmbient } from './ambient.js';
 import { drawTank } from './tanks.js';
 import { drawCrate, drawCrateFront } from './crate.js';
 import { drawRoad, drawTruck } from './truck.js';
+import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
 import { drawHint, drawHud } from './hud.js';
 
 let fps = 60, fpsAcc = 0, fpsN = 0, fpsT = 0;
 
+// ana içerik ölçeği — tavuk/civciv kompakt çizilir (pixel bütünlüğü için
+// kesirli çarpan yerine hedef boyut sabiti, çizimde piksele oturur)
+const CH_SC = 2.5;   // tavuk: 16px sprite → 40px (~x0.85)
 const TIER_SPR = {
   normal:  [SPR.eggDirty,        SPR.egg],
   bronze:  [SPR.eggBronzeDirty,  SPR.eggBronze],
@@ -55,8 +59,8 @@ export function draw(ctx, dt) {
     // sınırlı, yığın büyüdükçe yanlara genişler (tepe olmaz)
     const pile = rest && e.phase !== 'floor' ? e.pile || 0 : 0;
     const pl = Math.min(pile, 6);
-    const px = pile ? (((e.seed || 0) * 7 | 0) % 2 ? 1 : -1) * (3 + Math.floor(pile / 3) * 5) : 0;
-    const fy = e.y + 21 + (rest ? (e.jy || 0) - pl * 9 : 0); // dip hizası (fizik çapası ölçek-3'e göre)
+    const px = pile ? (((e.seed || 0) * 7 | 0) % 2 ? 1 : -1) * (3 + Math.floor(pile / 3) * 4) : 0;
+    const fy = e.y + 21 + (rest ? (e.jy || 0) - pl * 7 : 0); // dip hizası (fizik çapası ölçek-3'e göre)
     let rot = e.rot || 0;
     if (e.phase === 'belt1' || e.phase === 'belt2')
       rot += Math.sin(e.x * 0.32 + (e.seed || 0)) * 0.07;
@@ -120,19 +124,11 @@ export function draw(ctx, dt) {
   drawTank(ctx, L.FEED,  S.feed  / feedCap(),  'feed',  S.lvl.autoF);
   drawTank(ctx, L.WATER, S.water / waterCap(), 'water', S.lvl.autoW);
 
+  // gübre haznesi + çuval istifi (kümes üst kenarı, tavukların arkasında)
+  drawManureBin(ctx);
+  drawBagStack(ctx);
   // gübre yığınları — kümes zemini, tavukların altında/arkasında
-  for (const m of S.manures) {
-    const sw = Math.sin(m.seed || 0) * 2;
-    ctx.fillStyle = 'rgba(0,0,0,.12)';
-    ctx.beginPath(); ctx.ellipse(m.x, m.y + 2, 9, 3, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = '#5a4028';
-    ctx.fillRect(m.x - 7 + sw, m.y - 4, 14, 6);
-    ctx.fillRect(m.x - 5 + sw, m.y - 8, 10, 4);
-    ctx.fillRect(m.x - 2 + sw, m.y - 11, 5, 3);
-    ctx.fillStyle = '#7a5a38';
-    ctx.fillRect(m.x - 6 + sw, m.y - 4, 4, 2);
-    ctx.fillRect(m.x - 3 + sw, m.y - 8, 3, 1);
-  }
+  drawPiles(ctx);
 
   // tavuklar (y'ye göre sırala — derinlik)
   const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
@@ -140,13 +136,13 @@ export function draw(ctx, dt) {
   for (const ch of sorted) {
     const sprs = SPR.chickens[ch.variant] || SPR.chickens.white;
     const spr = sprs[ch.frame] || sprs.a;
-    const hopY = ch.hop > 0 ? -Math.sin(ch.hop / 0.35 * Math.PI) * 14 : 0;
+    const hopY = ch.hop > 0 ? -Math.sin(ch.hop / 0.35 * Math.PI) * 12 : 0;
     // yürürken adımlarla senkron hafif zıplama
     const bobY = ch.state === 'walk' ? -Math.abs(Math.sin(ch.frameT * 8 * Math.PI)) * 2 : 0;
-    const w = spr.w * 3, h = spr.h * 3;
+    const w = spr.w * CH_SC, h = spr.h * CH_SC; // kompakt ölçek (~x0.85)
     // gölge (hop'ta küçülür)
     ctx.fillStyle = 'rgba(0,0,0,.18)';
-    ctx.beginPath(); ctx.ellipse(ch.x, ch.y + 2, 16 * (1 + hopY / 60), 5, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(ch.x, ch.y + 2, 13 * (1 + hopY / 50), 4, 0, 0, 7); ctx.fill();
     if (ch.squat > 0) {
       ctx.save();
       ctx.translate(ch.x, ch.y);
@@ -155,7 +151,7 @@ export function draw(ctx, dt) {
       ctx.drawImage(spr.c, -w / 2, -h, w, h);
       ctx.restore();
     } else {
-      drawSprite(ctx, spr, ch.x - w / 2, ch.y - h + hopY + bobY, 3, ch.dir < 0);
+      drawSprite(ctx, spr, ch.x - w / 2, ch.y - h + hopY + bobY, CH_SC, ch.dir < 0);
     }
     // açlık işareti: tavuğun ~üçte biri gösterir (kalabalıkta okunaklı kalır)
     if (hungry && !ch.drag && (S.chickens.indexOf(ch) % 3 === 0)) {
@@ -172,8 +168,8 @@ export function draw(ctx, dt) {
   for (const c of S.chicks) {
     const spr = SPR.chick[c.frame];
     ctx.fillStyle = 'rgba(0,0,0,.15)';
-    ctx.beginPath(); ctx.ellipse(c.x, c.y + 1, 7, 3, 0, 0, 7); ctx.fill();
-    drawSprite(ctx, spr, c.x - 8, c.y - 16, 2, c.dir < 0);
+    ctx.beginPath(); ctx.ellipse(c.x, c.y + 1, 6, 2.5, 0, 0, 7); ctx.fill();
+    drawSprite(ctx, spr, c.x - 7, c.y - 14, 1.7, c.dir < 0);
   }
 
   // sürüklenen tavuğun fiyat etiketi
@@ -181,7 +177,7 @@ export function draw(ctx, dt) {
   if (d && d.moved) {
     ctx.font = 'bold 14px "Courier New",monospace';
     ctx.fillStyle = '#ffd23e'; ctx.textAlign = 'center';
-    ctx.fillText('$' + fmt(sellPrice(d.ch.breed)), d.ch.x, d.ch.y - 52);
+    ctx.fillText('$' + fmt(sellPrice(d.ch.breed)), d.ch.x, d.ch.y - 46);
   }
 
   // lojistik kamyonu (yolun üstünde, yumurtaların önünde)
@@ -192,6 +188,8 @@ export function draw(ctx, dt) {
 
   // mıknatıs aracı (alan halkası + nal + toplam değer)
   drawMagnet(ctx);
+  // gübre yığını üstünde kürek imleci
+  drawShovelCursor(ctx);
 
   // ipucu balonu + üst bilgi çubuğu
   drawHint(ctx);

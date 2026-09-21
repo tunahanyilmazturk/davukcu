@@ -26,8 +26,9 @@ function spill(e) {
 }
 
 // her yumurtaya ufak görsel kişilik: boyut, eğim, dikey kayma, sallanma fazı
+// (sc ~x0.8 küçültülmüş ölçek — kümes genişledi)
 export function eggLooks() {
-  return { sc: 1.85 + Math.random() * 0.3, rot: (Math.random() - .5) * 0.34,
+  return { sc: 1.48 + Math.random() * 0.24, rot: (Math.random() - .5) * 0.34,
            jy: -Math.random() * 2.5, seed: Math.random() * 7 };
 }
 

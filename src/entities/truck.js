@@ -1,7 +1,8 @@
-// Lojistik kamyonu: yoldan gelir, yerdeki yumurtaları toplar, giderken satar
+// Lojistik kamyonu: yoldan gelir, yerdeki yumurtaları + gübre çuvallarını
+// toplar, giderken satar
 import { S } from '../state.js';
 import { L, fmt } from '../config.js';
-import { truckInterval, truckCap } from '../economy.js';
+import { truckInterval, truckCap, manureBagValue } from '../economy.js';
 import { eggWorth } from './eggs.js';
 import { sndCoin, sndPop } from '../audio.js';
 
@@ -23,11 +24,11 @@ export function updateTruck(dt) {
   }
 
   if (!S.truck) {
-    // seviye yoksa ya da yerde yumurta yoksa kamyon gelmez
-    if (lvl <= 0 || !floorEggs.length) { timer = Math.max(1.5, timer); return; }
+    // seviye yoksa ya da taşınacak şey (yerde yumurta / stokta çuval) yoksa gelmez
+    if (lvl <= 0 || (!floorEggs.length && !S.manureBags)) { timer = Math.max(1.5, timer); return; }
     timer -= dt;
     if (timer <= 0) {
-      S.truck = { x: -80, state: 'arrive', cargo: 0, worth: 0, t: 0, bob: 0 };
+      S.truck = { x: -80, state: 'arrive', cargo: 0, bags: 0, worth: 0, t: 0, bob: 0 };
     }
     return;
   }
@@ -54,7 +55,17 @@ export function updateTruck(dt) {
       sndPop();
       return;
     }
-    tr.state = 'leave';                  // doldu ya da yerde yumurta kalmadı
+    // gübre çuvalları: kasa dolsa da toptan yüklenir (lojistik teşviki)
+    if (S.manureBags > 0) {
+      S.manureBags--;
+      tr.bags++;
+      tr.worth += manureBagValue();
+      tr.t = 0.22;                       // çuval başı yükleme süresi
+      S.parts.push({ kind: 'spark', x: tr.x + 6, y: L.ROAD_Y - 24, vy: -50, t: 0, life: .3 });
+      sndPop();
+      return;
+    }
+    tr.state = 'leave';                  // doldu ya da taşınacak kalmadı
     return;
   }
 
@@ -66,7 +77,9 @@ export function updateTruck(dt) {
       S.eggsSold += tr.cargo;
       S.stats.earned += tr.worth;
       S.stats.trucked += tr.cargo;
-      S.parts.push({ kind: 'text', text: '+$' + fmt(tr.worth) + ' kamyon',
+      S.stats.bags += tr.bags;
+      S.parts.push({ kind: 'text', text: '+$' + fmt(tr.worth) + ' kamyon' +
+          (tr.bags ? ' (' + tr.bags + ' çuval)' : ''),
         x: L.DOCK_X - 20, y: L.ROAD_Y - 60, vy: -30, t: 0, life: 1.2, color: '#8fd8ff' });
       sndCoin();
     }

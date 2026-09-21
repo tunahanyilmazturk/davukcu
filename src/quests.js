@@ -8,6 +8,8 @@ import { sndAchv } from './audio.js';
 export const QUESTS = [
   { name: 'İlk Adım',          desc: 'Bir yumurtayı kutuya taşıyıp sat',        prog: () => [S.eggsSold, 1],        reward: 10 },
   { name: 'El Emeği',          desc: '10 yumurtayı elle kutuya taşı',           prog: () => [S.eggsSold, 10],       reward: 30 },
+  { name: 'İlk Çuval',         desc: 'Kovada 20 yığın biriktir — 1 gübre çuvalı üret',
+    prog: () => [S.manureBags + S.stats.bags + (S.truck ? S.truck.bags : 0), 1], reward: 50 },
   { name: 'Sürü Büyüyor',      desc: '3 tavuk sahibi ol',                       prog: () => [S.chickens.length, 3], reward: 40 },
   { name: 'Bant Zamanı',       desc: 'Depolama Bandı kur',                      prog: () => [S.lvl.beltD, 1],       reward: 60 },
   { name: 'Yukarıdan Aşağı',   desc: 'Çiftlik Bandı kur',                       prog: () => [S.lvl.beltF, 1],       reward: 80 },

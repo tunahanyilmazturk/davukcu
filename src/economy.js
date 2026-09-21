@@ -1,6 +1,6 @@
 // Ekonomi: seviyelerden türetilen değerler (parametre verilmezse mevcut seviye)
 import { S } from './state.js';
-import { BASE } from './config.js';
+import { BASE, BAG_AT } from './config.js';
 
 // tavuk cinsleri: layRate = yumurtlama süresi çarpanı (küçük = hızlı),
 // rare/gold = yumurta başına ek şans, val = yumurta değer çarpanı
@@ -106,6 +106,8 @@ export function autoPetCd(l = S.lvl.autopet)   { return 5.5 - l; }
 export function scoopInterval(l = S.lvl.scoop) { return 14 * Math.pow(0.8, l); }
 // bir gübre yığınının satış değeri — yumurta değeriyle ölçeklenir
 export function manureValue()                  { return Math.max(1, Math.ceil(eggValue() * 0.5)); }
+// gübre çuvalı: 20 yığının toplu satışı — %25 toptan primi (kamyon taşır)
+export function manureBagValue()               { return Math.round(manureValue() * BAG_AT * 1.25); }
 
 export function chickenCost(n = S.chickens.length) { return Math.ceil(12 * Math.pow(1.23, n)); }
 export function sellPrice(breed = 'white') {

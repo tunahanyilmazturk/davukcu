@@ -21,7 +21,7 @@ function evPos(e) {
 
 export function chickenAt(x, y) {
   const sorted = [...S.chickens].sort((a, b) => b.y - a.y);
-  return sorted.find(c => Math.abs(x - c.x) < 24 && y > c.y - 50 && y < c.y + 8);
+  return sorted.find(c => Math.abs(x - c.x) < 20 && y > c.y - 42 && y < c.y + 7);
 }
 
 // sevme: tavuk zıplar, kalpler çıkar, bir sonraki yumurtlama hızlanır
@@ -34,7 +34,7 @@ export function pet(ch) {
     ch.petCd = S.lvl.autopet > 0 ? Math.min(autoPetCd(), 1.0) : 1.0;
   }
   for (let i = 0; i < 3; i++) {
-    S.parts.push({ kind: 'heart', x: ch.x - 12 + i * 12, y: ch.y - 50,
+    S.parts.push({ kind: 'heart', x: ch.x - 12 + i * 12, y: ch.y - 44,
       vy: -30 - i * 8, t: 0, life: .9 });
   }
   sndPet();
@@ -128,8 +128,11 @@ export function initInput(canvas) {
       magnet.x = p.x; magnet.y = p.y;
       cv.style.cursor = 'none'; // imlecin yerini nal görseli alıyor
     } else {
-      cv.style.cursor = troughAt(p.x, p.y) || manureAt(p.x, p.y) ? 'pointer'
-        : (chickenAt(p.x, p.y) ? 'grab' : 'default');
+      // imleç önceliği tıklamayla aynı: silo → tavuk → gübre → mıknatıs;
+      // yığın üstünde 'none' — yerini render/manure.js'teki kürek alır
+      cv.style.cursor = troughAt(p.x, p.y) ? 'pointer'
+        : chickenAt(p.x, p.y) ? 'grab'
+        : manureAt(p.x, p.y) ? 'none' : 'default';
     }
   });
 

@@ -21,12 +21,14 @@ export const S = {
   fxAmbient: true,// ortam efektleri (kelebek, toz)
   fxHints: true,  // ipucu balonları
   showFps: true,  // üst barda FPS göstergesi
-  stats: { earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0 },
+  stats: { earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 },
   achv: {},       // açılan başarım id'leri
   chickens: [],
   chicks: [],
   eggs: [],
   manures: [],    // kümesdeki gübre yığınları (kaydedilmez)
+  manureBin: 0,   // gübre kovasındaki yığın sayısı (BAG_AT'te 1 çuval olur)
+  manureBags: 0,  // kamyonun satacağı gübre çuvalı stoğu
   truck: null,
   parts: [],
 };
@@ -40,6 +42,7 @@ export function writeSave() {
       money: S.money, lvl: S.lvl, chickens: S.chickens.map(c => c.breed || 'white'),
       chicks: S.chicks.map(c => Math.round(c.growT * 10) / 10), // kalan büyüme süreleri
       feed: S.feed, water: S.water,
+      manureBin: S.manureBin, manureBags: S.manureBags,
       eggsSold: S.eggsSold, playTime: S.playTime, muted: S.muted,
       prestige: S.prestige, prestigeBase: S.prestigeBase, questIdx: S.questIdx,
       music: S.music, volume: S.volume,
@@ -80,10 +83,12 @@ export function applySave(d) {
   S.showFps = d.showFps !== false;
   S.feed  = d.feed  !== undefined ? d.feed  : 100;
   S.water = d.water !== undefined ? d.water : 100;
+  S.manureBin  = d.manureBin  || 0;   // eski kayıt: kova/çuval yoksa sıfır
+  S.manureBags = d.manureBags || 0;
   S.prestige = d.prestige || 0;
   S.prestigeBase = d.prestigeBase || 0;
   S.questIdx = d.questIdx || 0;
-  S.stats = Object.assign({ earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0 }, d.stats || {});
+  S.stats = Object.assign({ earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 }, d.stats || {});
   S.achv = Object.assign({}, d.achv || {});
   // tavuklar cins listesi olarak saklanır; eski kayıtlarda sadece sayı var
   const breeds = Array.isArray(d.chickens)

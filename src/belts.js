@@ -34,7 +34,7 @@ function drawRoller(ctx, x, cy, r, ang, st) {
 
 // tahrik motoru: gövde + dönen fan + LED (kapalıyken fan durur, LED kırmızı)
 function drawMotor(ctx, x, topY, bottomY, running) {
-  const w = 26;
+  const w = 22;
   ctx.fillStyle = '#1c1220';
   ctx.fillRect(x - w / 2 - 1, topY - 1, w + 2, bottomY - topY + 2);
   ctx.fillStyle = '#2e2438';
@@ -43,19 +43,19 @@ function drawMotor(ctx, x, topY, bottomY, running) {
   ctx.fillRect(x - w / 2 + 2, topY + 2, w - 4, bottomY - topY - 4);
   const cy = topY + (bottomY - topY) / 2;
   ctx.fillStyle = '#241c2c';
-  ctx.beginPath(); ctx.arc(x, cy, 7, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, cy, 6, 0, 7); ctx.fill();
   const a = running ? performance.now() / 1000 * 7 : 0;
   ctx.strokeStyle = running ? '#6a5a78' : '#4a3c58';
   ctx.lineWidth = 2;
   for (let i = 0; i < 3; i++) {
     const ang = a + i * 2.09;
     ctx.beginPath(); ctx.moveTo(x, cy);
-    ctx.lineTo(x + Math.cos(ang) * 5, cy + Math.sin(ang) * 5); ctx.stroke();
+    ctx.lineTo(x + Math.cos(ang) * 4, cy + Math.sin(ang) * 4); ctx.stroke();
   }
   ctx.fillStyle = '#54445f'; ctx.fillRect(x - 1.5, cy - 1.5, 3, 3);
   const blink = Math.floor(performance.now() / 350) % 2 === 0;
   ctx.fillStyle = running ? (blink ? '#8aff6a' : '#2c5a28') : '#e04840';
-  ctx.fillRect(x + w / 2 - 6, topY + 3, 3, 3);
+  ctx.fillRect(x + w / 2 - 5, topY + 3, 3, 3);
   if (!running) {
     ctx.fillStyle = '#e04840';
     ctx.font = 'bold 7px "Courier New",monospace'; ctx.textAlign = 'center';
@@ -128,8 +128,8 @@ function drawBelt(ctx, y, dirRight, x0, x1, bs, st) {
   // uç silindirleri
   const cy = y + L.BELT_H / 2;
   const ang = t * bs / 9 * (dirRight ? 1 : -1);
-  drawRoller(ctx, x0 + 1, cy, 9, ang, st);
-  drawRoller(ctx, x1 - 1, cy, 9, ang, st);
+  drawRoller(ctx, x0 + 1, cy, 7, ang, st);
+  drawRoller(ctx, x1 - 1, cy, 7, ang, st);
   // sağa akan bandın ucu: yumurtaları kutu ağzına yönlendiren sac deflektör
   if (dirRight) {
     ctx.fillStyle = st.edge;
@@ -160,12 +160,12 @@ export function drawBelts(ctx) {
   const fOn = S.lvl.beltF > 0, dOn = S.lvl.beltD > 0;
   // çiftlik bandı: kümesten sola → huniye
   drawBelt(ctx, L.BELT1_Y, false, L.BELT1_X0, L.BELT_X1, fOn ? farmBeltSpeed() : 0, STYLE.farm);
-  drawStruts(ctx, L.BELT1_Y, L.BELT1_X0, L.BELT_X1, STYLE.farm, L.BELT2_Y - 24);
-  drawMotor(ctx, L.BELT1_X0 + 70, L.BELT1_Y + L.BELT_H + 6, L.BELT1_Y + L.BELT_H + 30, fOn);
+  drawStruts(ctx, L.BELT1_Y, L.BELT1_X0, L.BELT_X1, STYLE.farm, L.BELT2_Y - 20);
+  drawMotor(ctx, L.BELT1_X0 + 70, L.BELT1_Y + L.BELT_H + 6, L.BELT1_Y + L.BELT_H + 26, fOn);
   drawPlate(ctx, L.BELT_X1 - 70, L.BELT1_Y + L.BELT_H + 7, 'ÇİFTLİK');
   // depolama bandı: huni → yıkama → kutuya (sağa)
   drawBelt(ctx, L.BELT2_Y, true, L.BELT_X0, L.BELT2_X1, dOn ? depoBeltSpeed() : 0, STYLE.depo);
   drawStruts(ctx, L.BELT2_Y, L.BELT_X0, L.BELT2_X1, STYLE.depo, L.FLOOR_Y);
-  drawMotor(ctx, L.CRATE_X - 70, L.BELT2_Y + L.BELT_H + 6, L.BELT2_Y + L.BELT_H + 30, dOn);
+  drawMotor(ctx, L.CRATE_X - 70, L.BELT2_Y + L.BELT_H + 6, L.BELT2_Y + L.BELT_H + 26, dOn);
   drawPlate(ctx, 255, L.BELT2_Y + L.BELT_H + 7, 'DEPOLAMA');
 }

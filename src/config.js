@@ -9,20 +9,20 @@ export function computeLayout(stageW, stageH) {
   const w = Math.round(Math.min(1900, Math.max(640, H * stageW / stageH)));
   L.W = w; L.H = H;
   L.HUD_H = 18;
-  L.PEN = { x: 24, y: 54, w: w - 48, h: 326 };
-  L.BEAM_Y = 384;
-  L.BELT_H = 18;
+  L.PEN = { x: 24, y: 54, w: w - 48, h: 392 }; // kümes genişledi — sanayi bölgesi kompaktlaştı
+  L.BEAM_Y = 450;
+  L.BELT_H = 14;
   L.BELT_X0 = 24; L.BELT_X1 = w - 12;
   L.BELT1_X0 = 64;              // üst bandın sol ucu — kanalın sağında, açıkta durur
-  L.BELT1_Y = 480;              // çiftlik bandı (sola akar)
-  L.BELT2_Y = 640;              // depolama bandı (sağa akar, kutuya) — bantlar arası geniş
+  L.BELT1_Y = 494;              // çiftlik bandı (sola akar)
+  L.BELT2_Y = 606;              // depolama bandı (sağa akar, kutuya)
   L.DROP_X = L.BELT1_X0 - 10;   // yumurta üst bandın sol merdanesinden dökülür
   L.BELT1_LIMIT = w - 28;       // üst bantta yumurtaların gidebileceği en sağ nokta
   L.CRATE_X = w - 86;           // paketleme kutusu sol kenarı
   L.BELT2_X1 = L.CRATE_X - 16;  // alt bandın sağ ucu — kutudan önce biter
   L.MOUTH_X = w - 52;           // kutu ağzının ortası (para yazısı konumu)
   // kutu algılama bölgesi: boxfall'da bu aralığa giren yumurta içeri düşer
-  L.CRATE_ZONE = { x0: L.CRATE_X - 4, x1: w - 14, rimY: L.BELT2_Y + 6, inY: L.BELT2_Y + 24 };
+  L.CRATE_ZONE = { x0: L.CRATE_X - 4, x1: w - 14, rimY: L.BELT2_Y + 6, inY: L.BELT2_Y + 22 };
   L.WASH_X = Math.round(w * 0.45) + 26; // yıkama yuvası merkezi (alt bant)
   L.GRADE_X = Math.round(w * 0.58);     // sınıflandırıcı merkezi (yıkama ile cila arası)
   L.POLISH_X = Math.round(w * 0.72);    // cila makinesi merkezi (yıkamadan sonra)
@@ -32,6 +32,9 @@ export function computeLayout(stageW, stageH) {
   L.EGG_GAP = 22;
   L.WATER = { x: 28,     y: 140, w: 36, h: 200 }; // su deposu — kümesin sol kenarı, boydan boya
   L.FEED  = { x: w - 64, y: 140, w: 36, h: 200 }; // yem silosu — kümesin sağ kenarı
+  // gübre toplama alanı: kümesin üst iç kenarında hazne + yanında çuval istifi
+  L.MANURE_BIN = { x: Math.round(w / 2 - 30), y: L.PEN.y + 6, w: 60, h: 36 };
+  L.BAG_STACK = { x: L.MANURE_BIN.x + L.MANURE_BIN.w + 10, y: L.MANURE_BIN.y + L.MANURE_BIN.h };
   return L;
 }
 
@@ -43,6 +46,7 @@ export const MAXL = { value: 99, lay: 12, beltF: 10, beltD: 10, golden: 14, rare
 
 export const SAVE_KEY = 'tavukciftligi_v1';
 export const MAX_CHICKENS = 80;
+export const BAG_AT = 20; // gübre kovasında 1 çuvala dönüşen yığın sayısı
 
 export function fmt(n) {
   if (n < 1000) return Math.floor(n).toString();

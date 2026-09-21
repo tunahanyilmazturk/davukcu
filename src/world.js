@@ -170,7 +170,7 @@ export function buildBG() {
 
   // ---- hat duvarı dekoru: iki bant arasındaki boş fabrika duvarı ----
   // yatay buhar/su boru hattı + flanşlar + vana tekerlekleri
-  const py = L.BELT1_Y + 62;
+  const py = L.BELT1_Y + 44;
   g.fillStyle = '#241c2c'; g.fillRect(60, py - 2, L.CRATE_X - 110, 9);
   g.fillStyle = '#3c3048'; g.fillRect(60, py - 1, L.CRATE_X - 110, 7);
   g.fillStyle = '#54445f'; g.fillRect(60, py, L.CRATE_X - 110, 2);
@@ -193,16 +193,16 @@ export function buildBG() {
     g.beginPath(); g.moveTo(x + 6, py - 8); g.lineTo(x + 9, py - 12); g.stroke();
     g.fillStyle = '#54445f'; g.fillRect(x + 4, py - 2, 4, 2);
   }
-  // hat tabelası
-  g.fillStyle = '#1c1220'; g.fillRect(L.W * 0.36 - 2, L.BELT1_Y + 34, 92, 15);
-  g.fillStyle = '#54445f'; g.fillRect(L.W * 0.36, L.BELT1_Y + 35, 88, 13);
+  // hat tabelası — huni ile yıkama arasındaki boş duvara sabitli
+  g.fillStyle = '#1c1220'; g.fillRect(162, L.BELT1_Y + 24, 92, 15);
+  g.fillStyle = '#54445f'; g.fillRect(164, L.BELT1_Y + 25, 88, 13);
   g.fillStyle = '#e8e0e8';
   g.font = 'bold 8px "Courier New",monospace'; g.textAlign = 'center';
-  g.fillText('★ YUMURTA HATTI ★', L.W * 0.36 + 44, L.BELT1_Y + 45);
+  g.fillText('★ YUMURTA HATTI ★', 208, L.BELT1_Y + 35);
   g.textAlign = 'left';
   // asma iş lambaları: kirişten sarkan kordon + koni + sıcak hale
   for (let x = 240; x < L.CRATE_X - 60; x += 300) {
-    const ly = L.BELT1_Y + 92;
+    const ly = L.BELT1_Y + 72;
     g.fillStyle = '#1c1220'; g.fillRect(x, L.BEAM_Y + 30, 2, ly - L.BEAM_Y - 36);
     g.fillStyle = '#241c2c'; g.fillRect(x - 6, ly - 7, 16, 8);
     g.fillStyle = '#3c3048'; g.fillRect(x - 4, ly - 6, 12, 5);
@@ -214,9 +214,9 @@ export function buildBG() {
   }
   // duvar havalandırma panjurları
   for (let x = 180; x < L.CRATE_X - 90; x += 380) {
-    g.fillStyle = '#1c1220'; g.fillRect(x, L.BELT2_Y - 34, 26, 20);
+    g.fillStyle = '#1c1220'; g.fillRect(x, L.BELT2_Y - 30, 26, 17);
     g.fillStyle = '#3c3048';
-    for (let yy = 0; yy < 14; yy += 5) g.fillRect(x + 3, L.BELT2_Y - 31 + yy, 20, 2);
+    for (let yy = 0; yy < 12; yy += 5) g.fillRect(x + 3, L.BELT2_Y - 27 + yy, 20, 2);
   }
 
   // depo dekoru: bacakların sağına istifler (sandık, yumurta kasası, çuval, varil)

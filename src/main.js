@@ -117,7 +117,10 @@ if (import.meta.env && import.meta.env.DEV) {
                   tier: 'normal', valMult: 1, clean: false, wash: 0, polish: 0,
                   shine: false, graded: true, ...eggLooks() });
   // ?trucknow=1 → görsel test: kamyonu hemen yükleme pozisyonuna koy
-  if (q.has('trucknow')) S.truck = { x: L.W * 0.35, state: 'arrive', cargo: 3, worth: 0, t: 1, bob: 0 };
+  if (q.has('trucknow')) S.truck = { x: L.W * 0.35, state: 'arrive', cargo: 3, bags: 0, worth: 0, t: 1, bob: 0 };
+  // ?bags=3&bin=12 → görsel test: çuval stoğu + kova doluluğu
+  if (q.get('bags') !== null) S.manureBags = parseInt(q.get('bags')) || 0;
+  if (q.get('bin') !== null) S.manureBin = parseInt(q.get('bin')) || 0;
   // ?settings=1 → ayarlar modalını açık başlat (görsel test)
   if (q.has('settings')) document.getElementById('btnSettings').click();
   // ?mag=1 → mıknatıs görselini sabit konumda aktif tut (görsel test)

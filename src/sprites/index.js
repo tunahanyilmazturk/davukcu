@@ -3,7 +3,7 @@ import { CHICKEN_SPRITES, CHICK_SPRITE } from './chickens.js';
 import { EGG, GOLDEN_EGG, EGG_DIRTY, GOLDEN_EGG_DIRTY,
          BRONZE_EGG, BRONZE_EGG_DIRTY, SILVER_EGG, SILVER_EGG_DIRTY,
          DIAMOND_EGG, DIAMOND_EGG_DIRTY } from './eggs.js';
-import { COIN, HEART, FEATHER } from './misc.js';
+import { COIN, HEART, FEATHER, MANURE_BAG, SHOVEL } from './misc.js';
 import { ICON_EGG, ICON_GOLDEGG, ICON_FASTLAY, ICON_BELT, ICON_MACHINE,
          ICON_WASH, ICON_WASHSPD, ICON_POLISH, ICON_RARE, ICON_FEED, ICON_WATER,
          ICON_AUTOF, ICON_AUTOW, ICON_MAGNET,
@@ -29,6 +29,8 @@ export const SPR = {
   coin: COIN,
   heart: HEART,
   feather: FEATHER,
+  bag: MANURE_BAG,
+  shovel: SHOVEL,
   icons: {
     egg: ICON_EGG,
     goldegg: ICON_GOLDEGG,

@@ -26,6 +26,10 @@ export function drawParticles(ctx) {
       ctx.fillStyle = 'rgba(106,184,240,.8)';
       const r = 3 + p.t * 22;
       ctx.fillRect(p.x - r, p.y - r / 3, r * 2, 3);
+    } else if (p.kind === 'manureFly') {
+      // kovaya uçan gübre parçası
+      ctx.fillStyle = '#5a4028'; ctx.fillRect(p.x, p.y, 4, 4);
+      ctx.fillStyle = '#7a5a38'; ctx.fillRect(p.x + 1, p.y, 2, 1);
     } else if (p.kind === 'speck') {
       ctx.fillStyle = '#6a4a28'; ctx.fillRect(p.x, p.y, 2, 2);
     } else if (p.kind === 'puff' || p.kind === 'smoke') {
