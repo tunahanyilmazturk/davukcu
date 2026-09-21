@@ -7,7 +7,7 @@ import { spawnChicken, spawnChick, update, clampEntities } from './entities/inde
 import { eggLooks } from './entities/eggs.js';
 import { draw } from './render/index.js';
 import { initInput, magnet } from './input.js';
-import { buildShop, refreshShop, refreshUI, initPanel, initTopbar, SHOP, buyItem } from './shop.js';
+import { buildShop, buildMarket, refreshShop, refreshUI, initPanel, initTopbar, SHOP, buyItem, buyDecor, openTab } from './shop.js';
 import { initSettings } from './settings.js';
 import { initPrestige } from './prestige.js';
 import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
@@ -77,6 +77,7 @@ initTopbar();
 initSettings();
 initPrestige();
 buildShop();
+buildMarket();
 refreshUI();
 
 setInterval(writeSave, 10000);
@@ -105,7 +106,7 @@ if (import.meta.env && import.meta.env.DEV) {
   window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
                   QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage,
                   eggValue, sellPrice, refillCost, truckBonus, fertileRate, chickOdds, consumeMult,
-                  scareFox, catchButterfly };
+                  scareFox, catchButterfly, buyDecor, openTab };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
   const ff = parseFloat(q.get('ff') || '0');

@@ -10,7 +10,7 @@ import { ICON_EGG, ICON_GOLDEGG, ICON_FASTLAY, ICON_BELT, ICON_MACHINE,
          ICON_TWIN, ICON_LUCKY, ICON_SAVER, ICON_OFFLINE, ICON_PACK,
          ICON_HATCH, ICON_GROW, ICON_GRADE, ICON_TRUCK, ICON_PET, ICON_SCOOP,
          ICON_GENE, ICON_DEALER, ICON_ORGANIC, ICON_FERTILE, ICON_SUPPLY,
-         ICON_BARGAIN } from './icons.js';
+         ICON_BARGAIN, ICON_CART, ICON_CHART, ICON_TROPHY, ICON_STAR } from './icons.js';
 
 export { makeSprite, drawSprite } from './core.js';
 export { CHICKEN_VARIANTS } from './chickens.js';
@@ -65,5 +65,6 @@ export const SPR = {
     fertile: ICON_FERTILE,
     supply: ICON_SUPPLY,
     bargain: ICON_BARGAIN,
+    cart: ICON_CART, chart: ICON_CHART, trophy: ICON_TROPHY, star: ICON_STAR,
   },
 };

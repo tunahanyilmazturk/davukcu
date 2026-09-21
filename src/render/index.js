@@ -14,6 +14,7 @@ import { drawWashBack, drawWashFront, drawWashSlot } from './wash.js';
 import { drawPolishBack, drawPolishFront, drawPolishSlot } from './polish.js';
 import { drawGradeBack, drawGradeFront, drawGradeSlot } from './grade.js';
 import { drawAmbient } from './ambient.js';
+import { drawDecor } from './decor.js';
 import { drawTank } from './tanks.js';
 import { drawCrate, drawCrateFront } from './crate.js';
 import { drawRoad, drawDock, drawTruck } from './truck.js';
@@ -75,6 +76,7 @@ export function draw(ctx, dt) {
   // ================= ÇİFTLİK sayfası (dünya x: 0..W) =================
   ctx.drawImage(bgFarm, 0, 0);
   if (S.fxAmbient) drawAmbient(ctx);
+  drawDecor(ctx); // satın alınan kozmetik süsler — tavukların arkasında
 
   // yemlik & suluk (kümes zemini, tavukların arkasında)
   drawTank(ctx, L.FEED,  S.feed  / feedCap(),  'feed',  S.lvl.autoF);

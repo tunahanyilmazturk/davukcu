@@ -37,31 +37,40 @@
       <div class="res feed"><span>YEM</span><div class="bar"><i id="barFeed"></i></div><b id="pctFeed">%100</b></div>
       <div class="res water"><span>SU</span><div class="bar"><i id="barWater"></i></div><b id="pctWater">%100</b></div>
     </div>
-    <div class="pazar">Pazar</div>
-    <div class="tabs">
-      <button class="tab active" data-tab="shop">ÇİFTLİK</button>
-      <button class="tab" data-tab="stats">İSTATİSTİK</button>
-      <button class="tab" data-tab="achv">BAŞARIM</button>
-      <button class="tab tab-prest" data-tab="prest">EFSANE</button>
-    </div>
-    <div id="tabShop">
-      <div id="questBar" class="hidden"></div>
-      <div class="qtyrow">
-        <span>Satın al</span>
-        <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
-        <button id="btnQty">1x</button>
+    <div class="pazar" id="tabTitle">Pazar</div>
+    <div id="tabBody">
+      <div class="trail">
+        <button class="tab ticon active" data-tab="shop" title="Çiftlik — üretim ve yükseltmeler"><canvas class="tico" data-ico="chicken" width="16" height="16"></canvas></button>
+        <button class="tab ticon" data-tab="market" title="Mağaza — kozmetik süsler"><canvas class="tico" data-ico="cart" width="16" height="16"></canvas></button>
+        <button class="tab ticon" data-tab="stats" title="İstatistik"><canvas class="tico" data-ico="chart" width="16" height="16"></canvas></button>
+        <button class="tab ticon" data-tab="achv" title="Başarım"><canvas class="tico" data-ico="trophy" width="16" height="16"></canvas></button>
+        <button class="tab ticon tab-prest" data-tab="prest" title="Efsane"><canvas class="tico" data-ico="star" width="16" height="16"></canvas></button>
       </div>
-      <div id="cards"></div>
-    </div>
-    <div id="tabStats" class="hidden">
-      <div id="statList"></div>
-    </div>
-    <div id="tabAchv" class="hidden">
-      <div id="achvList"></div>
-    </div>
-    <div id="tabPrest" class="hidden">
-      <div id="prestBody"></div>
-      <button id="btnPrest" class="btn-prest" disabled>PRESTİJ</button>
+      <div id="tabMain">
+        <div id="tabShop">
+          <div id="questBar" class="hidden"></div>
+          <div class="qtyrow">
+            <span>Satın al</span>
+            <button id="btnAvail" title="Sadece alınabilirleri göster">Alınabilir</button>
+            <button id="btnQty">1x</button>
+          </div>
+          <div id="cards"></div>
+        </div>
+        <div id="tabMarket" class="hidden">
+          <div class="mknote">Çiftliğine süsler — hepsi kozmetik, satın aldıkça oyun alanına eklenir</div>
+          <div id="marketCards"></div>
+        </div>
+        <div id="tabStats" class="hidden">
+          <div id="statList"></div>
+        </div>
+        <div id="tabAchv" class="hidden">
+          <div id="achvList"></div>
+        </div>
+        <div id="tabPrest" class="hidden">
+          <div id="prestBody"></div>
+          <button id="btnPrest" class="btn-prest" disabled>PRESTİJ</button>
+        </div>
+      </div>
     </div>
     <div id="sellHint">Tavuğu satmak için buraya sürükle!</div>
     <div id="toast"></div>

@@ -243,29 +243,98 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   box-shadow: inset 0 -4px 0 rgba(0,0,0,.2);
 }
 
-.tabs {
+/* sekme gövdesi: solda dikey ikon rayı + sağda içerik */
+#tabBody {
+  flex: 1;
+  min-height: 0;
   display: flex;
+  gap: 8px;
+}
+.trail {
+  flex: 0 0 46px;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+  background: #241430;
+  border: 3px solid #120a18;
+  padding: 6px 4px;
 }
 .tab {
-  flex: 1;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
   background: #2c1834;
   color: #b090c0;
   border: 3px solid #120a18;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab .tico { width: 18px; height: 18px; image-rendering: pixelated; }
+.tab.active {
+  background: #6e4a80;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.2), inset 0 3px 0 rgba(255,255,255,.08),
+              -3px 0 0 #ffd23e;         /* sol kenar aksanı — aktif işareti */
+}
+.tab:not(.active):hover { background: #3a2444; }
+.tab.tab-prest.active { box-shadow: inset 0 -4px 0 rgba(0,0,0,.2), -3px 0 0 #ffd23e; }
+#tabMain {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* mağaza sekmesi — kozmetik süs kartları */
+#tabMarket { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+.mknote {
+  font-size: 10px;
+  color: #b090c0;
+  line-height: 1.5;
+  padding: 0 2px;
+}
+#marketCards {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-content: start;
+  padding-right: 2px;
+}
+#marketCards::-webkit-scrollbar { width: 8px; }
+#marketCards::-webkit-scrollbar-thumb { background: #2c1834; }
+.mcard {
+  background: #2c1834;
+  border: 3px solid #120a18;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mcard canvas { width: 100%; height: 56px; image-rendering: pixelated;
+                background: #1c1024; border: 2px solid #120a18; }
+.mcard b { font-size: 11px; color: #f0e6f0; }
+.mcard small { font-size: 9px; color: #b090c0; line-height: 1.4; }
+.mbuy {
+  background: #4a6a34;
+  color: #f0ffd8;
+  border: 2px solid #120a18;
   font-family: inherit;
   font-weight: bold;
   font-size: 11px;
-  letter-spacing: 1px;
-  padding: 7px 0;
+  padding: 5px 0;
   cursor: pointer;
-  box-shadow: inset 0 -4px 0 rgba(0,0,0,.3);
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,.25);
 }
-.tab.active {
-  background: #6e4a80;
-  color: #f0e6f0;
-  box-shadow: inset 0 -4px 0 rgba(0,0,0,.2), inset 0 3px 0 rgba(255,255,255,.08);
-}
-.tab:not(.active):hover { background: #3a2444; color: #d8b8e8; }
+.mbuy:hover { background: #5a7c40; }
+.mbuy:disabled { background: #3a2444; color: #8a7a9a; cursor: default; }
+.mcard.owned { border-color: #3e6a30; }
+.mcard.owned .mbuy { background: #2c4a24; color: #9fe870; }
 
 .qtyrow {
   display: flex;

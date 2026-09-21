@@ -270,11 +270,20 @@ setTimeout(() => {
     S.rain = null;
     log.push({ rainOk: Math.abs(cmWet - cmDry * 0.75) < 1e-9 });
 
+    // ---- kozmetik mağaza: süs satın alımı kayda işlenir ----
+    S.money = Math.max(S.money, 1000); // prestij sonrası kasa boş olabilir
+    const mDec = S.money, nDec = S.decor.length;
+    window.GAME.buyDecor('flowers');
+    window.GAME.buyDecor('flowers'); // tekrar alım yok
+    log.push({ decorOk: S.decor.includes('flowers') && S.decor.length === nDec + 1
+               && S.money === mDec - 150 });
+
     // ---- kayıt: prestij/görev alanları kalıcı ----
     window.GAME.writeSave();
     const saved = JSON.parse(localStorage.getItem('tavukciftligi_v1'));
     log.push({ saveOk: saved && saved.prestige === S.prestige
-               && saved.questIdx === S.questIdx });
+               && saved.questIdx === S.questIdx
+               && saved.decor.join() === S.decor.join() });
     out.textContent = 'TEST|' + JSON.stringify(log);
   } catch (e) {
     out.textContent = 'TESTERR|' + e.message + '|' + e.stack;

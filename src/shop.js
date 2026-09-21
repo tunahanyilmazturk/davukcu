@@ -17,6 +17,9 @@ import { buildAchv, refreshAchv, checkAchv } from './achievements.js';
 import { isMobile } from './mobile.js';
 import { openSettings } from './settings.js';
 import { getFps } from './render/hud.js';
+import { DECOR } from './decor.js';
+import { drawDecorIcon } from './render/decor.js';
+import { toast } from './toast.js';
 
 /* ---------------- Mağaza tanımları ----------------
    lv: seviye anahtarı (S.lvl), costAt(i): i. seviyenin fiyatı,
@@ -336,20 +339,68 @@ export function refreshShop() {
 }
 
 /* ---------------- Sekmeler + toplu alım ---------------- */
-const TAB_IDS = { shop: 'tabShop', stats: 'tabStats', achv: 'tabAchv', prest: 'tabPrest' };
-// programatik sekme seçimi — sekme butonları ve üst bar çipleri paylaşır
+const TAB_IDS = { shop: 'tabShop', market: 'tabMarket', stats: 'tabStats', achv: 'tabAchv', prest: 'tabPrest' };
+const TAB_TITLES = { shop: 'Pazar', market: 'Mağaza', stats: 'İstatistik', achv: 'Başarım', prest: 'Efsane' };
+// programatik sekme seçimi — ray ikonları ve üst bar çipleri paylaşır
 function selectTab(t) {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === t));
   for (const k in TAB_IDS) {
     const el = document.getElementById(TAB_IDS[k]);
     if (el) el.classList.toggle('hidden', k !== t);
   }
+  const tt = document.getElementById('tabTitle');
+  if (tt) tt.textContent = TAB_TITLES[t] || 'Pazar';
+  if (t === 'market') refreshMarket();
   if (t === 'stats') refreshStats();
   if (t === 'achv') refreshAchv();
   if (t === 'prest') refreshPrestige();
 }
 // üst bar çipleri: paneli açıp doğrudan ilgili sekmeye atlar
 export function openTab(t) { setPanel(false); selectTab(t); }
+
+/* ---------------- Mağaza: kozmetik süsler ---------------- */
+const marketEl = document.getElementById('marketCards');
+const marketRecs = [];
+
+export function buildMarket() {
+  if (!marketEl) return;
+  marketEl.innerHTML = '';
+  marketRecs.length = 0;
+  for (const id in DECOR) {
+    const d = DECOR[id];
+    const el = document.createElement('div');
+    el.className = 'mcard';
+    const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96;
+    drawDecorIcon(cv.getContext('2d'), id, 96);
+    const nm = document.createElement('b'); nm.textContent = d.name;
+    const ds = document.createElement('small'); ds.textContent = d.desc;
+    const btn = document.createElement('button'); btn.className = 'mbuy';
+    btn.addEventListener('click', () => buyDecor(id));
+    el.appendChild(cv); el.appendChild(nm); el.appendChild(ds); el.appendChild(btn);
+    marketEl.appendChild(el);
+    marketRecs.push({ el, btn, d, id });
+  }
+}
+
+export function refreshMarket() {
+  for (const r of marketRecs) {
+    const owned = S.decor.includes(r.id);
+    r.el.classList.toggle('owned', owned);
+    r.btn.disabled = owned || S.money < r.d.price;
+    r.btn.textContent = owned ? '✓ Eklendi' : '$' + fmt(r.d.price);
+  }
+}
+
+export function buyDecor(id) {
+  const d = DECOR[id];
+  if (!d || S.decor.includes(id)) return;
+  if (S.money < d.price) { sndErr(); return; }
+  S.money -= d.price;
+  S.decor.push(id);
+  writeSave(); sndBuy();
+  toast(d.name + ' çiftliğe eklendi!');
+  refreshMarket();
+}
 
 function initTabs() {
   document.querySelectorAll('.tab').forEach(b => {
@@ -446,10 +497,13 @@ export function refreshUI() {
   // panel kapalıyken kart/sekme güncellemeleri görünmez — DOM işini atla
   if (panelEl.classList.contains('closed')) return;
   refreshShop();
+  // sekme yenilemeleri — element yoksa (test harness) atla
   const tabEl = id => document.getElementById(id);
-  if (!tabEl('tabStats').classList.contains('hidden')) refreshStats();
-  if (!tabEl('tabAchv').classList.contains('hidden')) refreshAchv();
-  if (tabEl('tabPrest') && !tabEl('tabPrest').classList.contains('hidden')) refreshPrestige();
+  const vis = id => { const el = tabEl(id); return el && !el.classList.contains('hidden'); };
+  if (vis('tabMarket')) refreshMarket();
+  if (vis('tabStats')) refreshStats();
+  if (vis('tabAchv')) refreshAchv();
+  if (vis('tabPrest')) refreshPrestige();
 }
 
 /* ---------------- Panel aç/kapat (üst bar çipleri de kullanır) ---------------- */
@@ -482,11 +536,20 @@ export function initPanel() {
     const q = new URLSearchParams(location.search);
     if (q.get('panel') === '1') setPanel(false);
     else if (localStorage.getItem('panelClosed') || isMobile()) setPanel(true);
+    if (q.get('tab')) selectTab(q.get('tab')); // görsel test: sekmeyi açık başlat
   } catch (e) {}
 
   initTabs();
   buildStats();
   buildAchv();
+
+  // sekme rayı ikonları — sprite'lardan bir kez çizilir
+  document.querySelectorAll('.tico').forEach(cv => {
+    const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
+    const k = cv.dataset.ico;
+    if (k === 'chicken') g.drawImage(SPR.chickens.white.a.c, 1, 2);
+    else if (SPR.icons[k]) g.drawImage(SPR.icons[k].c, 0, 0);
+  });
 
   // panel ikonları
   const g1 = document.getElementById('icoChicken').getContext('2d');

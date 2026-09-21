@@ -24,6 +24,7 @@ export const S = {
   showFps: true,  // üst barda FPS göstergesi
   stats: { earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 },
   achv: {},       // açılan başarım id'leri
+  decor: [],      // satın alınan kozmetik süs id'leri (src/decor.js)
   chickens: [],
   chicks: [],
   eggs: [],
@@ -51,7 +52,7 @@ export function writeSave() {
       prestige: S.prestige, prestigeBase: S.prestigeBase, questIdx: S.questIdx,
       music: S.music, volume: S.volume,
       fxParts: S.fxParts, fxAmbient: S.fxAmbient, fxHints: S.fxHints, showFps: S.showFps,
-      stats: S.stats, achv: S.achv, lastSeen: Date.now(),
+      stats: S.stats, achv: S.achv, decor: S.decor, lastSeen: Date.now(),
     }));
   } catch (e) {}
 }
@@ -95,6 +96,7 @@ export function applySave(d) {
   S.questIdx = d.questIdx || 0;
   S.stats = Object.assign({ earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 }, d.stats || {});
   S.achv = Object.assign({}, d.achv || {});
+  S.decor = Array.isArray(d.decor) ? d.decor.slice(0, 50) : [];
   // tavuklar cins listesi olarak saklanır; eski kayıtlarda sadece sayı var
   const breeds = Array.isArray(d.chickens)
     ? d.chickens.slice(0, 80)

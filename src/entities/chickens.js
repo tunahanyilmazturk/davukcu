@@ -8,6 +8,7 @@ import { layInterval, BREEDS, roosterBoost } from '../economy.js';
 import { CHICKEN_VARIANTS } from '../sprites/index.js';
 import { layEgg } from './eggs.js';
 import { tickManure } from './manure.js';
+import { decorZones } from '../decor.js';
 
 // ---- animasyon koreografileri: [kare, süre-sn] adım listeleri ----
 // loop=true döner; aksi halde bitince 'idle'a düşer ve stepAnim true döner
@@ -94,6 +95,7 @@ function fillZones() {
   _bagZone.x = L.BAG_STACK.x; _bagZone.y = L.BAG_STACK.y - 30;
   _bz.length = 0;
   _bz.push(L.FEED, L.WATER, L.MANURE_BIN, _bagZone, L.COOP, L.MILL, L.FLAG);
+  for (const z of decorZones()) _bz.push(z); // satın alınan süsler de engeller
   _gzr1.x = L.POND.x - 8; _gzr1.y = L.POND.y - 8; _gzr1.w = L.POND.w + 16; _gzr1.h = L.POND.h + 16;
   _gzr2.x = L.HAY.x - 4; _gzr2.y = L.HAY.y - 4; _gzr2.w = L.HAY.w + 8; _gzr2.h = L.HAY.h + 8;
 }
