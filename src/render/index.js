@@ -170,14 +170,24 @@ export function draw(ctx, dt) {
     }
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(spr.c, -w / 2, -h, w, h); // taban noktasından sallanır
-    // kaba kir benekleri — süpürge kazımadan satılırsa değer düşer
+    // kaba pislik — benekler + tabanda çamur bandı (süpürge kazır)
     if (e.dirt > 0) {
       const sd = e.seed || 0;
-      ctx.globalAlpha = 0.3 + 0.4 * e.dirt;
-      ctx.fillStyle = '#6a4a28';
-      ctx.fillRect(-w / 4 + (sd % 5), -h * 0.62, 3, 3);
-      ctx.fillRect(w / 6 - (sd % 3), -h * 0.4, 3, 2);
-      if (e.dirt > 0.55) ctx.fillRect(-w / 8, -h * 0.8, 2, 2);
+      ctx.globalAlpha = 0.35 + 0.45 * e.dirt;
+      ctx.fillStyle = '#5e3f22';
+      ctx.fillRect(-w * 0.3 + (sd % 4), -h * 0.68, 3, 3);
+      ctx.fillRect(w * 0.1 - (sd % 3), -h * 0.44, 4, 3);
+      if (e.dirt > 0.55) ctx.fillRect(-w * 0.06, -h * 0.86, 3, 2);
+      ctx.fillRect(-w * 0.36, -h * 0.14, w * 0.72, Math.max(2, h * 0.1)); // çamur tabanı
+      ctx.globalAlpha = 1;
+    }
+    // cila parıltısı — cilalanmış yumurta titreyen ışıltı taşır
+    if (e.shine) {
+      const gl = 0.45 + 0.4 * Math.sin(performance.now() / 240 + (e.seed || 0) * 9);
+      ctx.globalAlpha = gl;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(-w * 0.22, -h * 0.74, 2, 2);
+      ctx.fillRect(w * 0.08, -h * 0.52, 1, 1);
       ctx.globalAlpha = 1;
     }
     ctx.restore();

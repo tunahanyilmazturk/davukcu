@@ -29,9 +29,9 @@ function spill(e) {
 }
 
 // her yumurtaya ufak görsel kişilik: boyut, eğim, dikey kayma, sallanma fazı
-// (sc ~x0.8 küçültülmüş ölçek — kümes genişledi)
+// (8×9 sprite — sc ~1.3 ile sahnede ~11px genişliğinde)
 export function eggLooks() {
-  return { sc: 1.48 + Math.random() * 0.24, rot: (Math.random() - .5) * 0.34,
+  return { sc: 1.16 + Math.random() * 0.26, rot: (Math.random() - .5) * 0.34,
            jy: -Math.random() * 2.5, seed: Math.random() * 7 };
 }
 

@@ -4,8 +4,8 @@ import { makeSprite } from './core.js';
 export const ICON_EGG = makeSprite([
 "................",
 ".....WWWW.......",
-"....WWWWWW......",
-"...WWWWWWWW.....",
+"....WhWWWW......",
+"...WhWWWWWW.....",
 "...WWWWWWWW.....",
 "..WWWWWWWWWW....",
 "..WWWWWWWWWW....",
@@ -18,13 +18,13 @@ export const ICON_EGG = makeSprite([
 "................",
 "................",
 "................",
-], { W:'#f8f2e6', w:'#d0c4b2' });
+], { W:'#f8f2e6', w:'#d0c4b2', h:'#fffef8' });
 
 export const ICON_GOLDEGG = makeSprite([
 "................",
 ".....WWWW.......",
-"....WWWWWW......",
-"...WWWWWWWW.....",
+"....WhWWWW......",
+"...WhWWWWWW.....",
 "...WWWWWWWW.....",
 "..WWWWWWWWWW....",
 "..WWWWWWWWWW....",
@@ -37,7 +37,7 @@ export const ICON_GOLDEGG = makeSprite([
 "................",
 "................",
 "................",
-], { W:'#ffd23e', w:'#d89818' });
+], { W:'#ffd23e', w:'#d89818', h:'#fff0a8' });
 
 // yemlik: ahşap tekne + yem taneleri
 export const ICON_FEED = makeSprite([
