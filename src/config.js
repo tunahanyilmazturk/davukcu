@@ -32,6 +32,13 @@ export function computeLayout(stageW, stageH) {
   // yumurta kanalı girişi — sağ alt köşedeki boru ağzı
   L.DUCT_IN = w - 42;       // yuvarlanan yumurtanın boruya girdiği x (çiftlik)
   L.DUCT_Y = 692;           // zemin seviyesindeki boru hattı
+  // çiftlik dekorları: kümes + rüzgar gülü üstte, gölet sol altta,
+  // buğday tarlası sağ altta, saman balyası orta alan
+  L.COOP  = { x: 84, y: 58, w: 150, h: 104 };              // kırmızı kümes
+  L.MILL  = { x: w - 172, y: 50, w: 44, h: 120 };          // rüzgar gülü kulesi
+  L.POND  = { x: 42, y: 548, w: 148, h: 76 };              // gölet
+  L.WHEAT = { x: w - 336, y: 552, w: 200, h: 100 };        // buğday tarlası
+  L.HAY   = { x: Math.round(w * 0.40), y: 512, w: 30, h: 24 }; // saman balyası
 
   // ---- FABRİKA sayfası (LOKAL koordinatlar, x: 0..w) ----
   L.BEAM_Y = 44;            // fabrika tavan kirişi (sayfa üstü)

@@ -38,9 +38,15 @@ export function spawnChicken(x, y, breed) {
   // cins verilmezse rastgele (görsel çeşitlilik); mağaza kartları cinsi belirtir
   breed = breed || VARIANT_KEYS[Math.floor(Math.random() * VARIANT_KEYS.length)];
   const b = BREEDS[breed] || BREEDS.white;
+  let sx = x !== undefined ? x : P.x + 40 + Math.random() * (P.w - 80);
+  let sy = y !== undefined ? y : P.y + 60 + Math.random() * (P.h - 80);
+  // dekor engelleri içinde doğma — kümes/gölet üstüne spawn olmasın
+  for (let i = 0; i < 8 && posBlocked(sx, sy); i++) {
+    sx = P.x + 40 + Math.random() * (P.w - 80);
+    sy = P.y + 60 + Math.random() * (P.h - 80);
+  }
   S.chickens.push({
-    x: x !== undefined ? x : P.x + 40 + Math.random() * (P.w - 80),
-    y: y !== undefined ? y : P.y + 60 + Math.random() * (P.h - 80),
+    x: sx, y: sy,
     tx: 0, ty: 0, state: 'idle', t: Math.random() * 2,
     layT: b.lays === false ? Infinity : layInterval() * b.layRate * (0.4 + Math.random() * 0.8),
     dir: Math.random() < 0.5 ? 1 : -1,
@@ -77,8 +83,28 @@ function stepAnim(ch, dt) {
 export function inSilo(x, y, t) {
   return y < t.y + t.h + 8 && x > t.x - 12 && x < t.x + t.w + 12;
 }
-// gübre kovası + çuval istifi de kümes üst kenarında — silo gibi davranır
-function blockedZones() { return [L.FEED, L.WATER, L.MANURE_BIN, { ...L.BAG_STACK, w: 96, h: 30, y: L.BAG_STACK.y - 30 }]; }
+// gübre kovası + çuval istifi de kümes üst kenarında — silo gibi davranır;
+// kümes ve rüzgar gülü de üst-ankrajlı bina: arkasına/üstüne çıkılmaz
+function blockedZones() {
+  return [L.FEED, L.WATER, L.MANURE_BIN,
+          { ...L.BAG_STACK, w: 96, h: 30, y: L.BAG_STACK.y - 30 },
+          L.COOP, L.MILL];
+}
+// zemin engelleri — orta alandaki dekorlar, her yönden geçilmez
+function groundZones() {
+  return [{ x: L.POND.x - 8, y: L.POND.y - 8, w: L.POND.w + 16, h: L.POND.h + 16 },
+          { x: L.HAY.x - 4, y: L.HAY.y - 4, w: L.HAY.w + 8, h: L.HAY.h + 8 }];
+}
+export function inRect(x, y, r) {
+  return x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h;
+}
+export function inGroundZone(x, y) {
+  return groundZones().some(r => inRect(x, y, r));
+}
+// civcivler ve hedef seçimi için birleşik kontrol
+export function posBlocked(x, y) {
+  return blockedZones().some(t => inSilo(x, y, t)) || inGroundZone(x, y);
+}
 function siloBlocked(ch, nx, ny) {
   for (const t of blockedZones()) {
     if (!inSilo(ch.x, ch.y, t) && inSilo(nx, ny, t)) return true;
@@ -91,7 +117,7 @@ function pickWander(ch, P) {
   for (let i = 0; i < 8; i++) {
     const tx = P.x + 20 + Math.random() * (P.w - 40);
     const ty = P.y + 30 + Math.random() * (P.h - 34);
-    if (blockedZones().some(t => inSilo(tx, ty, t))) continue;
+    if (posBlocked(tx, ty)) continue;
     if (Math.hypot(tx - ch.x, ty - ch.y) < 60) continue;
     ch.tx = tx; ch.ty = ty;
     return true;
@@ -169,8 +195,10 @@ export function updateChickens(dt, fed) {
         }
       } else {
         let nx = ch.x + dx / dist * step;
-        const ny = ch.y + dy / dist * step;
+        let ny = ch.y + dy / dist * step;
         if (siloBlocked(ch, nx, ny)) nx = ch.x; // silo şeridi — dikey kayıp kenarından geçer
+        // gölet/balya gibi zemin engelleri — iki eksende de geçiş yok
+        if (!inGroundZone(ch.x, ch.y) && inGroundZone(nx, ny)) { nx = ch.x; ny = ch.y; }
         ch.stuck = Math.hypot(nx - ch.x, ny - ch.y) < step * 0.35 ? (ch.stuck || 0) + dt : 0;
         if (ch.stuck > 1.2) { ch.stuck = 0; ch.state = 'idle'; ch.t = 0.4 + Math.random(); }
         ch.x = nx; ch.y = ny;

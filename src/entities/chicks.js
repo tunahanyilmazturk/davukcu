@@ -2,7 +2,7 @@
 import { S } from '../state.js';
 import { L, MAX_CHICKENS } from '../config.js';
 import { chickInterval, chickGrowT } from '../economy.js';
-import { spawnChicken, inSilo } from './chickens.js';
+import { spawnChicken, posBlocked } from './chickens.js';
 import { sndPop, sndCluck } from '../audio.js';
 
 let hatchT = 8; // ilk civciv biraz gecikmeli
@@ -47,7 +47,7 @@ export function updateChicks(dt) {
         for (let i = 0; i < 6; i++) {
           const tx = P.x + 16 + Math.random() * (P.w - 32);
           const ty = P.y + 30 + Math.random() * (P.h - 34);
-          if (inSilo(tx, ty, L.FEED) || inSilo(tx, ty, L.WATER)) continue;
+          if (posBlocked(tx, ty)) continue;
           if (Math.hypot(tx - c.x, ty - c.y) < 24) continue;
           c.tx = tx; c.ty = ty; ok = true; break;
         }
@@ -68,8 +68,8 @@ export function updateChicks(dt) {
         c.x = c.tx; c.y = c.ty; c.state = 'idle'; c.t = 0.5 + Math.random() * 1.8;
       } else {
         const nx = c.x + dx / dist * step, ny = c.y + dy / dist * step;
-        // silo şeridine çarparsa durur — tavuklar gibi üstüne çıkamaz
-        const hit = [L.FEED, L.WATER].some(t => !inSilo(c.x, c.y, t) && inSilo(nx, ny, t));
+        // engel bölgesine çarparsa durur — tavuklar gibi üstüne çıkamaz
+        const hit = !posBlocked(c.x, c.y) && posBlocked(nx, ny);
         if (hit) { c.state = 'idle'; c.t = 0.5 + Math.random(); }
         else {
           c.x = nx; c.y = ny;

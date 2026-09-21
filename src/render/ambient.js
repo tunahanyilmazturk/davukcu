@@ -1,4 +1,6 @@
-// Ortam efektleri: kümeste süzülen toz zerreleri + üstten ışık huzmeleri
+// Ortam efektleri (DÜNYA uzayı, çiftlik sayfası x<W'de kalır):
+// ışık huzmeleri + toz, bulut gölgeleri, gölet dalgası, dönen rüzgar
+// gülü kanatları, kelebekler ve ara sıra geçen kuş. fxAmbient ayarıyla.
 import { L } from '../config.js';
 
 export function drawAmbient(ctx) {
@@ -20,11 +22,73 @@ export function drawAmbient(ctx) {
   }
   ctx.restore();
 
+  // bulut gölgeleri — çimde yavaşça sağa süzülen yumuşak koyuluklar
+  ctx.fillStyle = 'rgba(30,50,20,.06)';
+  for (let i = 0; i < 2; i++) {
+    const cx = ((t * (7 + i * 2.5) + i * 480) % (L.W + 500)) - 250;
+    ctx.beginPath(); ctx.ellipse(cx, 200 + i * 280, 170, 58, 0, 0, 7); ctx.fill();
+  }
+
   // toz zerreleri — deterministik sin salınımıyla süzülür
   ctx.fillStyle = 'rgba(255,245,220,.35)';
   for (let i = 0; i < 14; i++) {
     const px = P.x + ((i * 137.5 + t * (6 + i % 3 * 4)) % P.w);
     const py = P.y + 20 + ((i * 61 + Math.sin(t * 0.6 + i) * 30 + t * 3) % (P.h - 40));
     ctx.fillRect(px, py, 2, 2);
+  }
+
+  // gölet — genişleyen dalga halkası + süzülen parlama çizgisi
+  const PO = L.POND, pcx = PO.x + PO.w / 2, pcy = PO.y + PO.h / 2;
+  const rp = (t * 0.4) % 1;
+  ctx.strokeStyle = `rgba(190,225,245,${(0.4 * (1 - rp)).toFixed(3)})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(pcx, pcy, 6 + rp * (PO.w / 2 - 10), 3 + rp * (PO.h / 2 - 8), 0, 0, 7);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  const gl = (t * 26) % (PO.w - 40);
+  ctx.fillStyle = 'rgba(220,240,255,.4)';
+  ctx.fillRect(PO.x + 20 + gl, pcy - 12 + Math.sin(t * 1.4) * 6, 8, 2);
+
+  // rüzgar gülü kanatları — kule göbeğinde yavaşça döner
+  const M = L.MILL, mx = M.x + M.w / 2, my = M.y + 20;
+  ctx.save();
+  ctx.translate(mx, my); ctx.rotate(t * 0.9);
+  for (let i = 0; i < 4; i++) {
+    ctx.save(); ctx.rotate(i * Math.PI / 2);
+    ctx.fillStyle = '#d8cba8'; ctx.fillRect(4, -3, 24, 6);   // kanat kolu
+    ctx.fillStyle = '#b8a888'; ctx.fillRect(20, -6, 10, 12); // yel bezi
+    ctx.fillStyle = '#8a7858'; ctx.fillRect(4, -3, 24, 2);   // kol gölgesi
+    ctx.restore();
+  }
+  ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
+  ctx.restore();
+
+  // kelebekler — otlak üstünde süzülüp kanat çırpan 3 kelebek
+  const bf = ['#fff4d8', '#ffd23e', '#c894e8'];
+  for (let i = 0; i < 3; i++) {
+    const bx = P.x + 70 + (Math.sin(t * 0.19 + i * 2.4) * .5 + .5) * (P.w - 140)
+             + Math.sin(t * 1.1 + i * 5) * 16;
+    const by = P.y + 150 + (Math.sin(t * 0.27 + i * 1.9) * .5 + .5) * (P.h - 320)
+             + Math.sin(t * 2.3 + i * 3) * 10;
+    const open = Math.abs(Math.sin(t * 14 + i * 6)); // kanat açıklığı
+    ctx.save(); ctx.translate(bx, by);
+    ctx.fillStyle = bf[i];
+    ctx.beginPath(); ctx.ellipse(-3, 0, 2 + open * 3, 3.5, -.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(3, 0, 2 + open * 3, 3.5, .5, 0, 7); ctx.fill();
+    ctx.fillStyle = '#4a3828'; ctx.fillRect(-1, -3, 2, 6); // gövde
+    ctx.restore();
+  }
+
+  // kuş — ara sıra üstten süzülen siluet (yaklaşık 26 sn'de bir geçiş)
+  const bp = (t % 26) / 26;
+  if (bp < 0.45) {
+    const bx = -40 + bp * 2.4 * (L.W + 80);
+    const by = 78 + Math.sin(bp * 16) * 14;
+    const wob = Math.sin(t * 10) * 5;
+    ctx.strokeStyle = 'rgba(40,30,45,.55)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx - 8, by - wob); ctx.lineTo(bx, by + 2); ctx.lineTo(bx + 8, by - wob);
+    ctx.stroke();
   }
 }
