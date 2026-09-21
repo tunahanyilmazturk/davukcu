@@ -27,6 +27,7 @@ export const S = {
   stats: { earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 },
   achv: {},       // açılan başarım id'leri
   decor: [],      // satın alınan kozmetik süs id'leri (src/decor.js)
+  scenery: {},    // satın alınan çiftlik manzarası {id:1} — eski kayıtta null gelir, main.js toplu verir
   chickens: [],
   chicks: [],
   eggs: [],
@@ -58,7 +59,7 @@ export function writeSave() {
       diff: S.diff,
       music: S.music, volume: S.volume,
       fxParts: S.fxParts, fxAmbient: S.fxAmbient, fxHints: S.fxHints, showFps: S.showFps,
-      stats: S.stats, achv: S.achv, decor: S.decor, lastSeen: Date.now(),
+      stats: S.stats, achv: S.achv, decor: S.decor, scenery: S.scenery, lastSeen: Date.now(),
     }));
   } catch (e) {}
 }
@@ -105,6 +106,9 @@ export function applySave(d) {
   S.stats = Object.assign({ earned: 0, golden: 0, rare: 0, washed: 0, polished: 0, pets: 0, bought: 0, sold: 0, fills: 0, upg: 0, trucked: 0, manure: 0, bags: 0 }, d.stats || {});
   S.achv = Object.assign({}, d.achv || {});
   S.decor = Array.isArray(d.decor) ? d.decor.slice(0, 50) : [];
+  // manzara: kayıtta yoksa eski oyuncudur — manzara zaten vardı, null
+  // işaretlenir ve main.js hepsini verir; {} ise yeni oyundur (arsa boş)
+  S.scenery = d.scenery ? Object.assign({}, d.scenery) : null;
   // tavuklar cins listesi olarak saklanır; eski kayıtlarda sadece sayı var
   const breeds = Array.isArray(d.chickens)
     ? d.chickens.slice(0, 80)

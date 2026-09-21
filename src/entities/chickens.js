@@ -94,10 +94,16 @@ const _bz = [], _gz = [_gzr1, _gzr2];
 function fillZones() {
   _bagZone.x = L.BAG_STACK.x; _bagZone.y = L.BAG_STACK.y - 30;
   _bz.length = 0;
-  _bz.push(L.FEED, L.WATER, L.MANURE_BIN, _bagZone, L.COOP, L.MILL, L.FLAG);
+  _bz.push(L.FEED, L.WATER, L.MANURE_BIN, _bagZone);
+  const sc = S.scenery || {};
+  if (sc.coop) _bz.push(L.COOP);   // sahipsiz manzara görünmez duvar olmasın
+  if (sc.mill) _bz.push(L.MILL);
+  if (sc.flag) _bz.push(L.FLAG);
   for (const z of decorZones()) _bz.push(z); // satın alınan süsler de engeller
-  _gzr1.x = L.POND.x - 8; _gzr1.y = L.POND.y - 8; _gzr1.w = L.POND.w + 16; _gzr1.h = L.POND.h + 16;
-  _gzr2.x = L.HAY.x - 4; _gzr2.y = L.HAY.y - 4; _gzr2.w = L.HAY.w + 8; _gzr2.h = L.HAY.h + 8;
+  if (sc.pond) { _gzr1.x = L.POND.x - 8; _gzr1.y = L.POND.y - 8; _gzr1.w = L.POND.w + 16; _gzr1.h = L.POND.h + 16; }
+  else _gzr1.w = 0;
+  if (sc.hay) { _gzr2.x = L.HAY.x - 4; _gzr2.y = L.HAY.y - 4; _gzr2.w = L.HAY.w + 8; _gzr2.h = L.HAY.h + 8; }
+  else _gzr2.w = 0;
 }
 export function inRect(x, y, r) {
   return x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h;
@@ -198,8 +204,8 @@ export function updateChickens(dt, fed) {
           ch.ty = t.y + t.h + 20;
           faceTarget(ch);
           ch.state = 'toTrough';
-        } else if (S.rain && roll < 0.62) {
-          // yağmurda gaga vurma yerine kümes saçağının altına sığın
+        } else if (S.rain && S.scenery.coop && roll < 0.62) {
+          // yağmurda gaga vurma yerine kümes saçağının altına sığın (kümes alınmışsa)
           ch.tx = L.COOP.x + 12 + Math.random() * (L.COOP.w - 24);
           ch.ty = L.COOP.y + L.COOP.h + 24 + Math.random() * 18;
           faceTarget(ch);

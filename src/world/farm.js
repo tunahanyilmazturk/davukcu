@@ -2,37 +2,19 @@
 // sağ kenar çiti, alt toprak hat (yumurtaların yuvarlandığı yol) ve
 // fabrikaya giden boru ağzı. Fabrika çizimi src/world/factory.js'te —
 // geliştirirken iki alan birbirine karışmaz.
+//
+// Manzara öğeleri (gölet, kümes, değirmen...) MAĞAZA'dan satın alınır:
+// sahipsizse arsada "SATILIK" tabelası durur, satın alınınca buildBG()
+// yeniden kurulur ve öğe yerinde belirir. Her öğe bağımsız fonksiyondur;
+// mağaza kartı önizlemesi de aynı fonksiyonları kullanır (SCEN_DRAW).
+// Hareketli parçalar (değirmen kanatları, bayrak, gölet dalgası)
+// render/ambient.js'te aynı sahiplikle kapılıdır.
 import { L, H, mulberry32 } from '../config.js';
+import { S } from '../state.js';
+import { SCENERY } from '../decor.js';
 
-export function drawFarm(g) {
-  const rnd = mulberry32(1234);
-  const wf = L.W / 660; // genişliğe göre dekor yoğunluğu
-  const P = L.PEN;
-
-  // çimen — sayfa boyu
-  g.fillStyle = '#5aa348'; g.fillRect(0, 0, L.W, H);
-  for (let i = 0; i < 3800 * wf; i++) {
-    const x = rnd() * L.W, y = L.FARM.y + rnd() * L.FARM.h;
-    g.fillStyle = rnd() < .5 ? '#539b42' : '#63b051';
-    g.fillRect(x | 0, y | 0, 2, 2);
-  }
-  // açık yeşil yamalar
-  for (let i = 0; i < 20 * wf; i++) {
-    const x = rnd() * L.W, y = P.y + rnd() * (P.h - 40), r = 18 + rnd() * 44;
-    g.fillStyle = 'rgba(140,200,90,.35)';
-    g.beginPath(); g.ellipse(x, y, r, r * .5, 0, 0, 7); g.fill();
-  }
-  // çiçekler
-  const fc = ['#f0f0f0', '#ffd23e', '#e0637c', '#f0a028'];
-  for (let i = 0; i < 34 * wf; i++) {
-    const x = rnd() * (L.W - 30) + 15, y = P.y + 10 + rnd() * (P.h - 30), c = fc[(rnd() * fc.length) | 0];
-    g.fillStyle = c;
-    g.fillRect(x - 3, y, 3, 3); g.fillRect(x + 3, y, 3, 3);
-    g.fillRect(x, y - 3, 3, 3); g.fillRect(x, y + 3, 3, 3);
-    g.fillStyle = '#ffd23e'; g.fillRect(x, y, 3, 3);
-  }
-
-  // ---- gölet: kum halkası, su, nilüfer yaprakları, kamışlar, çakıllar ----
+// ---- gölet: kum halkası, su, nilüfer yaprakları, kamışlar, çakıllar ----
+function drawPond(g, rnd) {
   const PO = L.POND, pcx = PO.x + PO.w / 2, pcy = PO.y + PO.h / 2;
   g.fillStyle = 'rgba(0,0,0,.14)';
   g.beginPath(); g.ellipse(pcx + 3, pcy + 5, PO.w / 2 + 8, PO.h / 2 + 6, 0, 0, 7); g.fill();
@@ -61,8 +43,16 @@ export function drawFarm(g) {
     g.fillStyle = '#8a8a7a';
     g.fillRect(pcx + Math.cos(a) * (PO.w / 2 + 4) - 2, pcy + Math.sin(a) * (PO.h / 2 + 3) - 1, 4, 3);
   }
+  // kenar mantarları — göletin nemli tarafında
+  for (const [mx2, my2] of [[PO.x - 8, PO.y - 8], [PO.x + 18, PO.y - 14]]) {
+    g.fillStyle = '#e8e0d0'; g.fillRect(mx2, my2, 4, 6);
+    g.fillStyle = '#c04030'; g.fillRect(mx2 - 3, my2 - 4, 10, 5);
+    g.fillStyle = '#f0f0f0'; g.fillRect(mx2, my2 - 3, 2, 2);
+  }
+}
 
-  // ---- buğday tarlası: sürülmüş toprak + başak sıraları + korkuluk ----
+// ---- buğday tarlası: sürülmüş toprak + başak sıraları + korkuluk ----
+function drawWheat(g, rnd) {
   const WH = L.WHEAT;
   g.fillStyle = 'rgba(0,0,0,.10)'; g.fillRect(WH.x + 3, WH.y + 4, WH.w, WH.h);
   g.fillStyle = '#7a5a34'; g.fillRect(WH.x, WH.y, WH.w, WH.h);
@@ -87,8 +77,11 @@ export function drawFarm(g) {
   g.fillStyle = '#7a4a20'; g.fillRect(scx - 8, scy - 36, 16, 5);
   g.fillRect(scx - 5, scy - 42, 10, 7);
   g.fillStyle = '#3a2a18'; g.fillRect(scx - 3, scy - 29, 2, 2); g.fillRect(scx + 2, scy - 29, 2, 2);
+}
 
-  // ---- kırmızı kümes: tahta gövde, basamaklı çatı, kapı + rampa, yuvalık ----
+// ---- kırmızı kümes: tahta gövde, basamaklı çatı, kapı + rampa, yuvalık ----
+// ayçiçekleri kümes bahçesinin parçası — kümesle birlikte gelir
+function drawCoop(g) {
   const C = L.COOP;
   g.fillStyle = 'rgba(0,0,0,.20)';
   g.beginPath(); g.ellipse(C.x + C.w / 2 + 4, C.y + C.h + 4, C.w / 2 + 10, 11, 0, 0, 7); g.fill();
@@ -149,8 +142,24 @@ export function drawFarm(g) {
   g.fillStyle = '#6a4a28'; g.fillRect(C.x + C.w, C.y + C.h - 34, 16, 26);
   g.fillStyle = '#54381e'; g.fillRect(C.x + C.w - 2, C.y + C.h - 38, 20, 6);
   g.fillStyle = '#241c14'; g.fillRect(C.x + C.w + 3, C.y + C.h - 26, 10, 12); // giriş deliği
+  // ayçiçekleri — kümes ile gübre kovası arasındaki boşlukta
+  const sfGap = Math.max(26, L.MANURE_BIN.x - (C.x + C.w) - 10);
+  const sfN = sfGap > 60 ? 3 : 2;
+  for (let i = 0; i < sfN; i++) {
+    const sx = C.x + C.w + 8 + (i + 0.5) * (sfGap - 8) / sfN, sy = 88;
+    g.fillStyle = '#3e6a30'; g.fillRect(sx - 1, sy, 3, 34);
+    g.fillRect(sx - 5, sy + 16, 5, 3); g.fillRect(sx + 1, sy + 22, 5, 3);
+    g.fillStyle = '#e8a028';
+    for (let p = 0; p < 8; p++) {
+      const a = p / 8 * Math.PI * 2;
+      g.fillRect(sx + Math.cos(a) * 7 - 2, sy - 6 + Math.sin(a) * 7 - 2, 4, 4);
+    }
+    g.fillStyle = '#6a4a22'; g.fillRect(sx - 4, sy - 10, 8, 8);
+  }
+}
 
-  // ---- rüzgar gülü kulesi: A bacaklar + çaprazlar + kulübe (kanatlar ambient'te) ----
+// ---- rüzgar gülü kulesi: A bacaklar + çaprazlar + kulübe (kanatlar ambient'te) ----
+function drawMill(g) {
   const M = L.MILL, mx = M.x + M.w / 2;
   g.fillStyle = 'rgba(0,0,0,.16)';
   g.beginPath(); g.ellipse(mx + 4, M.y + M.h + 3, M.w / 2 + 8, 6, 0, 0, 7); g.fill();
@@ -173,8 +182,10 @@ export function drawFarm(g) {
   g.beginPath(); g.moveTo(mx - 20, M.y + 14); g.lineTo(mx, M.y - 2);
   g.lineTo(mx + 20, M.y + 14); g.closePath(); g.fill();
   g.fillStyle = '#3a2a1a'; g.beginPath(); g.arc(mx, M.y + 20, 5, 0, 7); g.fill(); // göbek
+}
 
-  // ---- saman balyası + ayçiçekleri + mantarlar + taşlar ----
+// ---- saman balyası ----
+function drawHay(g) {
   const HB = L.HAY;
   g.fillStyle = 'rgba(0,0,0,.15)';
   g.beginPath(); g.ellipse(HB.x + HB.w / 2 + 2, HB.y + HB.h - 2, HB.w / 2 + 3, 5, 0, 0, 7); g.fill();
@@ -185,26 +196,67 @@ export function drawFarm(g) {
   g.strokeStyle = '#b89030'; g.lineWidth = 2;
   g.beginPath(); g.arc(HB.x + HB.w / 2, HB.y + HB.h / 2, 8, .5, 2.6); g.stroke();
   g.beginPath(); g.arc(HB.x + HB.w / 2, HB.y + HB.h / 2, 4, .5, 2.9); g.stroke();
-  // ayçiçekleri — kümes ile gübre kovası arasındaki boşlukta
-  const sfGap = Math.max(26, L.MANURE_BIN.x - (C.x + C.w) - 10);
-  const sfN = sfGap > 60 ? 3 : 2;
-  for (let i = 0; i < sfN; i++) {
-    const sx = C.x + C.w + 8 + (i + 0.5) * (sfGap - 8) / sfN, sy = 88;
-    g.fillStyle = '#3e6a30'; g.fillRect(sx - 1, sy, 3, 34);
-    g.fillRect(sx - 5, sy + 16, 5, 3); g.fillRect(sx + 1, sy + 22, 5, 3);
-    g.fillStyle = '#e8a028';
-    for (let p = 0; p < 8; p++) {
-      const a = p / 8 * Math.PI * 2;
-      g.fillRect(sx + Math.cos(a) * 7 - 2, sy - 6 + Math.sin(a) * 7 - 2, 4, 4);
-    }
-    g.fillStyle = '#6a4a22'; g.fillRect(sx - 4, sy - 10, 8, 8);
+}
+
+// ---- satılık arsa tabelası — sahipsiz manzara parselinde durur ----
+function drawForSale(g, id) {
+  const [sx, sy] = SCENERY[id].sign();
+  g.fillStyle = 'rgba(0,0,0,.15)'; g.fillRect(sx + 2, sy + 22, 44, 4);
+  g.fillStyle = '#6a4a28'; g.fillRect(sx + 21, sy + 12, 4, 12);      // direk
+  g.fillStyle = '#54381e'; g.fillRect(sx, sy, 46, 14);               // tahta
+  g.fillStyle = '#7a5a34'; g.fillRect(sx + 1, sy + 1, 44, 12);
+  g.fillStyle = '#e8d8b0';
+  g.font = 'bold 7px "Courier New",monospace'; g.textAlign = 'center';
+  g.fillText('SATILIK', sx + 23, sy + 10);
+  g.textAlign = 'left';
+}
+
+// mağaza kartı önizlemesi için statik çizimler (hareketli parçalar
+// ambient'te: mill kanatları drawMillBlades, flag drawFlag)
+export const SCEN_DRAW = { hay: drawHay, coop: drawCoop, pond: drawPond, wheat: drawWheat, mill: drawMill };
+
+export function drawFarm(g) {
+  const rnd = mulberry32(1234);
+  const wf = L.W / 660; // genişliğe göre dekor yoğunluğu
+  const P = L.PEN;
+  const own = S.scenery || {};
+
+  // çimen — sayfa boyu
+  g.fillStyle = '#5aa348'; g.fillRect(0, 0, L.W, H);
+  for (let i = 0; i < 3800 * wf; i++) {
+    const x = rnd() * L.W, y = L.FARM.y + rnd() * L.FARM.h;
+    g.fillStyle = rnd() < .5 ? '#539b42' : '#63b051';
+    g.fillRect(x | 0, y | 0, 2, 2);
   }
-  // mantarlar — gölet kenarı + sol üst köşe
-  for (const [mx2, my2] of [[PO.x - 8, PO.y - 8], [PO.x + 18, PO.y - 14], [34, 470]]) {
-    g.fillStyle = '#e8e0d0'; g.fillRect(mx2, my2, 4, 6);
-    g.fillStyle = '#c04030'; g.fillRect(mx2 - 3, my2 - 4, 10, 5);
-    g.fillStyle = '#f0f0f0'; g.fillRect(mx2, my2 - 3, 2, 2);
+  // açık yeşil yamalar
+  for (let i = 0; i < 20 * wf; i++) {
+    const x = rnd() * L.W, y = P.y + rnd() * (P.h - 40), r = 18 + rnd() * 44;
+    g.fillStyle = 'rgba(140,200,90,.35)';
+    g.beginPath(); g.ellipse(x, y, r, r * .5, 0, 0, 7); g.fill();
   }
+  // çiçekler
+  const fc = ['#f0f0f0', '#ffd23e', '#e0637c', '#f0a028'];
+  for (let i = 0; i < 34 * wf; i++) {
+    const x = rnd() * (L.W - 30) + 15, y = P.y + 10 + rnd() * (P.h - 30), c = fc[(rnd() * fc.length) | 0];
+    g.fillStyle = c;
+    g.fillRect(x - 3, y, 3, 3); g.fillRect(x + 3, y, 3, 3);
+    g.fillRect(x, y - 3, 3, 3); g.fillRect(x, y + 3, 3, 3);
+    g.fillStyle = '#ffd23e'; g.fillRect(x, y, 3, 3);
+  }
+
+  // ---- manzara öğeleri: sahipse öğe, değilse SATILIK tabelası ----
+  if (own.pond) drawPond(g, rnd); else drawForSale(g, 'pond');
+  if (own.wheat) drawWheat(g, rnd); else drawForSale(g, 'wheat');
+  if (own.coop) drawCoop(g); else drawForSale(g, 'coop');
+  if (own.mill) drawMill(g); else drawForSale(g, 'mill');
+  if (own.hay) drawHay(g); else drawForSale(g, 'hay');
+  if (!own.flag) drawForSale(g, 'flag'); // bayrak tamamen ambient'te çizilir
+
+  // ---- tek başına zemin detayları (satın alımsız) ----
+  // sol üst köşedeki mantar
+  g.fillStyle = '#e8e0d0'; g.fillRect(34, 470, 4, 6);
+  g.fillStyle = '#c04030'; g.fillRect(31, 466, 10, 5);
+  g.fillStyle = '#f0f0f0'; g.fillRect(34, 467, 2, 2);
   // dağınık taş kümeleri
   for (const [sx2, sy2] of [[L.W * 0.55, 420], [L.W * 0.3, 330], [L.W - 220, 480]]) {
     g.fillStyle = '#8a8a7a';

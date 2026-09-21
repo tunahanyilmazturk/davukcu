@@ -1,6 +1,6 @@
 // Sağ panel: sekmeli mağaza, toplu alım, üst durum çubuğu
 import { S, writeSave } from './state.js';
-import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime } from './config.js';
+import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime, mulberry32 } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
@@ -18,9 +18,12 @@ import { buildAchv, refreshAchv, checkAchv } from './achievements.js';
 import { isMobile } from './mobile.js';
 import { openSettings } from './settings.js';
 import { getFps } from './render/hud.js';
-import { DECOR } from './decor.js';
+import { DECOR, SCENERY } from './decor.js';
 import { showMenu } from './menu.js';
 import { drawDecorIcon } from './render/decor.js';
+import { SCEN_DRAW } from './world/farm.js';
+import { drawFlag, drawMillBlades } from './render/ambient.js';
+import { buildBG } from './world.js';
 import { toast } from './toast.js';
 
 /* ---------------- Mağaza tanımları ----------------
@@ -371,47 +374,84 @@ function selectTab(t) {
 // üst bar çipleri: paneli açıp doğrudan ilgili sekmeye atlar
 export function openTab(t) { setPanel(false); selectTab(t); }
 
-/* ---------------- Mağaza: kozmetik süsler ---------------- */
+/* ---------------- Mağaza: çiftlik manzarası + kozmetik süsler ---------------- */
 const marketEl = document.getElementById('marketCards');
 const marketRecs = [];
+
+// hareketli parçası olan manzaralar — önizlemede de canlı dursun
+const SCEN_ANIM = { mill: drawMillBlades, flag: drawFlag };
+
+// önizleme: öğenin dünya kutusunu kırpıp karta sığdırır (çim fonuyla)
+function drawScenIcon(g, id, size) {
+  const v = SCENERY[id].view();
+  const s = Math.min(size / v[2], size / v[3]);
+  g.save();
+  g.imageSmoothingEnabled = false;
+  g.translate((size - v[2] * s) / 2, (size - v[3] * s) / 2);
+  g.scale(s, s);
+  g.translate(-v[0], -v[1]);
+  g.fillStyle = '#5aa348'; g.fillRect(v[0], v[1], v[2], v[3]);
+  const sd = SCEN_DRAW[id];
+  if (sd) sd(g, mulberry32(7));
+  const an = SCEN_ANIM[id];
+  if (an) an(g, 0.7);
+  g.restore();
+}
+
+function marketCard(id, d, scen) {
+  const el = document.createElement('div');
+  el.className = 'mcard';
+  const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96;
+  if (scen) drawScenIcon(cv.getContext('2d'), id, 96);
+  else drawDecorIcon(cv.getContext('2d'), id, 96);
+  const nm = document.createElement('b'); nm.textContent = d.name;
+  const ds = document.createElement('small'); ds.textContent = d.desc;
+  const btn = document.createElement('button'); btn.className = 'mbuy';
+  btn.addEventListener('click', () => buyDecor(id));
+  el.appendChild(cv); el.appendChild(nm); el.appendChild(ds); el.appendChild(btn);
+  marketEl.appendChild(el);
+  marketRecs.push({ el, btn, d, id, scen });
+}
 
 export function buildMarket() {
   if (!marketEl) return;
   marketEl.innerHTML = '';
   marketRecs.length = 0;
-  for (const id in DECOR) {
-    const d = DECOR[id];
-    const el = document.createElement('div');
-    el.className = 'mcard';
-    const cv = document.createElement('canvas'); cv.width = 96; cv.height = 96;
-    drawDecorIcon(cv.getContext('2d'), id, 96);
-    const nm = document.createElement('b'); nm.textContent = d.name;
-    const ds = document.createElement('small'); ds.textContent = d.desc;
-    const btn = document.createElement('button'); btn.className = 'mbuy';
-    btn.addEventListener('click', () => buyDecor(id));
-    el.appendChild(cv); el.appendChild(nm); el.appendChild(ds); el.appendChild(btn);
-    marketEl.appendChild(el);
-    marketRecs.push({ el, btn, d, id });
-  }
+  const h1 = document.createElement('div'); h1.className = 'msec'; h1.textContent = 'ÇİFTLİK';
+  marketEl.appendChild(h1);
+  for (const id in SCENERY) marketCard(id, SCENERY[id], true);
+  const h2 = document.createElement('div'); h2.className = 'msec'; h2.textContent = 'SÜSLER';
+  marketEl.appendChild(h2);
+  for (const id in DECOR) marketCard(id, DECOR[id], false);
 }
 
 export function refreshMarket() {
   for (const r of marketRecs) {
-    const owned = S.decor.includes(r.id);
+    const owned = r.scen ? !!(S.scenery && S.scenery[r.id]) : S.decor.includes(r.id);
+    const locked = !owned && r.d.req && !(S.scenery && S.scenery[r.d.req]);
     r.el.classList.toggle('owned', owned);
-    r.btn.disabled = owned || S.money < r.d.price;
-    r.btn.textContent = owned ? '✓ Eklendi' : '$' + fmt(r.d.price);
+    r.el.classList.toggle('locked', locked);
+    r.btn.disabled = owned || locked || S.money < r.d.price;
+    r.btn.textContent = owned ? '✓ Eklendi'
+      : locked ? '🔒 ' + SCENERY[r.d.req].name
+      : '$' + fmt(r.d.price);
   }
 }
 
 export function buyDecor(id) {
-  const d = DECOR[id];
-  if (!d || S.decor.includes(id)) return;
-  if (S.money < d.price) { sndErr(); return; }
-  S.money -= d.price;
-  S.decor.push(id);
+  const sc = SCENERY[id], d = DECOR[id];
+  const it = sc || d;
+  if (!it) return;
+  if (S.scenery == null) S.scenery = {}; // güvence — normalde migrate edilmiştir
+  const owned = sc ? !!S.scenery[id] : S.decor.includes(id);
+  if (owned) return;
+  if (d && d.req && !S.scenery[d.req]) { sndErr(); toast('Önce ' + SCENERY[d.req].name + ' gerekli'); return; }
+  if (S.money < it.price) { sndErr(); return; }
+  S.money -= it.price;
+  if (sc) { S.scenery[id] = 1; buildBG(); } // arka planı yeniden kur — öğe arsasında belirir
+  else S.decor.push(id);
   writeSave(); sndBuy();
-  toast(d.name + ' çiftliğe eklendi!');
+  toast(it.name + ' çiftliğe eklendi!');
   refreshMarket();
 }
 

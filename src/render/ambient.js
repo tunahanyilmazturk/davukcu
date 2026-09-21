@@ -29,6 +29,51 @@ function buildFlag() {
   return c;
 }
 
+// Türk bayrağı — direk + taş kaide + dalgalanan kumaş. drawAmbient'te
+// sahiplik kapılı çağrılır; mağaza önizlemesi de kullanır.
+export function drawFlag(ctx, t) {
+  if (!flagTex) flagTex = buildFlag();
+  const FL = L.FLAG, fx = FL.x + FL.w / 2, fgy = FL.y + FL.h;
+  const poleTop = fgy - 112;
+  ctx.fillStyle = '#8a8478'; ctx.fillRect(fx - 7, fgy - 4, 15, 4);  // taş kaide
+  ctx.fillStyle = '#a8a294'; ctx.fillRect(fx - 5, fgy - 7, 11, 3);
+  ctx.fillStyle = '#e8e4da'; ctx.fillRect(fx - 2, poleTop, 4, 112); // direk
+  ctx.fillStyle = '#b8b4aa'; ctx.fillRect(fx, poleTop, 2, 112);     // direk gölgesi
+  ctx.fillStyle = '#ffd23e';                                        // altın topuz
+  ctx.beginPath(); ctx.arc(fx, poleTop - 2, 3, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff0a8'; ctx.fillRect(fx - 1, poleTop - 4, 1, 1);
+  const fw = flagTex.width, fh = flagTex.height;
+  for (let i = 0; i < fw; i++) {
+    const k = i / fw;
+    const wob = Math.sin(t * 4.4 + i * 0.38) * k * 3.2;
+    const dy = poleTop + 2 + wob;
+    ctx.drawImage(flagTex, i, 0, 1, fh, fx + 2 + i, dy, 1, fh);
+    const sh = Math.sin(t * 4.4 + i * 0.38 + 1.3) * k;
+    if (sh > 0.01) {
+      ctx.globalAlpha = sh * 0.15;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(fx + 2 + i, dy, 1, fh);
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+// rüzgar gülü kanatları — kule göbeğinde yavaşça döner (kule farm BG'sinde)
+export function drawMillBlades(ctx, t) {
+  const M = L.MILL, mx = M.x + M.w / 2, my = M.y + 20;
+  ctx.save();
+  ctx.translate(mx, my); ctx.rotate(t * 0.9);
+  for (let i = 0; i < 4; i++) {
+    ctx.save(); ctx.rotate(i * Math.PI / 2);
+    ctx.fillStyle = '#d8cba8'; ctx.fillRect(4, -3, 24, 6);   // kanat kolu
+    ctx.fillStyle = '#b8a888'; ctx.fillRect(20, -6, 10, 12); // yel bezi
+    ctx.fillStyle = '#8a7858'; ctx.fillRect(4, -3, 24, 2);   // kol gölgesi
+    ctx.restore();
+  }
+  ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
 export function drawAmbient(ctx) {
   const t = performance.now() / 1000;
   const P = L.PEN;
@@ -63,60 +108,23 @@ export function drawAmbient(ctx) {
     ctx.fillRect(px, py, 2, 2);
   }
 
-  // gölet — genişleyen dalga halkası + süzülen parlama çizgisi
-  const PO = L.POND, pcx = PO.x + PO.w / 2, pcy = PO.y + PO.h / 2;
-  const rp = (t * 0.4) % 1;
-  ctx.strokeStyle = 'rgb(190,225,245)'; ctx.globalAlpha = 0.4 * (1 - rp);
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(pcx, pcy, 6 + rp * (PO.w / 2 - 10), 3 + rp * (PO.h / 2 - 8), 0, 0, 7);
-  ctx.stroke();
-  ctx.globalAlpha = 1; ctx.lineWidth = 1;
-  const gl = (t * 26) % (PO.w - 40);
-  ctx.fillStyle = 'rgba(220,240,255,.4)';
-  ctx.fillRect(PO.x + 20 + gl, pcy - 12 + Math.sin(t * 1.4) * 6, 8, 2);
-
-  // rüzgar gülü kanatları — kule göbeğinde yavaşça döner
-  const M = L.MILL, mx = M.x + M.w / 2, my = M.y + 20;
-  ctx.save();
-  ctx.translate(mx, my); ctx.rotate(t * 0.9);
-  for (let i = 0; i < 4; i++) {
-    ctx.save(); ctx.rotate(i * Math.PI / 2);
-    ctx.fillStyle = '#d8cba8'; ctx.fillRect(4, -3, 24, 6);   // kanat kolu
-    ctx.fillStyle = '#b8a888'; ctx.fillRect(20, -6, 10, 12); // yel bezi
-    ctx.fillStyle = '#8a7858'; ctx.fillRect(4, -3, 24, 2);   // kol gölgesi
-    ctx.restore();
+  // gölet — genişleyen dalga halkası + süzülen parlama çizgisi (satın alınınca)
+  if (S.scenery && S.scenery.pond) {
+    const PO = L.POND, pcx = PO.x + PO.w / 2, pcy = PO.y + PO.h / 2;
+    const rp = (t * 0.4) % 1;
+    ctx.strokeStyle = 'rgb(190,225,245)'; ctx.globalAlpha = 0.4 * (1 - rp);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(pcx, pcy, 6 + rp * (PO.w / 2 - 10), 3 + rp * (PO.h / 2 - 8), 0, 0, 7);
+    ctx.stroke();
+    ctx.globalAlpha = 1; ctx.lineWidth = 1;
+    const gl = (t * 26) % (PO.w - 40);
+    ctx.fillStyle = 'rgba(220,240,255,.4)';
+    ctx.fillRect(PO.x + 20 + gl, pcy - 12 + Math.sin(t * 1.4) * 6, 8, 2);
   }
-  ctx.fillStyle = '#3a2a1a'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
-  ctx.restore();
 
-  // Türk bayrağı — kümesin sağındaki direkte dalgalanır;
-  // kumaş uca doğru büyüyen sinüs dalgasıyla sütun sütun çizilir,
-  // faz-kaymalı gölge geçişi kumaşa derinlik verir
-  if (!flagTex) flagTex = buildFlag();
-  const FL = L.FLAG, fx = FL.x + FL.w / 2, fgy = FL.y + FL.h;
-  const poleTop = fgy - 112;
-  ctx.fillStyle = '#8a8478'; ctx.fillRect(fx - 7, fgy - 4, 15, 4);  // taş kaide
-  ctx.fillStyle = '#a8a294'; ctx.fillRect(fx - 5, fgy - 7, 11, 3);
-  ctx.fillStyle = '#e8e4da'; ctx.fillRect(fx - 2, poleTop, 4, 112); // direk
-  ctx.fillStyle = '#b8b4aa'; ctx.fillRect(fx, poleTop, 2, 112);     // direk gölgesi
-  ctx.fillStyle = '#ffd23e';                                        // altın topuz
-  ctx.beginPath(); ctx.arc(fx, poleTop - 2, 3, 0, 7); ctx.fill();
-  ctx.fillStyle = '#fff0a8'; ctx.fillRect(fx - 1, poleTop - 4, 1, 1);
-  const fw = flagTex.width, fh = flagTex.height;
-  for (let i = 0; i < fw; i++) {
-    const k = i / fw;
-    const wob = Math.sin(t * 4.4 + i * 0.38) * k * 3.2;
-    const dy = poleTop + 2 + wob;
-    ctx.drawImage(flagTex, i, 0, 1, fh, fx + 2 + i, dy, 1, fh);
-    const sh = Math.sin(t * 4.4 + i * 0.38 + 1.3) * k;
-    if (sh > 0.01) {
-      ctx.globalAlpha = sh * 0.15;
-      ctx.fillStyle = '#000';
-      ctx.fillRect(fx + 2 + i, dy, 1, fh);
-      ctx.globalAlpha = 1;
-    }
-  }
+  if (S.scenery && S.scenery.mill) drawMillBlades(ctx, t);
+  if (S.scenery && S.scenery.flag) drawFlag(ctx, t);
 
   // kelebekler — otlak üstünde süzülüp kanat çırpan 3 kelebek
   const bf = ['#fff4d8', '#ffd23e', '#c894e8'];

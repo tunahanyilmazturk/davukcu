@@ -13,6 +13,7 @@ import { initMenu, menuOpen } from './menu.js';
 import { initPrestige } from './prestige.js';
 import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
 import { collectManure } from './entities/manure.js';
+import { SCENERY } from './decor.js';
 import { scareFox } from './entities/fox.js';
 import { catchButterfly } from './entities/events.js';
 import { toast } from './toast.js';
@@ -59,6 +60,12 @@ if (saved) {
   chickTimes = r.chickTimes;
   lastSeen = r.lastSeen;
 }
+// eski kayıt: manzara alanı yok → oyuncu zaten hepsini görüyordu, toplu ver
+if (S.scenery === null) {
+  S.scenery = {};
+  for (const id in SCENERY) S.scenery[id] = 1;
+}
+buildBG(); // kayıt/arsa durumuna göre çiftlik arka planını kur
 for (const b of breeds) spawnChicken(undefined, undefined, b);
 for (const t of chickTimes) spawnChick(undefined, undefined, t); // kalan süreyle devam
 
@@ -107,9 +114,16 @@ if (import.meta.env && import.meta.env.DEV) {
   window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
                   QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage,
                   eggValue, sellPrice, refillCost, refillRate, tryRefill, truckBonus, fertileRate, chickOdds, consumeMult,
-                  scareFox, catchButterfly, buyDecor, openTab };
+                  scareFox, catchButterfly, buyDecor, openTab, SCENERY, buildBG };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
+  // ?scen=all veya ?scen=coop,pond → manzara hilesi
+  const scenQ = q.get('scen');
+  if (scenQ) {
+    for (const id of (scenQ === 'all' ? Object.keys(SCENERY) : scenQ.split(',')))
+      if (id in SCENERY) S.scenery[id] = 1;
+    buildBG();
+  }
   const ff = parseFloat(q.get('ff') || '0');
   // ?lvl=wash:2,belt:1 → seviye hilesi
   const lvls = (q.get('lvl') || '').split(',').filter(Boolean);

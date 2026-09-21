@@ -300,6 +300,14 @@ setTimeout(() => {
     log.push({ decorOk: S.decor.includes('flowers') && S.decor.length === nDec + 1
                && S.money === mDec - 150 });
 
+    // ---- çiftlik manzarası: satın alınınca arsaya dikilir + req kilidi ----
+    S.money = Math.max(S.money, 5000);
+    const mSc = S.money;
+    window.GAME.buyDecor('pond');            // 550 — gölet arsasına kurulur
+    window.GAME.buyDecor('duck');            // req:pond — gölet alındı, açılır (800)
+    log.push({ sceneryOk: S.scenery.pond === 1 && S.decor.includes('duck')
+               && S.money === mSc - 550 - 800 });
+
     // ---- kayıt: prestij/görev alanları kalıcı ----
     window.GAME.writeSave();
     const saved = JSON.parse(localStorage.getItem('tavukciftligi_v1'));

@@ -451,6 +451,17 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
 .mbuy:disabled { background: #3a2444; color: #8a7a9a; cursor: default; }
 .mcard.owned { border-color: #3e6a30; }
 .mcard.owned .mbuy { background: #2c4a24; color: #9fe870; }
+.mcard.locked canvas { filter: grayscale(.7) brightness(.7); }
+.msec {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #ffd23e;
+  text-shadow: 1px 1px 0 #120a18;
+  border-bottom: 2px solid #3a2444;
+  padding: 6px 2px 4px;
+}
 
 .qtyrow {
   display: flex;
