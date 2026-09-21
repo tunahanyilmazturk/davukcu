@@ -106,6 +106,19 @@ export function initMenu() {
   strip.id = 'mStrip'; strip.width = 320; strip.height = 38;
   card.appendChild(strip);
 
+  // yakında gelecek bölümler — yeni oyun bölümü ekleneceğinde bu listeyi doldur
+  const SOON = ['?', '?', '?'];
+  const soon = document.createElement('div');
+  soon.className = 'msoon';
+  for (const q of SOON) {
+    const b = document.createElement('div');
+    b.className = 'mson';
+    b.title = 'Yakında gelecek';
+    b.innerHTML = '<div class="mq">' + q + '</div><span>YAKINDA</span>';
+    soon.appendChild(b);
+  }
+  card.appendChild(soon);
+
   const ver = document.createElement('div');
   ver.className = 'mver';
   ver.textContent = 'v1.0';
