@@ -621,8 +621,14 @@ body.mob .tb-chip { height: 26px; font-size: 11px; padding: 0 10px; }
   color: #c9a0d8;
   border: 3px dashed #7a5590;
   padding: 6px;
+  opacity: .8;
 }
-#panel.sell-hover #sellHint { color: #ffd23e; border-color: #ffd23e; }
+#panel.sell-hover #sellHint {
+  color: #ffd23e;
+  border-color: #ffd23e;
+  background: rgba(255,210,62,.08);
+  opacity: 1;
+}
 
 #toast {
   min-height: 20px;
