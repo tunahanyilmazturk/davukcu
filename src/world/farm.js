@@ -66,12 +66,43 @@ export function drawFarm(g) {
   }
   g.fillStyle = '#b87a44'; g.fillRect(ex - 2, 70, 14, 5);      // yatay kuşaklar
   g.fillRect(ex - 2, 200, 14, 5); g.fillRect(ex - 2, 400, 14, 5);
-  // boru ağzı: metal kasa + karanlık ağız (yumurtalar buraya girer)
+  // boru ağzı: huni — soldan geniş ağız, sağda kenara çıkan cam tüpe daralır
   const dx = L.DUCT_IN - 10;
-  g.fillStyle = '#1c1220'; g.fillRect(dx - 4, L.DUCT_Y - 13, L.W - dx + 4, 26);
-  g.fillStyle = '#3c3048'; g.fillRect(dx - 2, L.DUCT_Y - 11, L.W - dx + 2, 22);
-  g.fillStyle = '#14101a'; g.fillRect(dx + 4, L.DUCT_Y - 7, L.W - dx, 14); // ağız
-  g.fillStyle = '#54445f'; g.fillRect(dx - 2, L.DUCT_Y - 11, L.W - dx + 2, 3);
+  const my = L.DUCT_Y;
+  // zemin gölgesi + boru gövdesi (kenara kadar)
+  g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(dx - 26, my - 10, L.W - dx + 30, 24);
+  g.fillStyle = '#161020'; g.fillRect(dx + 2, my - 13, L.W - dx, 26);       // kasa dış hat
+  g.fillStyle = '#3f3650'; g.fillRect(dx + 3, my - 12, L.W - dx - 1, 24);   // metal gövde
+  g.fillStyle = '#5a5270'; g.fillRect(dx + 3, my - 12, L.W - dx - 1, 3);
+  g.fillRect(dx + 3, my + 9, L.W - dx - 1, 3);
+  g.fillStyle = '#141c28'; g.fillRect(dx + 4, my - 9, L.W - dx - 4, 18);    // cam kanal
+  g.fillStyle = 'rgba(140,190,235,.15)'; g.fillRect(dx + 4, my - 9, L.W - dx - 4, 18);
+  g.fillStyle = 'rgba(220,240,255,.32)'; g.fillRect(dx + 4, my - 9, L.W - dx - 4, 2);
+  g.fillStyle = 'rgba(0,0,0,.30)'; g.fillRect(dx + 4, my + 7, L.W - dx - 4, 2);
+  // huni: soldan genişleyen yamuk ağız
+  g.fillStyle = '#161020';
+  g.beginPath();
+  g.moveTo(dx - 34, my - 17); g.lineTo(dx + 4, my - 12);
+  g.lineTo(dx + 4, my + 12);  g.lineTo(dx - 34, my + 17);
+  g.closePath(); g.fill();
+  g.fillStyle = '#54445f';
+  g.beginPath();
+  g.moveTo(dx - 32, my - 15); g.lineTo(dx + 3, my - 10);
+  g.lineTo(dx + 3, my + 10);  g.lineTo(dx - 32, my + 15);
+  g.closePath(); g.fill();
+  g.fillStyle = '#14101a'; // ağız içi — karanlık yamuk
+  g.beginPath();
+  g.moveTo(dx - 30, my - 11); g.lineTo(dx - 2, my - 7);
+  g.lineTo(dx - 2, my + 7);   g.lineTo(dx - 30, my + 11);
+  g.closePath(); g.fill();
+  // huni kenar cıvataları + alt kılavuz rampa
+  g.fillStyle = '#6a5a78';
+  g.fillRect(dx - 32, my - 15, 3, 3); g.fillRect(dx - 32, my + 12, 3, 3);
+  g.fillRect(dx - 20, my - 13, 3, 3); g.fillRect(dx - 20, my + 10, 3, 3);
+  g.fillStyle = '#3f3650'; // rampa: yoldan ağız dibine eğim
+  g.beginPath();
+  g.moveTo(dx - 34, my + 17); g.lineTo(dx + 4, my + 12); g.lineTo(dx + 4, my + 17);
+  g.closePath(); g.fill();
   // ağız üstü ok tabelası
   g.fillStyle = '#6a4a30'; g.fillRect(dx - 8, L.DUCT_Y - 44, 6, 26);
   g.fillStyle = '#241c14'; g.fillRect(dx - 24, L.DUCT_Y - 64, 60, 22);

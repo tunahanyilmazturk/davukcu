@@ -45,17 +45,54 @@ function drawBarrel(g, x, yB) {
 // yumurtalar borunun içinde görünür geçer.
 function drawDuct(g) {
   const D = L.DUCT, y0 = D.y, top = D.top, rx = D.rx, outX = D.outX;
-  const P = 22, C = 9; // dış kabuk ±11, iç kanal ±9 — yumurta (~18px) içinde kalır
-  const seg = (x, y, w, h) => { // bir boru parçası: kabuk + iç kanal + cam parlaması
-    g.fillStyle = '#1c1220'; g.fillRect(x - 1, y - 1, w + 2, h + 2);
-    g.fillStyle = '#2e2438'; g.fillRect(x, y, w, h);
-    g.fillStyle = '#191423'; // iç kanal — yumurta burada görünür geçer
-    if (w > h) { g.fillRect(x + 2, y + h / 2 - C, w - 4, C * 2); }
-    else       { g.fillRect(x + w / 2 - C, y + 2, C * 2, h - 4); }
-    g.fillStyle = '#5a5270'; // cam kenar parlaması
-    if (w > h) { g.fillRect(x, y + 2, w, 2); g.fillRect(x, y + h - 4, w, 2); }
-    else       { g.fillRect(x + 2, y, 2, h); g.fillRect(x + w - 4, y, 2, h); }
+  const P = 24, C = 9; // dış kabuk ±12, cam kanal ±9 — yumurta tüpün içinde kalır
+  // cam tüp parçası: duvar gölgesi → metal kasa → cam kanal → parlama
+  const seg = (x, y, w, h) => {
+    const horiz = w > h;
+    g.fillStyle = 'rgba(0,0,0,.28)';                    // duvara düşen gölge
+    g.fillRect(x + 3, y + 4, w, h);
+    g.fillStyle = '#161020'; g.fillRect(x - 1, y - 1, w + 2, h + 2); // kasa dış hat
+    g.fillStyle = '#3f3650'; g.fillRect(x, y, w, h);                 // metal gövde
+    g.fillStyle = '#5a5270';                                         // kasa kenar ışığı
+    if (horiz) { g.fillRect(x, y, w, 3); g.fillRect(x, y + h - 3, w, 3); }
+    else       { g.fillRect(x, y, 3, h); g.fillRect(x + w - 3, y, 3, h); }
+    // cam kanal — yumurtalar bu koyu bandın içinde görünür
+    g.fillStyle = '#141c28';
+    if (horiz) g.fillRect(x + 2, y + h / 2 - C, w - 4, C * 2);
+    else       g.fillRect(x + w / 2 - C, y + 2, C * 2, h - 4);
+    g.fillStyle = 'rgba(140,190,235,.15)';              // cam tonu
+    if (horiz) g.fillRect(x + 2, y + h / 2 - C, w - 4, C * 2);
+    else       g.fillRect(x + w / 2 - C, y + 2, C * 2, h - 4);
+    g.fillStyle = 'rgba(220,240,255,.32)';              // üst/yan parlama
+    if (horiz) g.fillRect(x + 2, y + h / 2 - C, w - 4, 2);
+    else       g.fillRect(x + w / 2 - C, y + 2, 2, h - 4);
+    g.fillStyle = 'rgba(0,0,0,.30)';                    // iç alt gölge
+    if (horiz) g.fillRect(x + 2, y + h / 2 + C - 2, w - 4, 2);
+    else       g.fillRect(x + w / 2 + C - 2, y + 2, 2, h - 4);
   };
+  // dirsek flanşı: kare plaka + köşe cıvataları
+  const flange = (cx, cy) => {
+    g.fillStyle = '#161020'; g.fillRect(cx - P / 2 - 2, cy - P / 2 - 2, P + 4, P + 4);
+    g.fillStyle = '#54445f'; g.fillRect(cx - P / 2, cy - P / 2, P, P);
+    g.fillStyle = '#6a5a78'; g.fillRect(cx - P / 2, cy - P / 2, P, 3);
+    g.fillStyle = '#2c2438';
+    for (const [ox, oy] of [[-8, -8], [8, -8], [-8, 8], [8, 8]])
+      g.fillRect(cx + ox - 1, cy + oy - 1, 3, 3);
+  };
+  // metal kelepçe bandı (boru üstünde enine şerit + vidalama kulakları)
+  const clampH = (x, cy) => { // yatay boru üstünde
+    g.fillStyle = '#161020'; g.fillRect(x - 3, cy - P / 2 - 3, 7, P + 6);
+    g.fillStyle = '#6a5a78'; g.fillRect(x - 2, cy - P / 2 - 2, 5, P + 4);
+    g.fillStyle = '#2c2438'; g.fillRect(x - 1, cy - P / 2 - 2, 3, P + 4);
+    g.fillRect(x - 2, cy - 2, 5, 4);
+  };
+  const clampV = (cx, y) => { // dikey boru üstünde
+    g.fillStyle = '#161020'; g.fillRect(cx - P / 2 - 3, y - 3, P + 6, 7);
+    g.fillStyle = '#6a5a78'; g.fillRect(cx - P / 2 - 2, y - 2, P + 4, 5);
+    g.fillStyle = '#2c2438'; g.fillRect(cx - P / 2 - 2, y - 1, P + 4, 3);
+    g.fillRect(cx - 2, y - 2, 4, 5);
+  };
+
   // zemin hattı: sol kenardan riser'a
   seg(-2, y0 - P / 2, rx + 4, P);
   // riser: zeminden üst hatta
@@ -63,20 +100,33 @@ function drawDuct(g) {
   // üst hat: riser'dan bırakma ağzına
   seg(rx - P / 2, top - P / 2, outX - rx + P / 2 + 4, P);
   // iniş ağzı: üst hattan üst banda
-  seg(outX - P / 2, top - 2, P, L.BELT1_Y - 34 - top + 2);
-  // dirsek kapakları
-  for (const [cx, cy] of [[rx, y0], [rx, top], [outX, top]]) {
-    g.fillStyle = '#1c1220'; g.fillRect(cx - P / 2 - 1, cy - P / 2 - 1, P + 2, P + 2);
-    g.fillStyle = '#54445f'; g.fillRect(cx - P / 2, cy - P / 2, P, P);
-    g.fillStyle = '#6a5a78'; g.fillRect(cx - 2, cy - 2, 4, 4);
+  seg(outX - P / 2, top - 2, P, L.BELT1_Y - 30 - top + 2);
+  // dirsek flanşları
+  flange(rx, y0); flange(rx, top); flange(outX, top);
+  // kelepçeler: riser ve üst hat boyunca
+  for (let y = top + 90; y < y0 - 40; y += 110) clampV(rx, y);
+  for (let x = rx + 80; x < outX - 40; x += 120) clampH(x, top);
+  // üst hat askı kayışları (duvar rayına değil tavana)
+  for (let x = rx + 140; x < outX - 20; x += 170) {
+    g.fillStyle = '#161020'; g.fillRect(x, top - P / 2 - 9, 5, 9);
+    g.fillStyle = '#54445f'; g.fillRect(x + 1, top - P / 2 - 9, 3, 9);
   }
-  // bırakma ağzı: açık uç + iç karanlık
-  g.fillStyle = '#1c1220'; g.fillRect(outX - P / 2 - 2, L.BELT1_Y - 38, P + 4, 6);
-  g.fillStyle = '#14101a'; g.fillRect(outX - P / 2 + 2, L.BELT1_Y - 36, P - 4, 4);
-  // üst hat askı kelepçeleri
-  for (let x = rx + 90; x < outX - 20; x += 130) {
-    g.fillStyle = '#1c1220'; g.fillRect(x, top - P / 2 - 8, 4, 8);
-    g.fillRect(x - 3, top - P / 2 - 10, 10, 3);
+  // bırakma ağzı: huni gibi açılan uç — banda doğru genişler
+  {
+    const my = L.BELT1_Y - 30; // ağız dibi
+    g.fillStyle = '#161020';
+    g.beginPath();
+    g.moveTo(outX - P / 2 - 2, my - 8); g.lineTo(outX + P / 2 + 2, my - 8);
+    g.lineTo(outX + P / 2 + 8, my + 4); g.lineTo(outX - P / 2 - 8, my + 4);
+    g.closePath(); g.fill();
+    g.fillStyle = '#54445f';
+    g.beginPath();
+    g.moveTo(outX - P / 2, my - 7); g.lineTo(outX + P / 2, my - 7);
+    g.lineTo(outX + P / 2 + 6, my + 2); g.lineTo(outX - P / 2 - 6, my + 2);
+    g.closePath(); g.fill();
+    g.fillStyle = '#14101a'; // ağzın içi karanlık
+    g.fillRect(outX - P / 2 - 2, my - 4, P + 4, 5);
+    g.fillStyle = '#6a5a78'; g.fillRect(outX - P / 2 - 6, my, P + 12, 2); // kenar ışığı
   }
   // 'YUMURTA' etiketi üst hatta
   g.fillStyle = '#54445f'; g.fillRect(rx + 44, top - P / 2 - 13, 56, 11);

@@ -100,6 +100,20 @@ export function draw(ctx, dt) {
   ctx.restore();
 
   // ================= yumurtalar (DÜNYA uzayı: çiftlik zemini → kanal → bant) ==
+  // kanal koridoru: boru yolunun her parçasının kapsadığı alan (kasa ±12 + dirsek
+  // payı) — 'duct' fazındaki yumurtalar bu alana kırpılır, cam tüpten taşmaz
+  let ductClip = null;
+  const buildDuctClip = () => {
+    if (ductClip) return ductClip;
+    const p = new Path2D();
+    const D = L.WD.duct;
+    for (let i = 0; i + 1 < D.length; i++) {
+      const [ax, ay] = D[i], [bx, by] = D[i + 1];
+      p.rect(Math.min(ax, bx) - 13, Math.min(ay, by) - 13,
+             Math.abs(bx - ax) + 26, Math.abs(by - ay) + 26);
+    }
+    return ductClip = p;
+  };
   const order = [...S.eggs].sort((a, b) =>
     (a.phase === 'belt1' ? -a.x : a.x) - (b.phase === 'belt1' ? -b.x : b.x));
   for (const e of order) {
@@ -132,6 +146,7 @@ export function draw(ctx, dt) {
       ctx.beginPath(); ctx.ellipse(e.x, ty, w * 0.42 * k + 2, 2.2, 0, 0, 7); ctx.fill();
     }
     ctx.save();
+    if (e.phase === 'duct') ctx.clip(buildDuctClip()); // tüp koridoru dışına taşma
     ctx.translate(Math.round(e.x + px), Math.round(fy));
     ctx.rotate(rot);
     if (e.sq > 0) { // iniş ezilmesi
