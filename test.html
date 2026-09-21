@@ -220,6 +220,15 @@ setTimeout(() => {
     const dealerOk = S.stats.earned - eBefore === 1300;
     S.lvl.dealer = 0;
     log.push({ organicOk, supplyOk, bargainOk, geneOk, fertOk, dealerOk });
+    // ---- zorluk çarpanları: kolay > standart > zor kazanç; tersine tüketim/fiyat ----
+    S.feed = 0;
+    S.diff = 'easy';  const vE = window.GAME.eggValue(), cE = window.GAME.consumeMult(), pE = window.GAME.refillCost('feed');
+    S.diff = 'xhard'; const vX = window.GAME.eggValue(), cX = window.GAME.consumeMult(), pX = window.GAME.refillCost('feed');
+    const diffOk = vE > vX && cE < cX && pE < pX;
+    S.diff = 'hard'; window.GAME.writeSave();
+    const diffSaved = JSON.parse(localStorage.getItem('tavukciftligi_v1')).diff === 'hard';
+    S.diff = 'std';
+    log.push({ diffOk, diffSaved });
     // ---- görev zinciri: koşullar sağlandı → sıralı ilerleme ----
     window.GAME.checkQuests();
     const qAfter = S.questIdx;

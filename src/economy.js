@@ -1,6 +1,13 @@
 // Ekonomi: seviyelerden türetilen değerler (parametre verilmezse mevcut seviye)
 import { S } from './state.js';
-import { BASE, BAG_AT } from './config.js';
+import { BASE, BAG_AT, DIFFS } from './config.js';
+
+// zorluk çarpanları — S.diff anahtarına göre DIFFS'ten okunur
+export function diffDef()     { return DIFFS[S.diff] || DIFFS.std; }
+export function diffEarn()    { return diffDef().earn; }
+export function diffPrice()   { return diffDef().price; }
+export function diffConsume() { return diffDef().consume; }
+export function diffFox()     { return diffDef().fox; }
 
 // tavuk cinsleri: layRate = yumurtlama süresi çarpanı (küçük = hızlı),
 // rare/gold = yumurta başına ek şans, val = yumurta değer çarpanı
@@ -21,7 +28,7 @@ export function prestGain() {
 }
 // Organik Sertifika: tüm yumurta (ve dolayısıyla gübre) değerine çarpan
 export function organicMult(l = S.lvl.organic) { return 1 + 0.12 * l; }
-export function eggValue(l = S.lvl.value)      { return Math.round((BASE.egg + l) * prestMult() * organicMult()); }
+export function eggValue(l = S.lvl.value)      { return Math.round((BASE.egg + l) * prestMult() * organicMult() * diffEarn()); }
 export function layInterval(l = S.lvl.lay)     { return Math.max(0.7, BASE.lay * Math.pow(0.88, l)); }
 // bantlar Sv.0'da da çalışır ama çok yavaş (%25) — yükseltme tam hıza çıkarır
 export function farmBeltSpeed(l = S.lvl.beltF) { return BASE.belt * (l > 0 ? Math.pow(1.25, l) : 0.25); }   // üst bant
@@ -77,7 +84,7 @@ export function waterCap(l = S.lvl.waterCap) { return 100 + 100 * l; }
 export function supplyMult(l = S.lvl.supply) { return Math.max(0.4, 1 - 0.12 * l); }
 export function refillCost(kind) {
   const cap = kind === 'feed' ? feedCap() : waterCap();
-  return Math.max(1, Math.ceil((cap - S[kind]) * 0.05 * supplyMult()));
+  return Math.max(1, Math.ceil((cap - S[kind]) * 0.05 * supplyMult() * diffPrice()));
 }
 // otomatik dolum: seviye başına kapasitenin %25'i (Sv.4 = tam dolum)
 export function autoFillPct(l)  { return 0.25 * l; }
@@ -88,7 +95,7 @@ export function fedOk() { return S.feed > 0 && S.water > 0; }
 /* ---- pasif yükseltmeler ---- */
 export function twinChance(l = S.lvl.twin)     { return 0.03 * l; }              // ikiz yumurta şansı
 export function luckyChance(l = S.lvl.lucky)   { return 0.025 * l; }             // satışta x2 ödeme şansı
-export function consumeMult(l = S.lvl.saver)   { return Math.max(0.5, 1 - 0.1 * l) * (S.rain ? 0.75 : 1); } // yem/su tüketimi; yağmurda yağmur suyu bedava
+export function consumeMult(l = S.lvl.saver)   { return Math.max(0.5, 1 - 0.1 * l) * (S.rain ? 0.75 : 1) * diffConsume(); } // yem/su tüketimi; yağmurda yağmur suyu bedava
 export function offlineEff(l = S.lvl.offline)  { return 0.5 + 0.12 * l; }        // çevrimdışı kazanç verimi
 export function offlineCapH(l = S.lvl.offline) { return 4 + 1.5 * l; }           // saat üst sınırı
 export function roosterBoost(l = S.lvl.rooster){ return 1 + 0.08 * l; }          // yumurtlama hızı çarpanı
@@ -139,7 +146,7 @@ export function chickenCost(n = S.chickens.length) { return Math.ceil(12 * Math.
 export function sellFrac(l = S.lvl.bargain)    { return Math.min(0.9, 0.5 + 0.08 * l); }
 export function sellPrice(breed = 'white') {
   const b = BREEDS[breed] || BREEDS.white;
-  return Math.max(1, Math.floor(chickenCost() * sellFrac() * b.costMult));
+  return Math.max(1, Math.floor(chickenCost() * sellFrac() * b.costMult * diffEarn()));
 }
 export function avgEggValue()   {
   // yıkama kuruluysa tüm yumurtalar yıkanır; cila da kuruluysa hepsi parlatılır

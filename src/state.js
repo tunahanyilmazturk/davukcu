@@ -1,5 +1,5 @@
 // Oyun durumu + localStorage kaydı
-import { SAVE_KEY } from './config.js';
+import { SAVE_KEY, DIFFS } from './config.js';
 
 export const S = {
   money: 0,
@@ -15,6 +15,7 @@ export const S = {
   prestige: 0,      // Altın Yem sayısı — her biri kalıcı +%12 yumurta değeri
   prestigeBase: 0,  // son prestijdeki toplam kazanç (bir sonraki ⭐ eşiği buradan ölçülür)
   questIdx: 0,      // görev zincirindeki konum
+  diff: 'std',    // zorluk: easy | std | hard | xhard (DIFFS)
   muted: false,   // ses efektleri kapalı
   music: true,    // ambient müzik
   volume: 1,      // ana ses seviyesi 0..1
@@ -53,6 +54,7 @@ export function writeSave() {
       manureBin: S.manureBin, manureBags: S.manureBags,
       eggsSold: S.eggsSold, playTime: S.playTime, muted: S.muted,
       prestige: S.prestige, prestigeBase: S.prestigeBase, questIdx: S.questIdx,
+      diff: S.diff,
       music: S.music, volume: S.volume,
       fxParts: S.fxParts, fxAmbient: S.fxAmbient, fxHints: S.fxHints, showFps: S.showFps,
       stats: S.stats, achv: S.achv, decor: S.decor, lastSeen: Date.now(),
@@ -83,6 +85,7 @@ export function applySave(d) {
   }
   S.eggsSold = d.eggsSold || 0;
   S.playTime = d.playTime || 0;
+  S.diff = (d.diff && DIFFS[d.diff]) ? d.diff : 'std';
   S.muted = !!d.muted;
   S.music = d.music !== undefined ? !!d.music : !d.muted; // eski kayıt: kapalı ses → müzik de kapalı
   S.volume = d.volume !== undefined ? +d.volume : 1;

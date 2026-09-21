@@ -4,7 +4,7 @@
 // OYNA → oyuna girer (kayıt varsa DEVAM ET); YENİ OYUN iki aşamalı onayla
 // kaydı sıfırlar; hızlı ayar çipleri + tam ayarlar modalı menüden erişilir.
 import { S, readSave, resetSave, writeSave } from './state.js';
-import { fmt } from './config.js';
+import { fmt, DIFFS } from './config.js';
 import { SPR } from './sprites/index.js';
 import { openSettings } from './settings.js';
 import { sndBuy, sndErr } from './audio.js';
@@ -59,6 +59,30 @@ export function showMenu() {
       + (saved.prestige ? ' · ⭐' + saved.prestige : '');
     card.appendChild(ms);
   }
+
+  // ZORLUK seçici — seçim anında kayda yazılır; devam eden oyunda da uygulanır
+  const dwrap = document.createElement('div');
+  dwrap.className = 'mdiff';
+  dwrap.innerHTML = '<div class="mdiff-cap">ZORLUK</div>';
+  const drow = document.createElement('div');
+  drow.className = 'mdiff-row';
+  const dbtns = {};
+  const paintDiff = () => {
+    for (const k in dbtns) dbtns[k].classList.toggle('on', S.diff === k);
+  };
+  for (const k of ['easy', 'std', 'hard', 'xhard']) {
+    const b = document.createElement('button');
+    b.className = 'mdiff-btn ' + k;
+    b.textContent = DIFFS[k].name;
+    b.title = 'Kazanç ×' + DIFFS[k].earn + ' · Fiyat ×' + DIFFS[k].price
+            + ' · Tüketim ×' + DIFFS[k].consume + ' · Tilki ×' + DIFFS[k].fox;
+    b.addEventListener('click', () => { S.diff = k; writeSave(); paintDiff(); sndBuy(); });
+    dbtns[k] = b;
+    drow.appendChild(b);
+  }
+  dwrap.appendChild(drow);
+  paintDiff();
+  card.appendChild(dwrap);
 
   // OYNA / DEVAM ET
   const play = document.createElement('button');

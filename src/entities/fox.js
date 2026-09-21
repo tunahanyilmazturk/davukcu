@@ -3,7 +3,7 @@
 // horozlar ötüşleriyle kendi başlarına da korkutabilir.
 import { S } from '../state.js';
 import { L, fmt } from '../config.js';
-import { eggValue } from '../economy.js';
+import { eggValue, diffFox } from '../economy.js';
 import { sndCluck, sndCoin, sndCrow, sndYip } from '../audio.js';
 import { toast } from '../toast.js';
 
@@ -13,7 +13,7 @@ let crowT = 0;
 export function updateFox(dt) {
   if (!S.fox) {
     if (S.chickens.length < 2 || S.playTime < 90) { foxT = Math.max(foxT, 20); return; }
-    foxT -= dt;
+    foxT -= dt * diffFox(); // zor modda baskınlar sıklaşır
     if (foxT <= 0) {
       const target = S.chickens[Math.floor(Math.random() * S.chickens.length)];
       S.fox = { x: L.FX - 26, y: target.y, state: 'sneak',

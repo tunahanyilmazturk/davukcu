@@ -4,6 +4,7 @@ import { MAXL, MAX_CHICKENS, BASE, fmt, fmtTime } from './config.js';
 import { eggValue, layInterval, farmBeltSpeed, depoBeltSpeed, goldenChance, rareChance, washMult, washTime, polishMult, polishTime, chickenCost, ratePerSec,
          feedCap, waterCap, BREEDS, magnetRadius, magnetCap, autoFillPct, autoTrigger,
          twinChance, luckyChance, consumeMult, offlineEff, offlineCapH, roosterBoost, eggGap,
+         diffDef, diffPrice,
          chickInterval, chickGrowT, gradeChance, truckInterval, truckCap, truckTier, autoPetCd,
          scoopInterval, organicMult, truckBonus, fertileRate, supplyMult, sellFrac,
          chickOdds } from './economy.js';
@@ -183,6 +184,12 @@ export const SHOP = [
     costAt: l => Math.ceil(120 * Math.pow(2.1, l)),
     effAt: l => '%' + Math.round(offlineEff(l) * 100) + ' verim · ' + offlineCapH(l) + ' saat' },
 ];
+
+// zorluk fiyat çarpanı — tüm mağaza maliyetlerine tek noktadan uygulanır
+for (const it of SHOP) {
+  const raw = it.costAt;
+  it.costAt = i => Math.ceil(raw(i) * diffPrice());
+}
 
 const QTY_STEPS = [1, 10, 'max'];
 const ui = { qty: 0, avail: false }; // qty: QTY_STEPS indeksi, avail: sadece alınabilir filtresi
@@ -482,7 +489,7 @@ export function refreshUI() {
     if (sec !== tbSec) { tbSec = sec; elTbTime.textContent = fmtTime(S.playTime); }
     if (S.prestige !== tbPrest) {
       tbPrest = S.prestige;
-      elTbMode.textContent = 'KLASİK' + (S.prestige ? ' ⭐' + S.prestige : '');
+      elTbMode.textContent = diffDef().name + (S.prestige ? ' ⭐' + S.prestige : '');
       elTbModeC.classList.toggle('star', S.prestige > 0);
     }
     const fps = getFps();

@@ -119,6 +119,15 @@ export function fmtTime(sec) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
+// zorluk modları — ana menüde seçilir; economy.js üzerinden oyuna uygulanır.
+// earn = kazanç çarpanı · price = mağaza fiyatı · consume = yem/su tüketimi · fox = baskın sıklığı
+export const DIFFS = {
+  easy:  { name: 'KOLAY',     earn: 1.25, price: 0.85, consume: 0.8,  fox: 0.6 },
+  std:   { name: 'STANDART',  earn: 1,    price: 1,    consume: 1,    fox: 1   },
+  hard:  { name: 'ZOR',       earn: 0.85, price: 1.15, consume: 1.15, fox: 1.5 },
+  xhard: { name: 'AŞIRI ZOR', earn: 0.7,  price: 1.35, consume: 1.35, fox: 2.2 },
+};
+
 export function mulberry32(a) {
   return function () {
     a |= 0; a = a + 0x6D2B79F5 | 0;
