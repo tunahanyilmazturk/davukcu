@@ -5,7 +5,7 @@ import { S } from '../state.js';
 import { SPR, drawSprite } from '../sprites/index.js';
 import { magnet } from '../input.js';
 import { magnetRadius, magnetCap } from '../economy.js';
-import { eggWorth, eggGrabbable } from '../entities/eggs.js';
+import { eggWorth, eggGrabbable, overCrate } from '../entities/eggs.js';
 
 export function drawMagnet(ctx) {
   if (!magnet.active) return;
@@ -67,23 +67,41 @@ export function drawMagnet(ctx) {
   drawSprite(ctx, SPR.icons.magnet, -16, -36, 2);
   ctx.restore();
 
-  // kutu ağzı vurgusu — tutulan yumurta ağız bölgesindeyse yeşil parlar (bırak = sat)
+  // kutu üstü otomatik satış — imleç ağız bölgesindeyken yeşil parlar,
+  // imleçten ağıza akan besleme huzmesi çizilir
   const z = L.WD.crateZone;
-  if (magnet.held.some(e => e.x > z.x0 - 14 && e.x < z.x1 + 14
-                         && e.y > z.rimY - 50 && e.y < z.inY + 50)) {
+  const feeding = overCrate(magnet.x, magnet.y) && magnet.held.length > 0;
+  if (feeding) {
     ctx.fillStyle = 'rgba(159,232,114,.3)';
     ctx.fillRect(z.x0, z.rimY - 4, z.x1 - z.x0, 30);
+    // besleme huzmesi — ağıza doğru akan kesikli çizgi + yumuşak parlama
+    ctx.strokeStyle = 'rgba(159,232,114,.22)';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(magnet.x, magnet.y + 4);
+    ctx.lineTo(L.WD.mouthX, z.rimY + 6);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(200,255,150,.9)';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5, 5]);
+    ctx.lineDashOffset = -t * 60;
+    ctx.beginPath();
+    ctx.moveTo(magnet.x, magnet.y + 4);
+    ctx.lineTo(L.WD.mouthX, z.rimY + 6);
+    ctx.stroke();
+    ctx.setLineDash([]); ctx.lineDashOffset = 0;
   }
 
   // doluluk + tutulanların toplam değeri (halkanın üstünde)
   if (magnet.held.length) {
     const tot = magnet.held.reduce((s, e) => s + eggWorth(e), 0);
-    const txt = magnet.held.length + '/' + cap + ' · +$' + fmt(tot);
+    const txt = magnet.held.length + '/' + cap + ' · +$' + fmt(tot)
+              + (feeding ? '  ↓SAT' : '');
     ctx.font = 'bold 13px "Courier New",monospace';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#1a1020';
     ctx.fillText(txt, magnet.x + 1, magnet.y - r - 9);
-    ctx.fillStyle = full ? '#ffb060' : '#9fe870';
+    ctx.fillStyle = feeding ? '#a8ff70' : full ? '#ffb060' : '#9fe870';
     ctx.fillText(txt, magnet.x, magnet.y - r - 10);
   }
 }

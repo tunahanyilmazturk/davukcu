@@ -5,6 +5,7 @@
 import { L } from '../config.js';
 import { SPR, drawSprite } from '../sprites/index.js';
 import { box } from '../entities/index.js';
+import { overCrate } from '../entities/eggs.js';
 import { magnet } from '../input.js';
 
 function crateTransform(ctx) {
@@ -81,11 +82,9 @@ export function drawCrateFront(ctx) {
   ctx.fillStyle = '#4a3520'; ctx.fillRect(-4, ch - 8, cw + 8, 8);
   ctx.fillStyle = '#5c4528'; ctx.fillRect(-4, ch - 10, cw + 8, 3);
 
-  // mıknatısla yumurta kutu ağzına getirilince hedef olarak parlar
-  const z = L.CRATE_ZONE;
-  if (magnet.active && magnet.held.length &&
-      magnet.x > z.x0 - 6 && magnet.x < z.x1 + 6 &&
-      magnet.y > z.rimY - 40 && magnet.y < z.inY + 50) {
+  // mıknatıs kutu üstündeyse hedef olarak parlar — tutulanlar otomatik satılır
+  // (overCrate dünya koordinatlı; magnet.x/y de öyle)
+  if (magnet.active && magnet.held.length && overCrate(magnet.x, magnet.y)) {
     ctx.strokeStyle = 'rgba(255,210,62,.9)';
     ctx.lineWidth = 3;
     ctx.setLineDash([5, 4]);

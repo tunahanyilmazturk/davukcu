@@ -23,8 +23,8 @@ export function drawHint(ctx) {
     ctx.fillStyle = '#241c2c';
     ctx.font = 'bold 11px "Courier New",monospace'; ctx.textAlign = 'center';
     ctx.fillText('Yumurtaları basılı', bx + 68, by + 15);
-    ctx.fillText('tutup kutuya', bx + 68, by + 28);
-    ctx.fillText('sürükle!', bx + 68, by + 41);
+    ctx.fillText('tutup kutunun', bx + 68, by + 28);
+    ctx.fillText('üstüne götür!', bx + 68, by + 41);
     return;
   }
   if (S.eggsSold !== 0 || S.playTime >= 14) return;

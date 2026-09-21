@@ -89,6 +89,19 @@ setTimeout(() => {
       magnet.held = [];
     }
     log.push({ magnetGrabbed });
+    // otomatik besleme: imleç kutu üstündeyken tutulan yumurta satılır
+    const af0 = S.eggsSold, m0 = S.money, e0 = S.stats.earned;
+    S.eggs.push({ x: L.WD.mouthX, y: L.BELT2_Y, vy: 0, phase: 'floor',
+                  tier: 'normal', valMult: 1, clean: false, wash: 0, washM: 0,
+                  polish: 0, shine: false, graded: true, seed: 1, sq: 0, rot: 0 });
+    magnet.active = true; magnet.x = L.WD.mouthX; magnet.y = L.BELT2_Y + 16;
+    for (let i = 0; i < 80; i++) update(0.05);
+    log.push({ autoFed: S.eggsSold > af0 && S.money > m0 && S.stats.earned > e0,
+               heldLeft: magnet.held.length });
+    magnet.active = false;
+    for (const e of magnet.held) e.phase = 'belt1';
+    magnet.held = [];
+    for (const e of S.eggs) if (e.phase === 'pulled' || e.phase === 'held') e.phase = 'belt1';
     // kilit şartlarını sağla: satış sayısı + sürü (cins/horoz kapıları)
     S.eggsSold = 400;
     while (S.chickens.length < 15) window.GAME.spawnChicken();

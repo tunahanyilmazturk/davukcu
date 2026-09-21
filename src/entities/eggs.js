@@ -95,9 +95,20 @@ export function eggGrabbable(e) {
       && e.phase !== 'gone' && e.phase !== 'in' && e.phase !== 'duct';
 }
 
+// mıknatıs kutu ağzı bölgesinde mi — otomatik besleme tetik çizgisi
+// (eggs.js, render/magnet.js ve render/crate.js paylaşır)
+export function overCrate(x, y) {
+  const z = L.WD.crateZone;
+  return Math.abs(x - L.WD.mouthX) < 62 && y > z.rimY - 92 && y < z.inY + 46;
+}
+
+let feedT = 0; // kutu besleme sayacı — tutulanlar aralıklarla ağıza akar
+
 export function updateEggs(dt) {
   // mıknatıs: basılıyken yarıçap içindeki yumurtalar imlece ÇEKİLİR,
-  // yeterince yaklaşan tutulur (held), bırakılınca input.js düşürür/satar
+  // yaklaşan tutulur (held) ve imlecin ardında kuyruk gibi dizilir.
+  // İmleç kutu üstündeyken tutulanlar tek tek ağızdan içeri akıp satılır;
+  // bırakılınca kalanlar input.js tarafından düşürülür/sahneye bırakılır.
   if (magnet.active) {
     const r = magnetRadius(), cap = magnetCap(), pull = magnetPull();
     const damp = Math.max(0, 1 - dt * 5);
@@ -132,14 +143,28 @@ export function updateEggs(dt) {
         room--;
       }
     }
-    // tutulanlar imlecin çevresinde yörüngede döner
-    const ot = performance.now() / 1000 * 2.4;
-    magnet.held.forEach((e, i) => {
-      const a = ot + i * Math.PI * 2 / magnet.held.length;
-      const k = Math.min(1, dt * 14);
-      e.x += (magnet.x + Math.cos(a) * 13 - e.x) * k;
-      e.y += (magnet.y - 6 + Math.sin(a) * 9 - e.y) * k;
-    });
+    // tutulanlar: imlecin ardında zincir kuyruk — her yumurta bir öncekini
+    // 12px geriden izler, hareket halinde sallanan bir dizi oluşturur
+    const k = Math.min(1, dt * 11);
+    let px = magnet.x, py = magnet.y - 4;
+    for (const e of magnet.held) {
+      const dx = px - e.x, dy = py - e.y, d = Math.hypot(dx, dy) || 1;
+      const tx = px - dx / d * 12, ty = py - dy / d * 12;
+      e.x += (tx - e.x) * k; e.y += (ty - e.y) * k;
+      px = e.x; py = e.y;
+    }
+    // otomatik besleme: imleç kutu üstündeyken tutulanlar sırayla ağıza akar
+    if (overCrate(magnet.x, magnet.y) && magnet.held.length) {
+      feedT -= dt;
+      if (feedT <= 0) {
+        feedT = 0.13;
+        const eg = magnet.held.pop(); // kuyruğun ucu ağıza en yakın
+        eg.phase = 'in';
+        eg.x = L.WD.mouthX + (Math.random() - .5) * 8;
+        eg.y = L.WD.crateZone.rimY - 2; eg.vy = 0;
+        S.parts.push({ kind: 'spark', x: eg.x, y: eg.y - 8, vy: -50, t: 0, life: .3 });
+      }
+    } else feedT = 0;
   }
 
   const WD = L.WD;
