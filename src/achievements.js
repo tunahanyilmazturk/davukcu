@@ -20,6 +20,8 @@ export const ACHV = [
   { id: 'pet10',   name: 'Tavuk Sever',     desc: 'Tavukları 10 kez sev',           test: () => S.stats.pets >= 10,                 reward: 40 },
   { id: 'auto',    name: 'Tam Otomasyon',   desc: 'İki otomatik sistemi de kur',    test: () => S.lvl.autoF > 0 && S.lvl.autoW > 0, reward: 500 },
   { id: 'time',    name: 'Sadık Çiftçi',    desc: '10 dakika oyna',                 test: () => S.playTime >= 600,                  reward: 300 },
+  { id: 'fox',     name: 'Tilki Avcısı',    desc: '3 tilkiyi korkut',               test: () => (S.stats.foxed || 0) >= 3,          reward: 300 },
+  { id: 'butter',  name: 'Şans Peşinde',    desc: 'Altın kelebeği yakala',          test: () => (S.stats.butter || 0) >= 1,         reward: 100 },
 ];
 
 // koşulu sağlanan her başarımı aç: ödül + bildirim + ses

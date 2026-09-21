@@ -136,9 +136,32 @@ function faceTarget(ch) {
 export function updateChickens(dt, fed) {
   const P = L.PEN;
   for (const ch of S.chickens) {
+    if (ch.stolen) continue; // tilki ağzında — konum tilki tarafından taşınır
     if (ch.drag) {
       // sürüklenirken panik: kanat çırpma
       ch.frameT += dt;
+      setAnim(ch, 'flap'); stepAnim(ch, dt);
+      continue;
+    }
+    if (ch.panicT > 0) {
+      // tilki paniği — hızla tilkiden uzağa kaç, kanat çırp
+      ch.panicT -= dt;
+      const f = S.fox;
+      if (f) {
+        const dx = ch.x - f.x, dy = ch.y - f.y, d = Math.hypot(dx, dy) || 1;
+        const sp = 95 * dt;
+        const nx = ch.x + dx / d * sp, ny = ch.y + dy / d * sp;
+        ch.x = Math.max(P.x + 12, Math.min(P.x + P.w - 12, nx));
+        ch.y = Math.max(P.y + 26, Math.min(P.y + P.h, ny));
+        ch.dir = dx < 0 ? -1 : 1;
+      }
+      setAnim(ch, 'flap'); stepAnim(ch, dt);
+      continue;
+    }
+    if (ch.alertT > 0) {
+      // horoz alarmı — tilkiye dönük, kanatları açmış nöbette dur
+      ch.alertT -= dt;
+      if (S.fox) ch.dir = S.fox.x > ch.x ? 1 : -1;
       setAnim(ch, 'flap'); stepAnim(ch, dt);
       continue;
     }
@@ -161,6 +184,12 @@ export function updateChickens(dt, fed) {
           ch.ty = t.y + t.h + 20;
           faceTarget(ch);
           ch.state = 'toTrough';
+        } else if (S.rain && roll < 0.62) {
+          // yağmurda gaga vurma yerine kümes saçağının altına sığın
+          ch.tx = L.COOP.x + 12 + Math.random() * (L.COOP.w - 24);
+          ch.ty = L.COOP.y + L.COOP.h + 24 + Math.random() * 18;
+          faceTarget(ch);
+          ch.state = 'walk';
         } else if (roll < 0.62) {
           // gaga vurma — koreografi bitince idle'a döner
           ch.state = 'peck';

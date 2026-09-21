@@ -2,7 +2,7 @@
 import { S, readSave, applySave, writeSave } from './state.js';
 import { H, L, computeLayout, fmt } from './config.js';
 import { ratePerSec, offlineEff, offlineCapH, eggValue, sellPrice,
-         refillCost, truckBonus, truckTier, fertileRate, chickOdds } from './economy.js';
+         refillCost, truckBonus, truckTier, fertileRate, chickOdds, consumeMult } from './economy.js';
 import { spawnChicken, spawnChick, update, clampEntities } from './entities/index.js';
 import { eggLooks } from './entities/eggs.js';
 import { draw } from './render/index.js';
@@ -12,6 +12,8 @@ import { initSettings } from './settings.js';
 import { initPrestige } from './prestige.js';
 import { checkQuests, refreshQuestBar, QUESTS } from './quests.js';
 import { collectManure } from './entities/manure.js';
+import { scareFox } from './entities/fox.js';
+import { catchButterfly } from './entities/events.js';
 import { toast } from './toast.js';
 import { buildBG } from './world.js';
 import { cam, goToPage, syncCam } from './camera.js';
@@ -101,7 +103,8 @@ requestAnimationFrame(loop);
 if (import.meta.env && import.meta.env.DEV) {
   window.GAME = { S, update, SHOP, buyItem, writeSave, L, spawnChicken, spawnChick, magnet,
                   QUESTS, checkQuests, refreshQuestBar, collectManure, cam, goToPage,
-                  eggValue, sellPrice, refillCost, truckBonus, fertileRate, chickOdds };
+                  eggValue, sellPrice, refillCost, truckBonus, fertileRate, chickOdds, consumeMult,
+                  scareFox, catchButterfly };
   // ?ff=30 → açılışta 30 saniye ileri sar (test/görsel kontrol)
   const q = new URLSearchParams(location.search);
   const ff = parseFloat(q.get('ff') || '0');
@@ -133,6 +136,19 @@ if (import.meta.env && import.meta.env.DEV) {
   // ?trucknow[=tier] → görsel test: aracı hemen yükleme pozisyonuna koy (lokal x)
   if (q.has('trucknow')) S.truck = { x: L.W * 0.35, state: 'arrive', cargo: 0, bags: 0, worth: 0,
     t: 1, bob: 0, dip: 0, tier: parseInt(q.get('trucknow')) || truckTier(S.lvl.truck) };
+  // ?foxnow[=sneak|carry] → görsel test: tilkiyi hemen sahneye koy
+  if (q.has('foxnow')) {
+    const target = S.chickens[0];
+    if (target) {
+      const carry = q.get('foxnow') === 'carry';
+      S.fox = { x: carry ? target.x + 30 : target.x + 120, y: target.y, state: carry ? 'flee' : 'sneak',
+                t: 0, pause: false, dir: -1, target: carry ? null : target, scare: 0, carry: null };
+      if (carry) { target.stolen = true; S.fox.carry = target; }
+    }
+  }
+  // ?rainnow → görsel test: yağmuru hemen başlat; ?flynow → kelebek koy
+  if (q.has('rainnow')) S.rain = { t: 60 };
+  if (q.has('flynow')) S.butterfly = { x: L.PEN.x + L.PEN.w * 0.4, y: L.PEN.y + L.PEN.h * 0.4, t: 0, seed: 2 };
   // ?bags=3&bin=12 → görsel test: çuval stoğu + kova doluluğu
   if (q.get('bags') !== null) S.manureBags = parseInt(q.get('bags')) || 0;
   if (q.get('bin') !== null) S.manureBin = parseInt(q.get('bin')) || 0;

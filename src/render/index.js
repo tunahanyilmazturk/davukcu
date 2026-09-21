@@ -20,6 +20,7 @@ import { drawRoad, drawDock, drawTruck } from './truck.js';
 import { drawFactoryFX } from './facfx.js';
 import { drawPiles, drawManureBin, drawBagStack, drawShovelCursor } from './manure.js';
 import { drawParticles } from './fx.js';
+import { drawFox } from './fox.js';
 import { drawHint, drawHud } from './hud.js';
 import { chickenPose } from '../entities/chickens.js';
 
@@ -203,6 +204,7 @@ export function draw(ctx, dt) {
   const hungry = !fedOk(); // yem veya su bitti — tavuklar üretemez
   const sorted = [...S.chickens].sort((a, b) => a.y - b.y);
   for (const ch of sorted) {
+    if (ch.stolen) continue; // tilki ağzında — drawFox'ta çizilir
     const sprs = SPR.chickens[ch.variant] || SPR.chickens.white;
     const pose = chickenPose(ch);
     const spr = sprs[pose.f] || sprs.a;
@@ -239,6 +241,9 @@ export function draw(ctx, dt) {
                                   : Math.sin(c.frameT * 3) * 0.5;
     drawSprite(ctx, spr, c.x - 8, c.y - 12 + cb, 2, c.dir < 0);
   }
+
+  // tilki baskını — tavukların üstünde, taşınan tavukla beraber
+  drawFox(ctx);
 
   // sürüklenen tavuğun fiyat etiketi
   const d = drag.current;

@@ -37,6 +37,10 @@ export const sndGrade = () => { beep(880, 1180, .06, 'sine', .08); setTimeout(()
 export const sndWash = () => { beep(360, 140, .12, 'sine', .07); setTimeout(() => beep(500, 240, .08, 'sine', .05), 50); };
 // kamyon kornası: kalın çift ton (iskele yanaşınca)
 export const sndTruck = () => { beep(185, 165, .2, 'sawtooth', .09); setTimeout(() => beep(185, 165, .16, 'sawtooth', .08), 240); };
+// horoz ötüşü — tilki alarmı: ince yükselen + kalın düşen
+export const sndCrow = () => { beep(720, 1400, .1, 'sawtooth', .07); setTimeout(() => beep(1050, 480, .16, 'sawtooth', .08), 100); };
+// tilki viyaklaması — kısa keskin iniş
+export const sndYip = () => { beep(1400, 800, .07, 'square', .08); setTimeout(() => beep(1250, 700, .06, 'square', .06), 75); };
 // başarım jingle'ı: kısa yükselen dörtlü
 export const sndAchv = () => {
   [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, f, .14, 'triangle', .12), i * 90));

@@ -88,7 +88,7 @@ export function fedOk() { return S.feed > 0 && S.water > 0; }
 /* ---- pasif yükseltmeler ---- */
 export function twinChance(l = S.lvl.twin)     { return 0.03 * l; }              // ikiz yumurta şansı
 export function luckyChance(l = S.lvl.lucky)   { return 0.025 * l; }             // satışta x2 ödeme şansı
-export function consumeMult(l = S.lvl.saver)   { return Math.max(0.5, 1 - 0.1 * l); } // yem/su tüketim çarpanı
+export function consumeMult(l = S.lvl.saver)   { return Math.max(0.5, 1 - 0.1 * l) * (S.rain ? 0.75 : 1); } // yem/su tüketimi; yağmurda yağmur suyu bedava
 export function offlineEff(l = S.lvl.offline)  { return 0.5 + 0.12 * l; }        // çevrimdışı kazanç verimi
 export function offlineCapH(l = S.lvl.offline) { return 4 + 1.5 * l; }           // saat üst sınırı
 export function roosterBoost(l = S.lvl.rooster){ return 1 + 0.08 * l; }          // yumurtlama hızı çarpanı

@@ -238,6 +238,38 @@ setTimeout(() => {
     window.GAME.checkQuests();
     log.push({ questsDone: S.questIdx >= window.GAME.QUESTS.length,
                questAdvanced: S.questIdx > qAfter || S.questIdx >= window.GAME.QUESTS.length });
+    // ---- tilki: tıkla ürküt → kaçar + ödül; taşınan tavuk kurtulur ----
+    for (const c of S.chickens) c.stolen = false; // doğal tilki artığı temizle
+    const fTarget = S.chickens[0];
+    S.fox = { x: window.GAME.L.FX - 150, y: fTarget.y, state: 'sneak',
+              t: 0, pause: false, dir: -1, target: fTarget, scare: 0, carry: null };
+    const mFox = S.money;
+    window.GAME.scareFox();              // oyuncu tıklaması simülasyonu
+    const foxFled = S.fox && S.fox.state === 'flee' && S.money > mFox
+                    && (S.stats.foxed || 0) === 1;
+    for (let i = 0; i < 240 && S.fox; i++) update(0.05); // kaçış süresi
+    const foxGone = !S.fox && !fTarget.stolen && S.chickens.includes(fTarget);
+    // taşıma kurtarma: kapılmış tavuk tıkla düşürülür
+    const f2 = S.chickens[0];
+    S.fox = { x: f2.x + 40, y: f2.y, state: 'flee', t: 0, pause: false,
+              dir: 1, target: null, scare: 0, carry: f2 };
+    f2.stolen = true;
+    window.GAME.scareFox();
+    const rescued = !f2.stolen && !S.fox.carry && S.chickens.includes(f2);
+    for (let i = 0; i < 240 && S.fox; i++) update(0.05);
+    log.push({ foxFled, foxGone, rescued });
+    // ---- kelebek: tıkla yakala → para + kaybolur ----
+    S.butterfly = { x: 300, y: 300, t: 0, seed: 1 };
+    const mFly = S.money;
+    window.GAME.catchButterfly();
+    log.push({ flyCaught: !S.butterfly && S.money > mFly && (S.stats.butter || 0) === 1 });
+    // ---- yağmur: consumeMult indirimi uygulanır ----
+    const cmDry = window.GAME.consumeMult();
+    S.rain = { t: 10 };
+    const cmWet = window.GAME.consumeMult();
+    S.rain = null;
+    log.push({ rainOk: Math.abs(cmWet - cmDry * 0.75) < 1e-9 });
+
     // ---- kayıt: prestij/görev alanları kalıcı ----
     window.GAME.writeSave();
     const saved = JSON.parse(localStorage.getItem('tavukciftligi_v1'));

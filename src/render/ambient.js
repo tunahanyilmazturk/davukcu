@@ -2,6 +2,7 @@
 // ışık huzmeleri + toz, bulut gölgeleri, gölet dalgası, dönen rüzgar
 // gülü kanatları, kelebekler ve ara sıra geçen kuş. fxAmbient ayarıyla.
 import { L } from '../config.js';
+import { S } from '../state.js';
 
 export function drawAmbient(ctx) {
   const t = performance.now() / 1000;
@@ -90,5 +91,46 @@ export function drawAmbient(ctx) {
     ctx.beginPath();
     ctx.moveTo(bx - 8, by - wob); ctx.lineTo(bx, by + 2); ctx.lineTo(bx + 8, by - wob);
     ctx.stroke();
+  }
+
+  // altın kelebek — parlak, tıklanabilir ödül ziyaretçisi
+  if (S.butterfly) {
+    const b = S.butterfly;
+    const open = Math.abs(Math.sin(b.t * 16));
+    ctx.save(); ctx.translate(b.x, b.y);
+    // altın parlama halesi
+    ctx.globalAlpha = 0.25 + Math.sin(t * 5) * 0.08;
+    ctx.fillStyle = '#ffd23e';
+    ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.ellipse(-4, 0, 2.5 + open * 4, 4.5, -.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(4, 0, 2.5 + open * 4, 4.5, .5, 0, 7); ctx.fill();
+    ctx.fillStyle = '#6a4a18'; ctx.fillRect(-1, -4, 2, 8);
+    ctx.restore();
+  }
+
+  // yaz yağmuru — hafif karartma + eğik yağmur çizgileri + yerde sıçrama
+  if (S.rain) {
+    ctx.fillStyle = 'rgba(16,22,44,.14)';
+    ctx.fillRect(0, 0, L.FX, L.H);
+    ctx.strokeStyle = 'rgba(170,195,235,.42)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < 90; i++) {
+      const rx = ((i * 97 + t * 640) % (L.FX + 60)) - 30;
+      const ry = ((i * 131 + t * 560) % (L.H + 30)) - 15;
+      ctx.moveTo(rx, ry); ctx.lineTo(rx - 4, ry + 11);
+    }
+    ctx.stroke();
+    // zeminde sıçrama halkaları
+    for (let i = 0; i < 12; i++) {
+      const sx = P.x + ((i * 179 + t * 60) % P.w);
+      const sp = (t * 2.6 + i * .63) % 1;
+      ctx.strokeStyle = `rgba(185,205,245,${(0.4 * (1 - sp)).toFixed(3)})`;
+      ctx.beginPath(); ctx.ellipse(sx, P.y + P.h - 8 - (i % 3) * 10, 2 + sp * 8, 1 + sp * 2.5, 0, 0, 7); ctx.stroke();
+    }
+    // küçük durum yazısı — yağmur suyu kaynak tasarrufu sağlar
+    ctx.font = 'bold 10px "Courier New",monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(10,16,34,.55)'; ctx.fillRect(P.x + 8, L.HUD_H + 8, 118, 17);
+    ctx.fillStyle = '#9fc3f0'; ctx.fillText('YAĞMUR · kaynak -%25', P.x + 13, L.HUD_H + 20);
   }
 }

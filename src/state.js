@@ -31,6 +31,9 @@ export const S = {
   manureBin: 0,   // gübre kovasındaki yığın sayısı (BAG_AT'te 1 çuval olur)
   manureBags: 0,  // kamyonun satacağı gübre çuvalı stoğu
   truck: null,
+  fox: null,        // tilki baskını (null | {x,y,state,...})
+  butterfly: null,  // altın kelebek (null | {x,y,t,seed})
+  rain: null,       // yaz yağmuru (null | {t})
   parts: [],
 };
 

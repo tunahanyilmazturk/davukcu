@@ -7,6 +7,8 @@ import { sellPrice, autoPetCd } from './economy.js';
 import { sndPet, sndCoin, sndZap } from './audio.js';
 import { tryRefill } from './entities/index.js';
 import { manureAt, collectManure } from './entities/manure.js';
+import { scareFox } from './entities/fox.js';
+import { catchButterfly } from './entities/events.js';
 import { HOP_T } from './entities/chickens.js';
 import { cam, goToPage, snapCam, navZones } from './camera.js';
 import { toast } from './toast.js';
@@ -139,6 +141,12 @@ export function initInput(canvas) {
     const wx = pointer.x;
     const tr = troughAt(wx, p.y);
     if (tr) { tryRefill(tr); return; }
+    // tilki — ürküt (tavuktan öncelikli: kapılan tavuğu kurtarmak kolay olsun)
+    const f = S.fox;
+    if (f && Math.hypot(wx - f.x, p.y - (f.y - 16)) < 34) { scareFox(); return; }
+    // altın kelebek — yakala
+    const bf = S.butterfly;
+    if (bf && Math.hypot(wx - bf.x, p.y - bf.y) < 28) { catchButterfly(); return; }
     const ch = chickenAt(wx, p.y);
     if (ch) {
       drag.current = { ch, ox: wx - ch.x, oy: p.y - ch.y, origX: ch.x, origY: ch.y, moved: false };
@@ -194,7 +202,10 @@ export function initInput(canvas) {
       // yığın üstünde 'none' — yerini render/manure.js'teki kürek alır
       const navHov = navZones().some(z => p.x >= z.x && p.x <= z.x + z.w
                                          && p.y >= z.y && p.y <= z.y + z.h);
+      const fxHov = S.fox && Math.hypot(pointer.x - S.fox.x, p.y - (S.fox.y - 16)) < 34;
+      const bfHov = S.butterfly && Math.hypot(pointer.x - S.butterfly.x, p.y - S.butterfly.y) < 28;
       cv.style.cursor = troughAt(pointer.x, p.y) ? 'pointer'
+        : (fxHov || bfHov) ? 'pointer'
         : chickenAt(pointer.x, p.y) ? 'grab'
         : manureAt(pointer.x, p.y) ? 'none'
         : navHov ? 'pointer'
