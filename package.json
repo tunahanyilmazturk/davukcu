@@ -3,12 +3,25 @@
   "private": true,
   "version": "1.0.0",
   "description": "Piksel grafikli idle tavuk çiftliği/fabrika oyunu — canvas + vanilla JS",
+  "author": "tunahanyilmazturk <tunahanyilmazturk@users.noreply.github.com>",
+  "license": "UNLICENSED",
   "repository": "github:tunahanyilmazturk/davukcu",
+  "keywords": [
+    "game",
+    "idle-game",
+    "pixel-art",
+    "canvas",
+    "vite",
+    "vanilla-js"
+  ],
   "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "dev": "vite --port 8137 --strictPort",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 8138 --strictPort"
   },
   "devDependencies": {
     "vite": "8.2.2"
