@@ -48,7 +48,7 @@ export const sndAchv = () => {
 
 /* ---- ambient müzik: yumuşak bas + arpej döngüsü ----
    İlk kullanıcı etkileşiminde startMusic() çağrılır (tarayıcı izni). */
-let musicOn = false, musicTimer = null;
+let musicOn = false;
 const MEL = [0, 4, 7, 4, 9, 7, 4, 2];          // pentatonik arpej (yarım ses, La üstünden)
 const ROOT = 220;                             // A3
 export function startMusic() {
@@ -81,6 +81,6 @@ export function startMusic() {
       step++;
     } catch (e) {}
   };
-  musicTimer = setInterval(tick, 360);
+  setInterval(tick, 360);
 }
 export function musicTickMute() {} // sessizlik anahtarı S.muted üzerinden okunuyor

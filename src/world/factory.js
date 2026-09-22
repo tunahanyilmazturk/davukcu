@@ -2,7 +2,7 @@
 // tavan kirişi, duvar, bant askıları, huni, yumurta kanalı borusu,
 // hat altı taşıyıcılar, zemin ve depo dekoru — statik arka plan.
 // Otlak çizimi src/world/farm.js'te; iki dosya ayrı sayfaları çizer.
-import { L, H, mulberry32 } from '../config.js';
+import { L, mulberry32 } from '../config.js';
 
 // --- depo dekoru parçaları (yB = zemine basan alt kenar) ---
 function drawCrate(g, x, yB, w, h) {

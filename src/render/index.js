@@ -1,7 +1,7 @@
 // Sahne çizimi — iki sayfalık dünya, kamera cam.x ile kayar.
 // Katmanlar: çiftlik bg → fabrika bg (lokal uzay) → yumurtalar (dünya) →
 // istasyon önleri → tavuklar → fx. HUD ve gezinme okları ekran uzayında.
-import { L, H, fmt } from '../config.js';
+import { L, fmt } from '../config.js';
 import { S } from '../state.js';
 import { SPR, drawSprite } from '../sprites/index.js';
 import { bgFarm, bgFac } from '../world.js';

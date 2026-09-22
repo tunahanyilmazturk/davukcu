@@ -15,7 +15,7 @@ function drawLabel(ctx, t, ratio, feed, tm) {
   ctx.textAlign = 'left';
 }
 
-function drawAutoBadge(ctx, t, tm) {
+function drawAutoBadge(ctx, t) {
   const { x, y, w } = t;
   ctx.fillStyle = '#243018';
   ctx.fillRect(x + w - 15, y - 13, 17, 9);
@@ -166,7 +166,7 @@ function drawFeedSilo(ctx, t, ratio, auto, tm) {
   ctx.fillStyle = '#6e522e';
   ctx.fillRect(sx + 3, sy, 8, 2);                  // bağlı ağzı
 
-  if (auto) drawAutoBadge(ctx, t, tm);
+  if (auto) drawAutoBadge(ctx, t);
 }
 
 // --- Su kulesi: ayaklı ahşap tank + ölçüm camı + boru + suluk teknesi ---
@@ -298,7 +298,7 @@ function drawWaterTower(ctx, t, ratio, auto, tm) {
   ctx.fillStyle = '#42505a';
   ctx.fillRect(kx + 1, ky - 1, 7, 1);
 
-  if (auto) drawAutoBadge(ctx, t, tm);
+  if (auto) drawAutoBadge(ctx, t);
 }
 
 export function drawTank(ctx, t, ratio, kind, auto) {

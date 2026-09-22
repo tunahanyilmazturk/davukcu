@@ -209,7 +209,6 @@ export function updateEggs(dt) {
     lead1 = e.x;
     // süpürge: fırça altından geçen yumurtanın kaba kiri kazınır, kir gübreye döner
     if (brushOn && e.dirt > 0 && Math.abs(e.x - WD.brushX) < brushHalf()) {
-      const d0 = e.dirt;
       e.dirt = Math.max(0, e.dirt - brushRate() * dt);
       if (Math.random() < dt * 7) {
         S.parts.push({ kind: 'speck', x: e.x + (Math.random() - .5) * 10,

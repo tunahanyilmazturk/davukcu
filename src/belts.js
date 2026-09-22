@@ -2,7 +2,6 @@
 // altta DEPOLAMA bandı (yıkama → kutuya taşır, endüstriyel metal).
 // Her bandın kendi hızı, görünümü ve yükseltmesi var.
 import { L } from './config.js';
-import { S } from './state.js';
 import { farmBeltSpeed, depoBeltSpeed } from './economy.js';
 
 // görünüm paletleri
