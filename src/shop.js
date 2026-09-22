@@ -538,7 +538,10 @@ export function initTopbar() {
   // süre → istatistik, mod → efsane, sürüm → ayarlar, FPS → gösterge aç/kapat
   document.getElementById('tbTime').addEventListener('click', () => { openTab('stats'); sndBuy(); });
   elTbModeC.addEventListener('click', () => { openTab('prest'); sndBuy(); });
-  document.getElementById('tbVer').addEventListener('click', () => { openSettings(); sndBuy(); });
+  const verEl = document.getElementById('tbVer');
+  verEl.textContent = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : verEl.textContent;
+  verEl.title = 'Sürüm ' + verEl.textContent + ' — Ayarlar';
+  verEl.addEventListener('click', () => { openSettings(); sndBuy(); });
   elTbFpsC.addEventListener('click', () => {
     S.showFps = !S.showFps;
     writeSave(); sndBuy();

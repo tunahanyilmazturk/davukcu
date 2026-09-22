@@ -1,7 +1,9 @@
 {
   "name": "tavuk-ciftligi",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Piksel grafikli idle tavuk çiftliği/fabrika oyunu — canvas + vanilla JS",
+  "repository": "github:tunahanyilmazturk/davukcu",
   "type": "module",
   "scripts": {
     "dev": "vite --port 8137 --strictPort",
