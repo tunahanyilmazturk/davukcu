@@ -21,6 +21,8 @@ npm run preview  # build'i önizle
 - **Tavuğa tıkla** → sev; **sürükleyip panele bırak** → sat.
 - **YEM/SU** barlarına (veya siloya) tıkla → paran yettiği kadar doldur.
 - **Pazar** sekmesi: tavuk, hat istasyonları ve ekonomi yükseltmeleri.
+- **Personel**: Çiftlik İşçisi gübre yığınlarını kovaya taşır,
+  Tavuk Bakıcısı gezip tavukları sever — yükseltmelerle hız/kapasite artar.
 - **Mağaza** sekmesi: kümes, gölet, değirmen, bayrak gibi manzaralar ve
   kozmetik süsler — satın alınca arsalarına yerleşir.
 - Fabrika sayfasında **mıknatıs**: basılı tut, yumurtaları çeker.
@@ -51,7 +53,7 @@ src/
   audio.js        WebAudio efektleri
   camera.js       sayfa geçişi / kamera
   mobile.js       dokunmatik düzen
-  entities/       tavuk, civciv, yumurta, gübre, tilki, kamyon, olaylar
+  entities/       tavuk, civciv, yumurta, gübre, personel, tilki, kamyon
   render/         canvas çizim katmanları (bant, istasyonlar, HUD, fx)
   world/          statik arka plan (çiftlik + fabrika, offscreen canvas)
   sprites/        string satırlarından üretilen pixel sprite'lar
